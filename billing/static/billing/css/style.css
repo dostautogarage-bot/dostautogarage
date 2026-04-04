@@ -1,0 +1,379 @@
+body {
+    background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.header {
+    background: #22223b;
+    color: #f2e9e4;
+    padding: 1.5rem 2rem;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.container {
+    background: #fff;
+    max-width: min(800px, calc(100% - 2rem));
+    margin: 2rem auto;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    padding: 2rem 2.5rem;
+}
+
+@media (max-width: 992px) {
+    .header {
+        padding: 1.25rem 1.5rem;
+        font-size: 1.8rem;
+    }
+
+    .container {
+        margin: 1.5rem auto;
+        padding: 1.5rem 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 1rem 1rem;
+        font-size: 1.6rem;
+    }
+
+    .container {
+        margin: 1rem auto;
+        padding: 1rem 1rem;
+        border-radius: 12px;
+    }
+
+    table th,
+    table td {
+        padding: 0.65rem 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.75rem;
+    }
+
+    .btn + .btn {
+        margin-top: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    input,
+    select {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .header {
+        font-size: 1.35rem;
+    }
+
+    .container {
+        padding: 0.9rem 0.9rem;
+    }
+
+    .table {
+        font-size: 0.92rem;
+    }
+}
+
+h1, h2, h3 {
+    color: #22223b;
+    margin-top: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    background: #f2e9e4;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+table th, table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+
+table th {
+    background: #4a4e69;
+    color: #fff;
+}
+
+table tr:nth-child(even) {
+    background: #f6d36533;
+}
+
+table tr:hover {
+    background: #fda08533;
+}
+
+.btn {
+    background: #4a4e69;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background: #9a8c98;
+    color: #22223b;
+}
+
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+input, select {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    font-size: 1rem;
+    margin-top: 0.3rem;
+}
+
+label {
+    font-weight: 500;
+    color: #4a4e69;
+}
+
+.errorlist {
+    color: #c0392b;
+    margin: 0.5rem 0 0 0;
+    list-style: none;
+    padding: 0;
+}
+
+.success {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.center {
+    text-align: center;
+}
+
+/* Responsive overrides for Bootstrap pages */
+@media (max-width: 768px) {
+    .table th,
+    .table td {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .table th[style],
+    .table td[style] {
+        width: auto !important;
+        min-width: 0 !important;
+    }
+
+    .d-flex.gap-2,
+    .d-flex.gap-3,
+    .d-flex.gap-4 {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .d-flex.gap-2 > *,
+    .d-flex.gap-3 > *,
+    .d-flex.gap-4 > * {
+        width: 100%;
+    }
+
+    .dashboard-filter .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .modal-dialog {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+
+    .input-group .form-select,
+    #countryCode,
+    .product-search-input,
+    #perPageSelect,
+    #searchInput,
+    .form-select,
+    input,
+    select,
+    .btn {
+        width: 100%;
+    }
+
+    .input-group .form-select,
+    #countryCode,
+    .product-search-input {
+        min-width: 0 !important;
+    }
+
+    .btn + .btn {
+        margin-top: 0.75rem;
+    }
+
+    .card.mx-auto[style*="max-width"] {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .dashboard-panel,
+    .dashboard-section-card,
+    .dashboard-admin-card {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .dashboard-section-card canvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .dashboard-section-card table,
+    .dashboard-section-card .table-responsive {
+        overflow-x: auto;
+    }
+
+    .product-dropdown {
+        min-width: auto !important;
+        max-width: 100% !important;
+    }
+
+    .product-search-wrapper {
+        width: 100%;
+    }
+
+    #searchWrapper {
+        width: 100%;
+    }
+
+    .table td[style*="white-space:nowrap"],
+    .table th[style*="white-space:nowrap"] {
+        white-space: normal !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-page {
+        padding-top: 1rem;
+        padding-bottom: 2.5rem;
+    }
+
+    .dashboard-hero {
+        padding: 1.5rem 1rem;
+    }
+
+    .dashboard-hero h3 {
+        font-size: 1.6rem;
+    }
+
+    .dashboard-panel,
+    .dashboard-section-card,
+    .dashboard-admin-card {
+        padding: 1rem;
+    }
+
+    .dashboard-filter .btn-link {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding-left: 0;
+    }
+
+    .dashboard-admin-stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-stat-card {
+        min-height: auto;
+        padding: 1.25rem;
+    }
+
+    .dashboard-stat-card .stat-value {
+        font-size: 2rem;
+    }
+
+    .dashboard-section-card h5,
+    .dashboard-admin-card h5 {
+        font-size: 1.05rem;
+    }
+
+    .dashboard-badge {
+        display: inline-block;
+        margin-top: 0.75rem;
+    }
+
+    .input-group .form-select {
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    #countryCode {
+        max-width: 100% !important;
+    }
+
+    .product-dropdown {
+        min-width: auto !important;
+        max-width: 100% !important;
+    }
+
+    .product-search-wrapper {
+        width: 100%;
+    }
+
+    .dashboard-panel,
+    .dashboard-section-card,
+    .dashboard-admin-card {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .dashboard-filter .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .dashboard-filter .btn-link {
+        display: inline-block;
+        width: auto;
+    }
+
+    .dashboard-section-card canvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .dashboard-section-card table,
+    .dashboard-section-card .table-responsive {
+        overflow-x: auto;
+    }
+
+    .dashboard-admin-stat-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

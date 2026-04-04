@@ -1,0 +1,881 @@
+{% extends 'billing/base.html' %}
+{% block title %}Create Invoice{% endblock %}
+
+{% block content %}
+
+<style>
+    .card {
+        border-radius: 1rem;
+        padding: 1rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    @media (min-width: 768px) {
+        .card {
+            border-radius: 1.5rem;
+            padding: 2rem !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    }
+
+    h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    h5 {
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        h5 {
+            font-size: 1.15rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    @media (min-width: 768px) {
+        .form-label {
+            font-size: 0.9rem;
+        }
+    }
+
+    .form-control, .form-select {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 0.4rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-control, .form-select {
+            font-size: 1rem;
+            padding: 0.6rem 0.9rem;
+            border-radius: 0.5rem;
+        }
+    }
+
+    .btn {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        min-height: 36px;
+    }
+
+    @media (min-width: 768px) {
+        .btn {
+            font-size: 1rem;
+            padding: 0.6rem 1.2rem;
+            min-height: 40px;
+        }
+    }
+
+    .input-group .form-control.is-invalid { border-color: #dc3545; z-index: 0; }
+    .input-group .form-control.is-valid   { border-color: #198754; z-index: 0; }
+
+    /* Product search */
+    .product-search-wrapper { position: relative; }
+
+    #productDropdownPortal {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        z-index: 99999;
+        pointer-events: none;
+    }
+
+    .product-dropdown {
+        position: absolute;
+        background: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.4rem;
+        max-height: 260px;
+        overflow-y: auto;
+        z-index: 99999;
+        display: none;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        min-width: 280px;
+        pointer-events: all;
+        font-size: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+        .product-dropdown {
+            min-width: 320px;
+            font-size: 0.88rem;
+            border-radius: 0.6rem;
+        }
+    }
+
+    .product-dropdown .drop-item {
+        padding: 0.6rem 0.85rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .product-dropdown .drop-item {
+            padding: 10px 14px;
+            gap: 10px;
+        }
+    }
+
+    .product-dropdown .drop-item:last-child { border-bottom: none; }
+    .product-dropdown .drop-item:hover      { background: #e8f4fd; }
+
+    .product-dropdown .drop-item.used {
+        color: #bbb;
+        cursor: not-allowed;
+        background: #fafafa;
+    }
+
+    .product-dropdown .drop-item .prod-name { 
+        font-weight: 600;
+        font-size: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+        .product-dropdown .drop-item .prod-name {
+            font-size: 0.9rem;
+        }
+    }
+
+    .product-dropdown .drop-item .prod-meta {
+        font-size: 0.6rem;
+        color: #666;
+        white-space: nowrap;
+    }
+
+    @media (min-width: 768px) {
+        .product-dropdown .drop-item .prod-meta {
+            font-size: 0.78rem;
+        }
+    }
+
+    .product-dropdown .drop-item.used .prod-meta { color: #ccc; }
+
+    .product-dropdown .no-results {
+        padding: 0.75rem 0.85rem;
+        color: #888;
+        font-size: 0.7rem;
+        text-align: center;
+    }
+
+    @media (min-width: 768px) {
+        .product-dropdown .no-results {
+            padding: 12px 14px;
+            font-size: 0.85rem;
+        }
+    }
+
+    .product-search-input.selected-product {
+        background-color: #f0fff4;
+        border-color: #198754;
+    }
+
+    .alert {
+        font-size: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .alert {
+            font-size: 0.9rem;
+            padding: 1rem;
+        }
+    }
+
+    .table {
+        font-size: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+        .table {
+            font-size: 0.9rem;
+        }
+    }
+
+    .table thead th {
+        padding: 0.4rem 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .table thead th {
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    .table tbody td {
+        padding: 0.4rem 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .table tbody td {
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    .invalid-feedback {
+        font-size: 0.65rem;
+    }
+
+    @media (min-width: 768px) {
+        .invalid-feedback {
+            font-size: 0.8rem;
+        }
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 1rem;
+    }
+
+    .table-responsive table {
+        min-width: 700px;
+    }
+
+    @media (min-width: 768px) {
+        .table-responsive {
+            overflow-x: visible;
+        }
+
+        .table-responsive table {
+            min-width: auto;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+
+        <h3 class="mb-4">Create Invoice</h3>
+
+        <form method="post" id="invoiceForm" novalidate>
+            {% csrf_token %}
+
+            <!-- Server-side Errors -->
+            {% if main_form.errors %}
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    {% for field in main_form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }}</strong>: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in main_form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- CUSTOMER DETAILS -->
+            <h5 class="mb-3">Customer Details</h5>
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-6">
+                    <label class="form-label">{{ main_form.customer_name.label }}</label>
+                    {{ main_form.customer_name }}
+                    <div class="invalid-feedback">Customer name is required.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">{{ main_form.customer_phone.label }}</label>
+                    <div class="input-group">
+                        <select class="form-select" id="countryCode" style="max-width: 130px;">
+                            <option value="+91"  selected>🇮🇳 +91</option>
+                            <option value="+1">🇺🇸  +1</option>
+                            <option value="+44">🇬🇧  +44</option>
+                            <option value="+971">🇦🇪 +971</option>
+                            <option value="+966">🇸🇦 +966</option>
+                            <option value="+60">🇲🇾  +60</option>
+                            <option value="+65">🇸🇬  +65</option>
+                            <option value="+61">🇦🇺  +61</option>
+                            <option value="+49">🇩🇪  +49</option>
+                            <option value="+33">🇫🇷  +33</option>
+                        </select>
+                        {{ main_form.customer_phone }}
+                    </div>
+                    <div id="phoneError" class="text-danger small mt-1"></div>
+                </div>
+
+            </div>
+
+            <!-- VEHICLE & INVOICE DETAILS -->
+            <h5 class="mb-3">Vehicle & Invoice Details</h5>
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-6">
+                    <label class="form-label">{{ main_form.vehicle_details.label }}</label>
+                    {{ main_form.vehicle_details }}
+                    <div class="invalid-feedback">Vehicle details are required.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">{{ main_form.ran_kilometer.label }}</label>
+                    {{ main_form.ran_kilometer }}
+                    <div class="invalid-feedback">Enter a valid kilometer reading (numbers only).</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">{{ main_form.next_due_date.label }}</label>
+                    {{ main_form.next_due_date }}
+                    <div class="invalid-feedback">Please select a valid future date.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">{{ main_form.paid_amount.label }}</label>
+                    {{ main_form.paid_amount }}
+                    <div class="invalid-feedback">Enter a valid paid amount (0 or more).</div>
+                </div>
+
+            </div>
+
+            <!-- PRODUCTS SECTION -->
+            <h5 class="mb-3">Products / Services</h5>
+
+            {{ formset.management_form }}
+
+            {% if formset.non_form_errors %}
+            <div class="alert alert-danger">
+                {% for error in formset.non_form_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div id="productError" class="alert alert-danger d-none">
+                Please add at least one product with a valid quantity.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="product-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Product</th>
+                            <th style="width:160px;">Quantity</th>
+                            <th style="width:80px;" class="text-center">Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr>
+                            <td style="min-width: 280px;">
+                                <div style="display:none;">{{ form.product }}</div>
+                                <div class="product-search-wrapper">
+                                    <input type="text"
+                                           class="form-control product-search-input"
+                                           placeholder="🔍 Type to search product..."
+                                           autocomplete="off"
+                                           spellcheck="false">
+                                </div>
+                                {% for error in form.product.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                                <div class="invalid-feedback">Please select a product.</div>
+                            </td>
+                            <td>
+                                {{ form.quantity }}
+                                {% for error in form.quantity.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                                <div class="invalid-feedback">Enter quantity (min 1).</div>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="removeRow(this)">✕</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addRow()">
+                + Add Product
+            </button>
+
+            <!-- OTHER CHARGES -->
+            <h5 class="mb-3 mt-2">Other Charges</h5>
+
+            <div id="chargesError" class="alert alert-danger d-none">
+                Please fill in all charge names and valid amounts.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="charges-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Charge Name</th>
+                            <th style="width:200px;">Amount (₹)</th>
+                            <th style="width:80px;" class="text-center">Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="charges-body"></tbody>
+                </table>
+            </div>
+
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-4" onclick="addCharge()">
+                + Add Charge
+            </button>
+
+            <input type="hidden" name="other_charges" id="otherChargesData">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Create Invoice</button>
+                <a href="{% url 'invoice_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!--
+    PORTAL DIV: appended to <body> so it's never clipped by any ancestor's
+    overflow:hidden or CSS transform. The dropdown sits inside this as
+    position:absolute, positioned with page coordinates (rect + scrollY).
+-->
+<div id="productDropdownPortal">
+    <div class="product-dropdown" id="sharedDropdown"></div>
+</div>
+
+<script>
+// FIX 1: Use |escapejs to safely encode names/prices with quotes, apostrophes, etc.
+// Without this, a product like "Castrol's Oil" breaks the entire JS array.
+const ALL_PRODUCTS = [
+    {% for product in products %}
+    { id: "{{ product.pk }}", name: "{{ product.name|escapejs }}", price: "{{ product.price|escapejs }}", stock: {{ product.stock }} },
+    {% endfor %}
+];
+
+const CHARGE_PRESETS = ['Labour Charge', 'Cleaning Charge', 'Transport Charge', 'Industrial Charge', 'Other'];
+
+const phoneLengths = {
+    '+91': 10, '+1': 10, '+44': 10, '+971': 9,
+    '+966': 9, '+60': 10, '+65': 8, '+61': 9,
+    '+49': 10, '+33': 9,
+};
+
+// ─── Shared dropdown (portal, appended to body) ───────────────────────────────
+const sharedDropdown = document.getElementById('sharedDropdown');
+let   activeInput    = null;
+let   activeSelect   = null;
+
+// FIX 2: Correct positioning math.
+// The portal div is position:absolute at the body origin (top:0, left:0).
+// getBoundingClientRect() returns viewport coords, so we add window.scroll*
+// to convert to page (document) coordinates — which is what absolute children need.
+function positionDropdown(input) {
+    const rect = input.getBoundingClientRect();
+    const top  = rect.bottom + window.scrollY;
+    const left = rect.left   + window.scrollX;
+    sharedDropdown.style.top   = top  + 'px';
+    sharedDropdown.style.left  = left + 'px';
+    sharedDropdown.style.width = Math.max(rect.width, 340) + 'px';
+}
+
+function getSelectedProductIds(excludeSelect = null) {
+    const selects  = document.querySelectorAll('#product-table tbody tr select[name*="product"]');
+    const selected = new Set();
+    selects.forEach(sel => {
+        if (sel !== excludeSelect && sel.value) selected.add(sel.value);
+    });
+    return selected;
+}
+
+function renderDropdown(filter) {
+    if (!activeInput || !activeSelect) return;
+
+    const selected = getSelectedProductIds(activeSelect);
+    const lower    = filter.toLowerCase().trim();
+    const matched  = lower
+        ? ALL_PRODUCTS.filter(p => p.name.toLowerCase().includes(lower))
+        : ALL_PRODUCTS;
+
+    sharedDropdown.innerHTML = '';
+
+    if (matched.length === 0) {
+        sharedDropdown.innerHTML = '<div class="no-results">No products found</div>';
+    } else {
+        matched.forEach(p => {
+            const isUsed = selected.has(String(p.id));
+            const div    = document.createElement('div');
+            div.className = 'drop-item' + (isUsed ? ' used' : '');
+
+            // FIX 3: Use textContent for name to avoid XSS — never innerHTML for data.
+            const nameSpan = document.createElement('span');
+            nameSpan.className   = 'prod-name';
+            nameSpan.textContent = p.name;
+
+            const metaSpan = document.createElement('span');
+            metaSpan.className   = 'prod-meta';
+            metaSpan.textContent = '₹' + p.price + '  |  Stock: ' + p.stock;
+
+            div.appendChild(nameSpan);
+            div.appendChild(metaSpan);
+
+            if (!isUsed) {
+                // FIX 4: Use mousedown (fires before blur) so the selection
+                // registers before the input loses focus and hides the dropdown.
+                // e.preventDefault() stops the input from blurring at all.
+                div.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    activeSelect.value = p.id;
+                    activeInput.value  = p.name;
+                    activeInput.classList.remove('is-invalid');
+                    activeInput.classList.add('selected-product');
+                    hideDropdown();
+                });
+            }
+
+            sharedDropdown.appendChild(div);
+        });
+    }
+
+    positionDropdown(activeInput);
+    sharedDropdown.style.display = 'block';
+}
+
+function hideDropdown() {
+    sharedDropdown.style.display = 'none';
+    activeInput  = null;
+    activeSelect = null;
+}
+
+// Reposition on scroll or resize (works correctly now with absolute positioning)
+window.addEventListener('scroll',  () => { if (activeInput) positionDropdown(activeInput); }, true);
+window.addEventListener('resize',  () => { if (activeInput) positionDropdown(activeInput); });
+
+// Click outside the dropdown closes it
+document.addEventListener('mousedown', function (e) {
+    if (!sharedDropdown.contains(e.target) && e.target !== activeInput) {
+        hideDropdown();
+    }
+});
+
+// ─── Attach search events to a row ───────────────────────────────────────────
+function initProductSearch(row) {
+    const input  = row.querySelector('.product-search-input');
+    const select = row.querySelector('select[name*="product"]');
+
+    input.addEventListener('focus', function () {
+        activeInput  = input;
+        activeSelect = select;
+        renderDropdown(input.value);
+    });
+
+    input.addEventListener('input', function () {
+        activeInput  = input;
+        activeSelect = select;
+        // Clear the hidden selection if the user starts typing again
+        if (select.value) {
+            select.value = '';
+            input.classList.remove('selected-product');
+        }
+        renderDropdown(input.value);
+    });
+
+    // FIX 5: On blur, only clear if nothing was selected.
+    // No arbitrary setTimeout — the mousedown handler on items calls
+    // e.preventDefault() which prevents blur from firing at all during selection.
+    input.addEventListener('blur', function () {
+        // Small delay only to allow mousedown on dropdown items to fire first
+        // in the rare edge case of a trackpad tap (touchstart doesn't prevent blur)
+        setTimeout(() => {
+            if (sharedDropdown.style.display === 'block' && activeInput === input) {
+                hideDropdown();
+            }
+            if (!select.value) {
+                input.value = '';
+                input.classList.remove('selected-product');
+            }
+        }, 150);
+    });
+}
+
+// Init existing formset rows on page load
+document.querySelectorAll('#product-table tbody tr').forEach(row => initProductSearch(row));
+
+// ─── Add Product Row ──────────────────────────────────────────────────────────
+function addRow() {
+    const tbody      = document.querySelector('#product-table tbody');
+    const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+    const formIndex  = parseInt(totalForms.value);
+    const firstRow   = tbody.rows[0];
+    const newRow     = firstRow.cloneNode(true);
+
+    newRow.querySelectorAll('input, select').forEach(el => {
+        ['name', 'id'].forEach(attr => {
+            if (el.getAttribute(attr)) {
+                el.setAttribute(attr,
+                    el.getAttribute(attr).replace(/form-\d+/, `form-${formIndex}`)
+                );
+            }
+        });
+        el.value = '';
+        el.classList.remove('is-valid', 'is-invalid', 'selected-product');
+    });
+
+    // Also clear the visible search input text
+    const clonedSearch = newRow.querySelector('.product-search-input');
+    if (clonedSearch) clonedSearch.value = '';
+
+    tbody.appendChild(newRow);
+    totalForms.value = formIndex + 1;
+    initProductSearch(newRow);
+}
+
+// ─── Remove Product Row ───────────────────────────────────────────────────────
+function removeRow(btn) {
+    const tbody = document.querySelector('#product-table tbody');
+    if (tbody.rows.length > 1) {
+        btn.closest('tr').remove();
+        hideDropdown();
+        // Re-index remaining rows so Django formset management is consistent
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((row, idx) => {
+            row.querySelectorAll('input, select').forEach(el => {
+                ['name', 'id'].forEach(attr => {
+                    if (el.getAttribute(attr)) {
+                        el.setAttribute(attr,
+                            el.getAttribute(attr).replace(/form-\d+/, `form-${idx}`)
+                        );
+                    }
+                });
+            });
+        });
+        document.getElementById('id_form-TOTAL_FORMS').value = rows.length;
+    } else {
+        alert('At least one product row is required.');
+    }
+}
+
+// ─── Add Charge Row ───────────────────────────────────────────────────────────
+function addCharge() {
+    const tbody = document.getElementById('charges-body');
+    const tr    = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            <select class="form-select charge-type-select">
+                ${CHARGE_PRESETS.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+            <input type="text"
+                   class="form-control mt-2 charge-custom-name d-none"
+                   placeholder="Enter charge name...">
+            <div class="invalid-feedback">Charge name is required.</div>
+        </td>
+        <td>
+            <input type="number" class="form-control charge-amount"
+                   min="0" step="0.01" placeholder="0.00">
+            <div class="invalid-feedback">Enter a valid amount.</div>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="this.closest('tr').remove()">✕</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+
+    const sel    = tr.querySelector('.charge-type-select');
+    const custom = tr.querySelector('.charge-custom-name');
+    sel.addEventListener('change', function () {
+        if (this.value === 'Other') {
+            custom.classList.remove('d-none');
+            custom.focus();
+        } else {
+            custom.classList.add('d-none');
+            custom.value = '';
+        }
+    });
+}
+
+// ─── Collect charges into hidden field ───────────────────────────────────────
+function collectCharges() {
+    const charges = [];
+    document.querySelectorAll('#charges-body tr').forEach(row => {
+        const sel    = row.querySelector('.charge-type-select');
+        const custom = row.querySelector('.charge-custom-name');
+        const amt    = row.querySelector('.charge-amount');
+        const name   = sel.value === 'Other' ? custom.value.trim() : sel.value;
+        const amount = parseFloat(amt.value) || 0;
+        if (name) charges.push({ name, amount });
+    });
+    document.getElementById('otherChargesData').value = JSON.stringify(charges);
+}
+
+// ─── Form Validation ──────────────────────────────────────────────────────────
+document.getElementById('invoiceForm').addEventListener('submit', function (e) {
+    let valid = true;
+
+    // 1. Customer Name
+    const name = document.getElementById('id_customer_name');
+    if (name && name.value.trim() === '') {
+        name.classList.add('is-invalid'); valid = false;
+    } else if (name) {
+        name.classList.remove('is-invalid'); name.classList.add('is-valid');
+    }
+
+    // 2. Phone
+    const phone       = document.getElementById('id_customer_phone');
+    const countryCode = document.getElementById('countryCode').value;
+    const phoneError  = document.getElementById('phoneError');
+
+    if (phone && phone.value.trim() !== '') {
+        const digits = phone.value.trim().replace(/\D/g, '');
+        const expectedLength = phoneLengths[countryCode] || 10;
+        if (digits.length !== expectedLength) {
+            phone.classList.add('is-invalid');
+            phoneError.textContent = `Enter a valid ${expectedLength}-digit number for ${countryCode}.`;
+            valid = false;
+        } else {
+            phone.classList.remove('is-invalid'); phone.classList.add('is-valid');
+            phoneError.textContent = '';
+            phone.value = countryCode + digits;
+        }
+    } else if (phone) {
+        phone.classList.remove('is-invalid', 'is-valid');
+        phoneError.textContent = '';
+    }
+
+    // 3. Vehicle Details
+    const vehicle = document.getElementById('id_vehicle_details');
+    if (vehicle && vehicle.value.trim() === '') {
+        vehicle.classList.add('is-invalid'); valid = false;
+    } else if (vehicle) {
+        vehicle.classList.remove('is-invalid'); vehicle.classList.add('is-valid');
+    }
+
+    // 4. Ran Kilometer
+    const km = document.getElementById('id_ran_kilometer');
+    if (km) {
+        if (km.value.trim() === '' || isNaN(km.value) || Number(km.value) < 0) {
+            km.classList.add('is-invalid'); valid = false;
+        } else {
+            km.classList.remove('is-invalid'); km.classList.add('is-valid');
+        }
+    }
+
+    // 5. Next Due Date
+    const dueDate = document.getElementById('id_next_due_date');
+    if (dueDate) {
+        const today = new Date().toISOString().split('T')[0];
+        if (dueDate.value === '' || dueDate.value < today) {
+            dueDate.classList.add('is-invalid'); valid = false;
+        } else {
+            dueDate.classList.remove('is-invalid'); dueDate.classList.add('is-valid');
+        }
+    }
+
+    // 6. Paid Amount
+    const paid = document.getElementById('id_paid_amount');
+    if (paid) {
+        if (paid.value.trim() === '' || isNaN(paid.value) || Number(paid.value) < 0) {
+            paid.classList.add('is-invalid'); valid = false;
+        } else {
+            paid.classList.remove('is-invalid'); paid.classList.add('is-valid');
+        }
+    }
+
+    // 7. Products
+    const rows = document.querySelectorAll('#product-table tbody tr');
+    let productValid = false;
+
+    rows.forEach(row => {
+        const hiddenSelect = row.querySelector('select[name*="product"]');
+        const searchInput  = row.querySelector('.product-search-input');
+        const qtyInput     = row.querySelector('input[name*="quantity"]');
+        let rowOk = true;
+
+        if (!hiddenSelect || hiddenSelect.value === '') {
+            if (searchInput) searchInput.classList.add('is-invalid');
+            rowOk = false;
+        } else {
+            if (searchInput) searchInput.classList.remove('is-invalid');
+        }
+
+        if (qtyInput) {
+            if (qtyInput.value.trim() === '' || Number(qtyInput.value) < 1) {
+                qtyInput.classList.add('is-invalid'); rowOk = false;
+            } else {
+                qtyInput.classList.remove('is-invalid'); qtyInput.classList.add('is-valid');
+            }
+        }
+
+        if (rowOk) productValid = true;
+    });
+
+    if (!productValid) {
+        document.getElementById('productError').classList.remove('d-none');
+        valid = false;
+    } else {
+        document.getElementById('productError').classList.add('d-none');
+    }
+
+    // 8. Other Charges
+    let chargesOk = true;
+    document.querySelectorAll('#charges-body tr').forEach(row => {
+        const sel    = row.querySelector('.charge-type-select');
+        const custom = row.querySelector('.charge-custom-name');
+        const amt    = row.querySelector('.charge-amount');
+
+        if (sel.value === 'Other' && custom.value.trim() === '') {
+            custom.classList.add('is-invalid'); chargesOk = false;
+        } else {
+            custom.classList.remove('is-invalid');
+        }
+
+        if (amt.value.trim() === '' || Number(amt.value) < 0) {
+            amt.classList.add('is-invalid'); chargesOk = false;
+        } else {
+            amt.classList.remove('is-invalid');
+        }
+    });
+
+    if (!chargesOk) {
+        document.getElementById('chargesError').classList.remove('d-none');
+        valid = false;
+    } else {
+        document.getElementById('chargesError').classList.add('d-none');
+    }
+
+    if (!valid) {
+        e.preventDefault();
+        e.stopPropagation();
+        const firstInvalid = document.querySelector('.is-invalid');
+        if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    collectCharges();
+});
+
+// ─── Live clear validation state on input ────────────────────────────────────
+document.getElementById('invoiceForm').addEventListener('input', function (e) {
+    if (e.target.classList.contains('is-invalid') && e.target.value.trim() !== '') {
+        e.target.classList.remove('is-invalid');
+        if (e.target.id === 'id_customer_phone') {
+            document.getElementById('phoneError').textContent = '';
+        }
+    }
+});
+</script>
+
+{% endblock %}

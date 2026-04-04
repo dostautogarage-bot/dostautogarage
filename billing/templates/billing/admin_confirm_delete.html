@@ -1,0 +1,202 @@
+{% extends 'billing/base.html' %}
+{% block title %}Delete Admin - {{ admin.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-card {
+        border-radius: 1rem;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+        border: none;
+    }
+
+    @media (min-width: 768px) {
+        .delete-card {
+            border-radius: 1.5rem;
+        }
+    }
+
+    .delete-content {
+        padding: 1.5rem 1rem;
+        text-align: center;
+    }
+
+    @media (min-width: 768px) {
+        .delete-content {
+            padding: 3rem 2rem;
+        }
+    }
+
+    .delete-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        color: #fed7aa;
+    }
+
+    @media (min-width: 768px) {
+        .delete-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    .delete-card h2 {
+        font-size: 1.35rem;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .delete-card h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    .admin-info {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        text-align: left;
+        font-size: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .admin-info {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin: 2rem 0;
+            font-size: 1rem;
+        }
+    }
+
+    .admin-info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .admin-info-row {
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    .admin-info-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .admin-info-label {
+        font-weight: 600;
+        color: #92400e;
+    }
+
+    .admin-info-value {
+        color: #b45309;
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    @media (min-width: 768px) {
+        .delete-actions {
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+    }
+
+    .btn-delete-action {
+        padding: 0.5rem 1rem;
+        border-radius: 0.4rem;
+        font-weight: 600;
+        font-size: 0.75rem;
+        min-height: 40px;
+        flex: 1;
+    }
+
+    @media (min-width: 768px) {
+        .btn-delete-action {
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            flex: 0 1 auto;
+        }
+    }
+
+    .alert {
+        font-size: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .alert {
+            font-size: 1rem;
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-4">
+
+    <div class="card delete-card">
+        <div class="delete-content">
+
+            <!-- Warning Icon -->
+            <div class="delete-icon">⚠️</div>
+
+            <!-- Title -->
+            <h2 class="mb-2">Delete Admin Account?</h2>
+            <p class="text-muted mb-3">This action cannot be undone. Please review the details below.</p>
+
+            <!-- Admin Info -->
+            <div class="admin-info">
+                <div class="admin-info-row">
+                    <span class="admin-info-label">Username:</span>
+                    <span class="admin-info-value"><strong>{{ admin.username }}</strong></span>
+                </div>
+                <div class="admin-info-row">
+                    <span class="admin-info-label">Email:</span>
+                    <span class="admin-info-value">{{ admin.email }}</span>
+                </div>
+                <div class="admin-info-row">
+                    <span class="admin-info-label">Full Name:</span>
+                    <span class="admin-info-value">{{ admin.get_full_name|default:"N/A" }}</span>
+                </div>
+                <div class="admin-info-row">
+                    <span class="admin-info-label">Joined:</span>
+                    <span class="admin-info-value">{{ admin.date_joined|date:"d M Y, H:i" }}</span>
+                </div>
+            </div>
+
+            <!-- Warning Message -->
+            <div class="alert alert-danger" role="alert">
+                <strong>⛔ Warning:</strong> Deleting this admin account will permanently remove all associated data. This includes any invoices or records created by this admin.
+            </div>
+
+            <!-- Actions -->
+            <div class="delete-actions">
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-delete-action">
+                        🗑️ Yes, Delete Account
+                    </button>
+                </form>
+                <a href="{% url 'admin_list' %}" class="btn btn-secondary btn-delete-action">
+                    ← Cancel
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

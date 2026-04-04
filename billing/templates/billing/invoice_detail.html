@@ -1,0 +1,406 @@
+{% extends 'billing/base.html' %}
+{% block title %}Invoice #{{ invoice.formatted_invoice_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border-radius: 1rem;
+        padding: 1rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    @media (min-width: 768px) {
+        .card {
+            border-radius: 1.5rem;
+            padding: 2rem !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    }
+
+    h3 {
+        font-size: 1.2rem;
+    }
+
+    @media (min-width: 768px) {
+        h3 {
+            font-size: 1.5rem;
+        }
+    }
+
+    h5 {
+        font-size: 0.95rem;
+    }
+
+    @media (min-width: 768px) {
+        h5 {
+            font-size: 1.1rem;
+        }
+    }
+
+    h6 {
+        font-size: 0.8rem;
+    }
+
+    @media (min-width: 768px) {
+        h6 {
+            font-size: 0.95rem;
+        }
+    }
+
+    small {
+        font-size: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+        small {
+            font-size: 0.85rem;
+        }
+    }
+
+    .alert {
+        padding: 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .alert {
+            padding: 1rem;
+            font-size: 1rem;
+        }
+    }
+
+    .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+        margin: 0.25rem;
+        min-height: 36px;
+    }
+
+    @media (min-width: 768px) {
+        .btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            margin: 0;
+        }
+    }
+
+    .table {
+        font-size: 0.7rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .table {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .table thead th {
+        padding: 0.4rem 0.25rem;
+        background: #1f2937;
+        color: white;
+    }
+
+    @media (min-width: 768px) {
+        .table thead th {
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    .table tbody td {
+        padding: 0.4rem 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .table tbody td {
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    .table tfoot tr {
+        background: #f3f4f6;
+    }
+
+    .table tfoot td {
+        padding: 0.4rem 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .table tfoot td {
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    .payment-box {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .payment-box {
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    .payment-box small {
+        display: block;
+        font-size: 0.65rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .payment-box small {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .payment-box strong {
+        font-size: 0.95rem;
+    }
+
+    @media (min-width: 768px) {
+        .payment-box strong {
+            font-size: 1.2rem;
+        }
+    }
+
+    .border-primary {
+        border: 1px solid #2563eb !important;
+    }
+
+    .card-header {
+        padding: 0.75rem !important;
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+
+    @media (min-width: 768px) {
+        .card-header {
+            padding: 1rem !important;
+            border-radius: 0.75rem 0.75rem 0 0 !important;
+        }
+    }
+
+    .card-body {
+        padding: 0.75rem !important;
+    }
+
+    @media (min-width: 768px) {
+        .card-body {
+            padding: 1.25rem !important;
+        }
+    }
+
+    .card-body p {
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .card-body p {
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    /* Horizontal scroll for mobile tables */
+    .table-responsive {
+        overflow-x: auto;
+        border-radius: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .table-responsive {
+            overflow-x: visible;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .table {
+        min-width: 700px;
+        margin-bottom: 0;
+    }
+
+    @media (min-width: 768px) {
+        .table {
+            min-width: auto;
+            margin-bottom: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+
+        <!-- Success Message -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success mt-2 mb-3">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="mb-0">Invoice #{{ invoice.formatted_invoice_number }}</h3>
+                <small class="text-muted">Date: {{ invoice.created_at|date:"d M Y" }}</small><br>
+                <small class="text-muted">
+                    Created by: {% if invoice.created_by %}{{ invoice.created_by.get_full_name|default:invoice.created_by.username }}{% else %}Unknown{% endif %}
+                </small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="btn btn-success">
+                    Download PDF
+                </a>
+                <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
+                    Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Customer Details -->
+        {% if invoice.customer_name or invoice.customer_phone %}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">Customer Information</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if invoice.customer_name %}
+                        <p class="mb-1"><strong>Name:</strong> {{ invoice.customer_name }}</p>
+                        {% endif %}
+                        {% if invoice.customer_phone %}
+                        <p class="mb-1"><strong>Phone:</strong> {{ invoice.customer_phone }}</p>
+                        {% endif %}
+                        {% if invoice.vehicle_details %}
+                        <p class="mb-0"><strong>Vehicle:</strong> {{ invoice.vehicle_details }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Products Table -->
+        <h5 class="mb-3">Products / Services</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Product</th>
+                        <th style="width:120px;">Quantity</th>
+                        <th style="width:150px;">Price</th>
+                        <th style="width:150px;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹ {{ item.price }}</td>
+                        <td>₹ {{ item.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td colspan="3" class="text-end"><strong>Products Total</strong></td>
+                        <td><strong>₹ {{ invoice.total }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Other Charges -->
+        {% if invoice.other_charges.exists %}
+        <h5 class="mt-4 mb-3">Other Charges</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Charge</th>
+                        <th style="width:150px;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for charge in invoice.other_charges.all %}
+                    <tr>
+                        <td>{{ charge.name }}</td>
+                        <td>₹ {{ charge.amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td class="text-end"><strong>Charges Total</strong></td>
+                        <td>
+                            <strong>₹ {{ invoice.other_charges_total }}</strong>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Payment Summary -->
+        <h5 class="mt-4 mb-3">Payment Summary</h5>
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 text-center">
+                    <small class="text-muted d-block">Products Total</small>
+                    <strong class="fs-5">₹ {{ invoice.total }}</strong>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 text-center">
+                    <small class="text-muted d-block">Other Charges</small>
+                    <strong class="fs-5">₹ {{ invoice.other_charges_total }}</strong>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 text-center">
+                    <small class="text-muted d-block">Paid Amount</small>
+                    <strong class="fs-5">₹ {{ invoice.paid_amount }}</strong>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 text-center bg-light">
+                    <small class="text-muted d-block">Balance</small>
+                    <strong class="fs-5 text-danger">₹ {{ invoice.balance_amount }}</strong>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Next Service Info -->
+        {% if invoice.next_due_date %}
+        <div class="alert alert-info mt-4 mb-0">
+            Next service due on <strong>{{ invoice.next_due_date|date:"d M Y" }}</strong>
+            {% if invoice.ran_kilometer %}
+                before <strong>{{ invoice.ran_kilometer }} KM</strong>.
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

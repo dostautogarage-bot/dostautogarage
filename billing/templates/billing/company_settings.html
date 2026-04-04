@@ -1,0 +1,407 @@
+{% extends 'billing/base.html' %}
+{% block title %}Company Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-page {
+        background: linear-gradient(135deg, #fdf2f8 0%, #f0f9ff 45%, #ecfccb 100%);
+        min-height: 100vh;
+        padding: 1.5rem 0 2rem;
+    }
+
+    @media (min-width: 768px) {
+        .settings-page {
+            padding: 2.5rem 0 4rem;
+        }
+    }
+
+    .settings-hero {
+        background: linear-gradient(135deg, #059669, #10b981);
+        border-radius: 1rem;
+        color: #fff;
+        padding: 1.25rem 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 24px 70px rgba(5, 150, 105, 0.16);
+    }
+
+    @media (min-width: 768px) {
+        .settings-hero {
+            border-radius: 1.5rem;
+            padding: 2rem 2.2rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .settings-hero h2 {
+        font-size: 1.4rem;
+        margin-bottom: 0.35rem;
+    }
+
+    @media (min-width: 768px) {
+        .settings-hero h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .settings-hero p {
+        color: rgba(255,255,255,0.88);
+        margin-bottom: 0;
+        font-size: 0.8rem;
+    }
+
+    @media (min-width: 768px) {
+        .settings-hero p {
+            font-size: 1rem;
+        }
+    }
+
+    .settings-card {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 1rem;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .settings-card {
+            border-radius: 1.25rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .settings-card h4 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #1f2937;
+        font-weight: 700;
+    }
+
+    @media (min-width: 768px) {
+        .settings-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .form-group-wrapper {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-group-wrapper {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .form-group-full {
+        grid-column: 1 / -1;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-label {
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem;
+        }
+    }
+
+    .form-control,
+    .form-textarea {
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.7rem;
+        font-size: 0.75rem;
+        font-family: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    @media (min-width: 768px) {
+        .form-control,
+        .form-textarea {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+    }
+
+    .form-control:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    @media (min-width: 768px) {
+        .form-textarea {
+            min-height: 100px;
+        }
+    }
+
+    .form-help-text {
+        font-size: 0.65rem;
+        color: #9ca3af;
+        margin-top: 0.3rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-help-text {
+            font-size: 0.8rem;
+            margin-top: 0.4rem;
+        }
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        font-size: 0.75rem;
+        min-height: 36px;
+    }
+
+    @media (min-width: 768px) {
+        .btn-save {
+            padding: 0.9rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            min-height: 40px;
+        }
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(5, 150, 105, 0.3);
+    }
+
+    .alert {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        font-size: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .alert {
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.3);
+        color: #059669;
+    }
+
+    .divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 1.5rem 0;
+    }
+
+    @media (min-width: 768px) {
+        .divider {
+            margin: 2rem 0;
+        }
+    }
+
+    .settings-info {
+        background: rgba(16, 185, 129, 0.05);
+        border-left: 4px solid #10b981;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+        font-size: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .settings-info {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            font-size: 1rem;
+        }
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+    <div class="container mt-4">
+        <div class="settings-hero">
+            <h2>Company Settings</h2>
+            <p>Manage your company information, contact details, and system preferences.</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="settings-card">
+            <h4>Company Information</h4>
+            
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <!-- Company Basic Info -->
+                <div class="form-group-wrapper">
+                    <div class="form-group">
+                        <label for="{{ form.company_name.id_for_label }}" class="form-label">
+                            {{ form.company_name.label }}
+                            <span style="color: #ef4444;">*</span>
+                        </label>
+                        {{ form.company_name }}
+                        {% if form.company_name.help_text %}<div class="form-help-text">{{ form.company_name.help_text|safe }}</div>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.company_email.id_for_label }}" class="form-label">
+                            {{ form.company_email.label }}
+                            <span style="color: #ef4444;">*</span>
+                        </label>
+                        {{ form.company_email }}
+                        {% if form.company_email.help_text %}<div class="form-help-text">{{ form.company_email.help_text|safe }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Phone Numbers -->
+                <div class="divider"></div>
+                <h4 style="margin-top: 1.5rem;">Contact Numbers</h4>
+                <div class="form-group-wrapper">
+                    <div class="form-group">
+                        <label for="{{ form.company_phone_1.id_for_label }}" class="form-label">
+                            {{ form.company_phone_1.label }}
+                            <span style="color: #ef4444;">*</span>
+                        </label>
+                        {{ form.company_phone_1 }}
+                        {% if form.company_phone_1.help_text %}<div class="form-help-text">{{ form.company_phone_1.help_text|safe }}</div>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.company_phone_2.id_for_label }}" class="form-label">
+                            {{ form.company_phone_2.label }}
+                        </label>
+                        {{ form.company_phone_2 }}
+                        {% if form.company_phone_2.help_text %}<div class="form-help-text">{{ form.company_phone_2.help_text|safe }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="divider"></div>
+                <h4 style="margin-top: 1.5rem;">Address</h4>
+                <div class="form-group-wrapper form-group-full">
+                    <div class="form-group">
+                        <label for="{{ form.company_address.id_for_label }}" class="form-label">
+                            {{ form.company_address.label }}
+                        </label>
+                        {{ form.company_address }}
+                        {% if form.company_address.help_text %}<div class="form-help-text">{{ form.company_address.help_text|safe }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Invoice Settings -->
+                <div class="divider"></div>
+                <h4 style="margin-top: 1.5rem;">Invoice Settings</h4>
+                <div class="form-group-wrapper">
+                    <div class="form-group">
+                        <label for="{{ form.invoice_prefix.id_for_label }}" class="form-label">
+                            {{ form.invoice_prefix.label }}
+                            <span style="color: #ef4444;">*</span>
+                        </label>
+                        {{ form.invoice_prefix }}
+                        {% if form.invoice_prefix.help_text %}<div class="form-help-text">{{ form.invoice_prefix.help_text|safe }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group-wrapper form-group-full">
+                    <div class="form-group">
+                        <label for="{{ form.invoice_footer.id_for_label }}" class="form-label">
+                            {{ form.invoice_footer.label }}
+                        </label>
+                        {{ form.invoice_footer }}
+                        {% if form.invoice_footer.help_text %}<div class="form-help-text">{{ form.invoice_footer.help_text|safe }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Digital Signature -->
+                <div class="divider"></div>
+                <h4 style="margin-top: 1.5rem;">Digital Signature</h4>
+                <div class="form-group-wrapper form-group-full">
+                    <div class="form-group">
+                        <label for="{{ form.signature.id_for_label }}" class="form-label">
+                            {{ form.signature.label }}
+                        </label>
+                        {{ form.signature }}
+                        {% if form.signature.help_text %}<div class="form-help-text">{{ form.signature.help_text|safe }}</div>{% endif %}
+                        {% if signature_obj and signature_obj.signature %}
+                        <div style="margin-top: 1rem;">
+                            <strong>Current Signature:</strong><br>
+                            <img src="{{ signature_obj.signature.url }}" alt="Current Signature" style="max-width: 200px; max-height: 100px; border: 1px solid #ddd; padding: 5px; margin-top: 0.5rem;">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn-save">Save Settings</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none;">Cancel</a>
+                </div>
+            </form>
+
+            <!-- Info Box -->
+            <div class="settings-info">
+                <strong>💡 Note:</strong> Changes to these settings will be reflected in future invoices and throughout the system.
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

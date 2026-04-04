@@ -1,0 +1,373 @@
+{% extends 'billing/base.html' %}
+{% block extra_css %}
+<style>
+    .invoice-list-card {
+        border-radius: 1rem;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+        border: none;
+        padding: 1rem !important;
+    }
+
+    @media (min-width: 768px) {
+        .invoice-list-card {
+            padding: 2rem !important;
+            border-radius: 1.5rem;
+        }
+    }
+
+    .invoice-filter-card {
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 1rem;
+        padding: 1rem;
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+    }
+
+    @media (min-width: 768px) {
+        .invoice-filter-card {
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+        }
+    }
+
+    .invoice-table thead th {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        padding: 0.5rem 0.25rem;
+        font-size: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+        .invoice-table thead th {
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+    }
+
+    .invoice-table tbody td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.7rem;
+        word-break: break-word;
+    }
+
+    @media (min-width: 768px) {
+        .invoice-table tbody td {
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+    }
+
+    .invoice-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .invoice-pagination .page-link {
+        border-radius: 0.9rem;
+        padding: 0.15rem 0.35rem;
+        font-size: 0.65rem;
+    }
+
+    @media (min-width: 768px) {
+        .invoice-pagination .page-link {
+            padding: 0.15rem 0.35rem;
+            font-size: 0.7rem;
+        }
+    }
+
+    .invoice-filter-card .form-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .invoice-filter-card .form-label {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .form-control, .form-select, .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-control, .form-select, .btn {
+            font-size: 1rem;
+            padding: 0.6rem 1rem;
+        }
+    }
+
+    .btn-sm {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.65rem;
+        min-height: 32px;
+        min-width: 32px;
+    }
+
+    @media (min-width: 768px) {
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    h3 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        border-radius: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @media (min-width: 768px) {
+        .table-responsive {
+            overflow-x: visible;
+        }
+    }
+
+    .table {
+        min-width: 700px;
+    }
+
+    @media (min-width: 768px) {
+        .table {
+            min-width: auto;
+        }
+    }
+
+    /* Mobile-friendly table display */
+    @media (max-width: 767px) {
+        .table thead {
+            font-size: 0.65rem;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .btn {
+            margin: 0.1rem;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card invoice-list-card p-4">
+        
+        <!-- Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <h3>Invoices</h3>
+            <a href="{% url 'invoice_create' %}" class="btn btn-primary">+ Create</a>
+        </div>
+
+        <!-- Search + Date Range + Per Page -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="invoice-filter-card">
+                    <form method="get" class="row gx-3 gy-3 align-items-end">
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <label class="form-label">Search</label>
+                            <input type="text" name="q" class="form-control" placeholder="ID / Invoice / customer / phone / user" value="{{ query }}">
+                        </div>
+                        <div class="col-6 col-sm-4 col-lg-2">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                        </div>
+                        <div class="col-6 col-sm-4 col-lg-2">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                        </div>
+                        <div class="col-6 col-sm-4 col-lg-2">
+                            <label class="form-label">Created By</label>
+                            <select name="creator" class="form-select">
+                                <option value="">All users</option>
+                                {% for user in users %}
+                                    <option value="{{ user.pk }}" {% if selected_creator == user.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ user.get_full_name|default:user.username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-4 col-lg-2">
+                            <label class="form-label opacity-0">Search</label>
+                            <button class="btn btn-secondary w-100">Search</button>
+                        </div>
+                        <div class="col-6 col-sm-4 col-lg-1">
+                            <label class="form-label">Per Page</label>
+                            <select name="per_page" class="form-select" onchange="this.form.submit()">
+                                <option value="5"  {% if per_page == 5  %}selected{% endif %}>5</option>
+                                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                                <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Invoice No</th>
+                        <th>Customer</th>
+                        <th>Created By</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+
+                        <td><strong>{{ invoice.formatted_invoice_number }}</strong></td>
+
+                        <td>
+                            <strong>{{ invoice.customer_name|default:"Walk-in" }}</strong><br>
+                            <small class="text-muted">{{ invoice.customer_phone }}</small>
+                        </td>
+
+                        <td>
+                            {% if invoice.created_by %}
+                                {{ invoice.created_by.get_full_name|default:invoice.created_by.username }}
+                            {% else %}
+                                <span class="text-muted">Unknown</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ invoice.created_at|date:"d M Y" }}</td>
+
+                        <td>₹ {{ invoice.total }}</td>
+
+                        <td>₹ {{ invoice.balance_amount }}</td>
+
+                        <td>
+                            <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-sm btn-info">View</a>
+
+                            <!-- 🔴 Delete button triggers modal -->
+                            <button type="button"
+                                    class="btn btn-sm btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal"
+                                    data-invoice-id="{{ invoice.pk }}"
+                                    data-invoice-number="{{ invoice.formatted_invoice_number }}">
+                                Delete
+                            </button>
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No data found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-3">
+            <ul class="pagination invoice-pagination justify-content-center flex-wrap gap-2">
+
+                {% if invoices.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ invoices.previous_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Prev</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">First</span></li>
+                    <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                {% endif %}
+
+                {% for num in invoices.paginator.page_range %}
+                    {% if invoices.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if invoices.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ invoices.next_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ invoices.paginator.num_pages }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Last</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    <li class="page-item disabled"><span class="page-link">Last</span></li>
+                {% endif %}
+
+            </ul>
+        </nav>
+
+    </div>
+</div>
+
+<!-- ✅ Single Confirmation Modal (shared for all invoices) -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Delete Invoice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to delete invoice <strong id="invoiceNumber"></strong>?
+                <br><br>
+                <small class="text-muted">This action cannot be undone.</small>
+            </div>
+
+            <div class="modal-footer">
+                <form id="deleteForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ✅ JS: dynamically set invoice number and delete URL -->
+<script>
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const invoiceId     = button.getAttribute('data-invoice-id');
+        const invoiceNumber = button.getAttribute('data-invoice-number');
+
+        document.getElementById('invoiceNumber').textContent = invoiceNumber;
+        document.getElementById('deleteForm').action = `/invoices/${invoiceId}/delete/`;
+    });
+</script>
+
+{% endblock %}

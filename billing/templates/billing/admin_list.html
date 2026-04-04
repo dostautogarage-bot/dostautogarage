@@ -1,0 +1,342 @@
+{% extends 'billing/base.html' %}
+{% block title %}Admin Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-list-card {
+        border-radius: 1rem;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+        border: none;
+        padding: 1rem !important;
+    }
+
+    @media (min-width: 768px) {
+        .admin-list-card {
+            padding: 2rem !important;
+            border-radius: 1.5rem;
+        }
+    }
+
+    .admin-filter-card {
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 1rem;
+        padding: 1rem;
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+    }
+
+    @media (min-width: 768px) {
+        .admin-filter-card {
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+        }
+    }
+
+    .admin-table thead th {
+        background: #7c3aed;
+        color: #fff;
+        border: none;
+        padding: 0.4rem 0.25rem;
+        font-size: 0.65rem;
+    }
+
+    @media (min-width: 768px) {
+        .admin-table thead th {
+            padding: 1rem;
+            font-size: 0.85rem;
+        }
+    }
+
+    .admin-table tbody td {
+        padding: 0.4rem 0.25rem;
+        font-size: 0.65rem;
+    }
+
+    @media (min-width: 768px) {
+        .admin-table tbody td {
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+    }
+
+    .admin-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .admin-badge {
+        display: inline-block;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.3rem;
+        font-size: 0.55rem;
+        font-weight: 600;
+    }
+
+    @media (min-width: 768px) {
+        .admin-badge {
+            padding: 0.35rem 0.65rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+
+    .admin-badge.active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .admin-badge.inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .admin-actions {
+        display: flex;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+    }
+
+    @media (min-width: 768px) {
+        .admin-actions {
+            gap: 0.5rem;
+        }
+    }
+
+    .action-btn {
+        padding: 0.2rem 0.3rem;
+        font-size: 0.55rem;
+        border-radius: 0.3rem;
+        min-height: 28px;
+        min-width: 28px;
+    }
+
+    @media (min-width: 768px) {
+        .action-btn {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 0.4rem;
+        }
+    }
+
+    .form-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-label {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .form-control, .form-select {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-control, .form-select {
+            font-size: 1rem;
+            padding: 0.6rem 1rem;
+        }
+    }
+
+    h3 {
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .btn-primary {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .btn-primary {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+        }
+    }
+
+    .pagination {
+        gap: 0.25rem;
+    }
+
+    .page-link {
+        padding: 0.15rem 0.35rem;
+        font-size: 0.65rem;
+    }
+
+    @media (min-width: 768px) {
+        .page-link {
+            padding: 0.15rem 0.35rem;
+            font-size: 0.7rem;
+        }
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 1rem;
+    }
+
+    .table-responsive table {
+        min-width: 700px;
+    }
+
+    @media (min-width: 768px) {
+        .table-responsive {
+            overflow-x: visible;
+        }
+
+        .table-responsive table {
+            min-width: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card admin-list-card p-4">
+        
+        <!-- Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <h3>Admin Management</h3>
+            <a href="{% url 'admin_create' %}" class="btn btn-primary">+ Create Admin</a>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} mt-2 mb-3 alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Search -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="admin-filter-card">
+                    <form method="get" class="row gx-3 gy-3 align-items-end">
+                        <div class="col-12 col-sm-8">
+                            <label class="form-label">Search Admin</label>
+                            <input type="text" name="q" class="form-control" placeholder="Username / Email / Name" value="{{ query }}">
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <button class="btn btn-secondary w-100">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle admin-table">
+
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th style="width: 100px;">Status</th>
+                        <th>Joined</th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% if admins %}
+                    {% for admin in admins %}
+                    <tr>
+                        <td>
+                            <strong>{{ admin.username }}</strong>
+                            {% if admin == request.user %}
+                                <span class="badge bg-info" title="This is your account">YOU</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ admin.email }}</td>
+                        <td>{{ admin.get_full_name|default:"N/A" }}</td>
+                        <td>
+                            {% if admin.is_active %}
+                                <span class="admin-badge active">✓ Active</span>
+                            {% else %}
+                                <span class="admin-badge inactive">✗ Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ admin.date_joined|date:"d M Y" }}</small></td>
+                        <td>
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_edit' admin.pk %}" class="btn btn-sm btn-info action-btn">
+                                    ✏️ Edit
+                                </a>
+                                {% if admin != request.user %}
+                                    <a href="{% url 'admin_delete' admin.pk %}" class="btn btn-sm btn-danger action-btn">
+                                        🗑️ Delete
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No admins found
+                        </td>
+                    </tr>
+                {% endif %}
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if admins.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if admins.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ admins.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ admins.number }} of {{ admins.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if admins.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ admins.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ admins.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

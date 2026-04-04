@@ -1,0 +1,386 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dostautogarage Invoice{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'billing/css/style.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(180deg, #fff9db 0%, #fffce6 50%, #ffffff 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+        }
+
+        /* Mobile-First Design */
+        @media (max-width: 768px) {
+            body {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                font-size: 12px;
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ffc857 0%, #ffb94a 100%);
+            color: #1f2937;
+            padding: 0.8rem 1rem;
+            font-size: 1.4rem;
+            font-weight: 900;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-bottom: 3px solid #ff9a00;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (min-width: 769px) {
+            .header {
+                padding: 1.2rem 2rem;
+                font-size: 2rem;
+                letter-spacing: 0.15em;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .header {
+                padding: 1.2rem 2rem;
+                font-size: 2rem;
+            }
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.92);
+            color: #0f172a;
+            box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0 0 1rem 1rem;
+            margin-bottom: 0.75rem;
+            backdrop-filter: blur(8px);
+            flex-wrap: wrap;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                display: none;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .navbar {
+                padding: 0.75rem 2rem;
+                gap: 1.5rem;
+                margin-bottom: 1rem;
+                flex-wrap: nowrap;
+            }
+        }
+
+        /* Mobile Hamburger Menu */
+        .mobile-menu-toggle {
+            display: block;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: #0f172a;
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-toggle {
+                display: none !important;
+            }
+        }
+
+        .mobile-navbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 9999;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-navbar.active {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-navbar {
+                display: none !important;
+            }
+        }
+
+        .mobile-navbar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .mobile-navbar-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #ffc857;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .mobile-navbar a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: color 0.2s;
+            display: block;
+        }
+
+        .mobile-navbar a:hover {
+            color: #ffc857;
+        }
+
+        .mobile-navbar-logout {
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+
+        .mobile-navbar form {
+            width: 100%;
+        }
+
+        .mobile-navbar button {
+            background: linear-gradient(135deg, #ffc857 0%, #ffb94a 100%);
+            color: #1f2937;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .mobile-menu-close {
+            width: 24px !important;
+        }
+
+        .navbar a {
+            color: #0f172a;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.7rem;
+            padding: 0.4rem 0.6rem;
+            white-space: nowrap;
+            transition: color 0.2s;
+            display: inline-block;
+            min-height: 36px;
+            line-height: 1.3;
+        }
+
+        @media (min-width: 769px) {
+            .navbar a {
+                font-size: 0.9rem;
+                padding: 0.3rem 0.8rem;
+                min-height: 38px;
+            }
+        }
+
+        .navbar a:hover {
+            color: #c2410c;
+        }
+
+        .navbar .spacer {
+            flex: 1;
+            display: none;
+        }
+
+        @media (min-width: 769px) {
+            .navbar .spacer {
+                display: block;
+            }
+        }
+
+        .navbar .logout {
+            color: #c2410c;
+            font-weight: 700;
+            text-decoration: none !important;
+        }
+
+        .navbar .logout:hover {
+            text-decoration: none !important;
+        }
+
+        .site-footer {
+            background: linear-gradient(135deg, #ffc857 0%, #ffb94a 100%);
+            color: #1f2937;
+            padding: 0.75rem 1rem;
+            margin-top: 1.5rem;
+            border-top: 3px solid #ff9a00;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        @media (min-width: 769px) {
+            .site-footer {
+                padding: 1rem 2rem;
+                margin-top: 2rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        .site-footer a {
+            color: #c2410c;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .site-footer a:hover {
+            text-decoration: underline;
+            color: #1f2937;
+        }
+
+        .footer-icon {
+            vertical-align: middle;
+            margin-right: 0.35rem;
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="header">
+        <span>Dostautogarage</span>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">☰</button>
+    </div>
+    
+    <!-- Desktop Navbar -->
+    <div class="navbar">
+        <a href="{% url 'product_list' %}">Products</a>
+        <a href="{% url 'invoice_list' %}">Invoices</a>
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        {% if user.is_superuser %}<a href="{% url 'company_settings' %}">Settings</a>{% endif %}
+        {% if user.is_superuser %}<a href="{% url 'admin_list' %}">Admins</a>{% endif %}
+        <span class="spacer"></span>
+        <form method="post" action="{% url 'logout' %}" class="d-inline m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-link logout p-0">Logout</button>
+        </form>
+    </div>
+
+    <!-- Mobile Overlay Navbar -->
+    <div class="mobile-navbar" id="mobileNavbar">
+        <div class="mobile-navbar-header">
+            <h3 class="mobile-navbar-title">Menu</h3>
+            <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">✕</button>
+        </div>
+        <a href="{% url 'product_list' %}">Products</a>
+        <a href="{% url 'invoice_list' %}">Invoices</a>
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        {% if user.is_superuser %}<a href="{% url 'company_settings' %}">Settings</a>{% endif %}
+        {% if user.is_superuser %}<a href="{% url 'admin_list' %}">Admins</a>{% endif %}
+        <div class="mobile-navbar-logout">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    <div class="site-footer">
+        Developed by Fanish —
+        <a href="https://www.instagram.com/its_me_fanu_/?igsh=MWJncnJ4NGxuYjRpdA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">
+            <svg class="footer-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.054 1.973.24 2.43.415a4.92 4.92 0 011.675 1.09 4.928 4.928 0 011.09 1.675c.175.457.36 1.26.415 2.43.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.054 1.17-.24 1.973-.415 2.43a4.903 4.903 0 01-1.09 1.675 4.91 4.91 0 01-1.675 1.09c-.457.175-1.26.36-2.43.415-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.17-.054-1.973-.24-2.43-.415a4.92 4.92 0 01-1.675-1.09 4.928 4.928 0 01-1.09-1.675c-.175-.457-.36-1.26-.415-2.43C2.175 15.747 2.163 15.367 2.163 12s.012-3.584.07-4.85c.054-1.17.24-1.973.415-2.43a4.904 4.904 0 011.09-1.675 4.903 4.903 0 011.675-1.09c.457-.175 1.26-.36 2.43-.415C8.416 2.175 8.796 2.163 12 2.163zm0 1.838c-3.17 0-3.545.012-4.795.069-1.018.045-1.57.21-1.935.35a3.096 3.096 0 00-1.125.733 3.096 3.096 0 00-.733 1.125c-.14.365-.305.917-.35 1.935-.057 1.25-.069 1.625-.069 4.795s.012 3.545.069 4.795c.045 1.018.21 1.57.35 1.935.18.466.44.878.733 1.125.248.248.659.553 1.125.733.365.14.917.305 1.935.35 1.25.057 1.625.069 4.795.069s3.545-.012 4.795-.069c1.018-.045 1.57-.21 1.935-.35a3.096 3.096 0 001.125-.733 3.096 3.096 0 00.733-1.125c.14-.365.305-.917.35-1.935.057-1.25.069-1.625.069-4.795s-.012-3.545-.069-4.795c-.045-1.018-.21-1.57-.35-1.935a3.097 3.097 0 00-.733-1.125 3.097 3.097 0 00-1.125-.733c-.365-.14-.917-.305-1.935-.35-1.25-.057-1.625-.069-4.795-.069zm0 4.838a5.001 5.001 0 110 10.002 5.001 5.001 0 010-10.002zm0 1.838a3.163 3.163 0 100 6.326 3.163 3.163 0 000-6.326zm4.946-1.839a1.162 1.162 0 11-2.324 0 1.162 1.162 0 012.324 0z"/>
+            </svg>
+            @its_me_fanu_
+        </a>
+        •
+        <span><svg class="footer-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6.62 10.79a15.464 15.464 0 006.59 6.6l1.9-1.9a1.003 1.003 0 011.11-.21c1.2.48 2.5.74 3.84.74a1 1 0 011 1v3.5a1 1 0 01-1 1C9.16 21.5 2.5 14.84 2.5 6.5a1 1 0 011-1H7a1 1 0 011 1c0 1.34.26 2.64.74 3.84.15.33.06.72-.21 1.11l-1.9 1.9z"/></svg>8848112104</span>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+        const mobileNavbar = document.getElementById('mobileNavbar');
+
+        if (mobileMenuToggle && mobileMenuClose && mobileNavbar) {
+            mobileMenuToggle.addEventListener('click', () => {
+                mobileNavbar.classList.add('active');
+            });
+
+            mobileMenuClose.addEventListener('click', () => {
+                mobileNavbar.classList.remove('active');
+            });
+
+            // Close menu when clicking on a link
+            const mobileNavLinks = mobileNavbar.querySelectorAll('a');
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileNavbar.classList.remove('active');
+                });
+            });
+
+            // Close menu when clicking outside
+            mobileNavbar.addEventListener('click', (e) => {
+                if (e.target === mobileNavbar) {
+                    mobileNavbar.classList.remove('active');
+                }
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
