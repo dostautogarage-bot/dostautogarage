@@ -61,6 +61,18 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Deployment files
+venv/
+staticfiles/
+logs/
+run/
+db_backup.sqlite3
+*.pid
+*.sock
+
+# Uploaded media (optional, if you want to keep it out of git)
+# media/
+
 # Flask stuff:
 instance/
 .webassets-cache
