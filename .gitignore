@@ -66,7 +66,7 @@ venv/
 staticfiles/
 logs/
 run/
-db_backup.sqlite3
+
 *.pid
 *.sock
 
