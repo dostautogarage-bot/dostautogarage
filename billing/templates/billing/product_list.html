@@ -1,5 +1,5 @@
 {% extends 'billing/base.html' %}
-{% block title %}Product List{% endblock %}
+{% block title %}PRODUCT LIST{% endblock %}
 
 {% block content %}
 
@@ -271,8 +271,8 @@
 
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <h3 class="mb-0">Product List</h3>
-            <a href="{% url 'product_add' %}" class="btn btn-primary">+ Add Product</a>
+            <h3 class="mb-0">PRODUCT LIST</h3>
+            <a href="{% url 'product_add' %}" class="btn btn-primary">+ CREATE</a>
         </div>
 
         <!-- Total Product Worth Banner -->
@@ -281,26 +281,26 @@
             <div class="worth-value">₹ {{ total_product_worth|floatformat:2 }}</div>
         </div>
 
-        <!-- Search + per-page -->
+        <!-- Search -->
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
 
-            <div id="searchWrapper">
+            <div id="searchWrapper" class="d-flex align-items-center flex-grow-1 me-2">
                 <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor"
                      stroke-width="2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
                 </svg>
                 <input id="searchInput" type="text" class="form-control"
-                       placeholder="Search products…" autocomplete="off">
+                       placeholder="SEARCH PRODUCTS…" autocomplete="off">
                 <div id="searchSpinner" class="spinner-border spinner-border-sm text-secondary"></div>
             </div>
 
             <div class="d-flex align-items-center gap-2">
                 <label class="form-label mb-0 text-muted small">Show</label>
-                <select id="perPageSelect" class="form-select form-select-sm" style="width:80px;">
-                    <option value="10" selected>10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
+                <select id="perPageSelect" class="form-select form-select-sm" style="width:120px;">
                     <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="300">300</option>
+                    <option value="500">500</option>
                 </select>
                 <span class="text-muted small">per page</span>
             </div>
@@ -399,7 +399,7 @@
 // ── Only AJAX needed: search + pagination ──────────────────────────────────────
 const LIST_URL = "{% url 'product_list_api' %}";
 
-let state = { query: '', page: 1, perPage: 10, total: 0 };
+let state = { query: '', page: 1, perPage: 100, total: 0 };
 let searchTimer = null;
 let activeXHR   = null;
 
@@ -449,7 +449,7 @@ function renderTable(products) {
     if (!products.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center text-muted py-5">No products found</td>
+                <td colspan="6" class="text-center text-muted py-5">NO PRODUCTS FOUND</td>
             </tr>`;
         return;
     }
@@ -458,8 +458,8 @@ function renderTable(products) {
     tbody.innerHTML = products.map((p, i) => `
         <tr>
             <td class="text-center text-muted small">${offset + i + 1}</td>
-            <td>${escHtml(p.name)}</td>
-            <td>${escHtml(p.part_number)}</td>
+            <td>${escHtml(p.name.toUpperCase())}</td>
+            <td>${escHtml(p.part_number.toUpperCase())}</td>
             <td>₹ ${escHtml(String(p.price))}</td>
             <td>${stockBadge(p.stock)}</td>
             <td class="text-center" style="white-space:nowrap;">
@@ -470,7 +470,7 @@ function renderTable(products) {
                         data-bs-toggle="modal"
                         data-bs-target="#stockModal"
                         data-product-id="${p.id}"
-                        data-product-name="${escAttr(p.name)}"
+                        data-product-name="${escAttr(p.name.toUpperCase())}"
                         data-product-stock="${p.stock}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
@@ -492,7 +492,7 @@ function renderTable(products) {
                         data-bs-toggle="modal"
                         data-bs-target="#deleteModal"
                         data-product-id="${p.id}"
-                        data-product-name="${escAttr(p.name)}">
+                        data-product-name="${escAttr(p.name.toUpperCase())}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
                         <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
@@ -537,7 +537,7 @@ function renderSummary(total, page, perPage, count) {
     const from = total === 0 ? 0 : (page - 1) * perPage + 1;
     const to   = (page - 1) * perPage + count;
     document.getElementById('summaryRow').textContent =
-        total === 0 ? 'No products found.' : `Showing ${from}–${to} of ${total} products`;
+        total === 0 ? 'NO PRODUCTS FOUND.' : `SHOWING ${from}–${to} OF ${total} PRODUCTS`;
     document.getElementById('pageInfo').textContent =
         total === 0 ? '' : `Page ${page} of ${Math.ceil(total / perPage)}`;
 }

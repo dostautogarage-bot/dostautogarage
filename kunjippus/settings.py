@@ -26,7 +26,8 @@ SECRET_KEY = "&)z1qen^5tke+l_ucu523gx5m=2+xg_mv!@-0^-$i!pzo#)4f@"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["dostautogarage.com", "159.65.151.179"]
+ALLOWED_HOSTS = ["dostautogarage.com" ,"www.dostautogarage.com", "159.65.151.179","localhost"]
+
 
 
 # Application definition

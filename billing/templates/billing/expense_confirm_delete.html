@@ -1,5 +1,5 @@
 {% extends 'billing/base.html' %}
-{% block title %}Delete Product{% endblock %}
+{% block title %}Delete Expense{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -109,9 +109,9 @@
 
     <!-- ✅ No trigger button — just a clean confirmation card -->
     <div class="card shadow-sm">
-        <h5 class="text-danger mb-3">DELETE PRODUCT</h5>
+        <h5 class="text-danger mb-3">DELETE EXPENSE</h5>
         <p>
-            ARE YOU SURE YOU WANT TO DELETE <strong>{{ product.name|upper }}</strong>?
+            ARE YOU SURE YOU WANT TO DELETE THE EXPENSE FOR <strong>{{ expense.property_name|upper }}</strong> (₹{{ expense.amount }})?
             <br>
             <small class="text-muted">THIS ACTION CANNOT BE UNDONE.</small>
         </p>
@@ -120,7 +120,7 @@
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">YES, DELETE</button>
             </form>
-            <a href="{% url 'product_list' %}" class="btn btn-secondary">CANCEL</a>
+            <a href="{% url 'expense_list' %}" class="btn btn-secondary">CANCEL</a>
         </div>
     </div>
 

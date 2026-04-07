@@ -11,12 +11,17 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('invoices/add/', views.invoice_create, name='invoice_create'),
     path('invoices/<int:pk>/', views.invoice_detail, name='invoice_detail'),
+    path('invoices/<int:pk>/edit/', views.invoice_edit, name='invoice_edit'),
     path('invoices/<int:pk>/delete/', views.invoice_delete, name='invoice_delete'),
     path('invoices/<int:pk>/pdf/', views.invoice_pdf, name='invoice_pdf'),
     path('products/<int:pk>/add-stock/', views.product_add_stock, name='product_add_stock'),
     path('api/product-search/', views.product_search_api, name='product_search_api'),
     path('api/products/', views.product_list_api, name='product_list_api'),
     
+    path('expenses/', views.expense_list, name='expense_list'),
+    path('expenses/<int:pk>/', views.expense_detail, name='expense_detail'),
+    path('expenses/<int:pk>/edit/', views.expense_edit, name='expense_edit'),
+    path('expenses/<int:pk>/delete/', views.expense_delete, name='expense_delete'),
     path('settings/', views.company_settings, name='company_settings'),
     
     # Admin Management

@@ -1,5 +1,5 @@
 {% extends 'billing/base.html' %}
-{% block title %}Admin Management{% endblock %}
+{% block title %}ADMIN MANAGEMENT{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -49,6 +49,7 @@
     .admin-table tbody td {
         padding: 0.4rem 0.25rem;
         font-size: 0.65rem;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -173,12 +174,16 @@
     .page-link {
         padding: 0.15rem 0.35rem;
         font-size: 0.65rem;
+        border-radius: 0.5rem;
+        min-width: 2.5rem;
+        text-align: center;
     }
 
     @media (min-width: 768px) {
         .page-link {
-            padding: 0.15rem 0.35rem;
-            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            min-width: 3rem;
         }
     }
 
@@ -212,8 +217,10 @@
         
         <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-            <h3>Admin Management</h3>
-            <a href="{% url 'admin_create' %}" class="btn btn-primary">+ Create Admin</a>
+            <h3>ADMIN MANAGEMENT</h3>
+            {% if request.user.pk == 1 %}
+                <a href="{% url 'admin_create' %}" class="btn btn-primary">+ CREATE</a>
+            {% endif %}
         </div>
 
         <!-- Messages -->
@@ -231,11 +238,21 @@
             <div class="col-12">
                 <div class="admin-filter-card">
                     <form method="get" class="row gx-3 gy-3 align-items-end">
-                        <div class="col-12 col-sm-8">
-                            <label class="form-label">Search Admin</label>
-                            <input type="text" name="q" class="form-control" placeholder="Username / Email / Name" value="{{ query }}">
+                        <div class="col-12 col-sm-6 col-lg-5">
+                            <label class="form-label">SEARCH ADMIN</label>
+                            <input type="text" name="q" class="form-control" placeholder="USERNAME / EMAIL / NAME" value="{{ query }}">
                         </div>
-                        <div class="col-6 col-sm-4">
+                        <div class="col-6 col-sm-4 col-lg-3">
+                            <label class="form-label">Per Page</label>
+                            <select name="per_page" class="form-select">
+                                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                                <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+                                <option value="300" {% if per_page == 300 %}selected{% endif %}>300</option>
+                                <option value="500" {% if per_page == 500 %}selected{% endif %}>500</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-4 col-lg-2">
+                            <label class="form-label opacity-0">Search</label>
                             <button class="btn btn-secondary w-100">Search</button>
                         </div>
                     </form>
@@ -249,12 +266,12 @@
 
                 <thead>
                     <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Full Name</th>
-                        <th style="width: 100px;">Status</th>
-                        <th>Joined</th>
-                        <th style="width: 150px;">Actions</th>
+                        <th>USERNAME</th>
+                        <th>EMAIL</th>
+                        <th>FULL NAME</th>
+                        <th style="width: 100px;">STATUS</th>
+                        <th>JOINED</th>
+                        <th style="width: 150px;">ACTIONS</th>
                     </tr>
                 </thead>
 
@@ -263,13 +280,18 @@
                     {% for admin in admins %}
                     <tr>
                         <td>
-                            <strong>{{ admin.username }}</strong>
+                            <strong>{{ admin.username|upper }}</strong>
+                            {% if admin.pk == 1 %}
+                                <span class="badge bg-warning text-dark" title="Main Superuser">SUPER</span>
+                            {% else %}
+                                <span class="badge bg-secondary" title="Admin User">ADMIN</span>
+                            {% endif %}
                             {% if admin == request.user %}
                                 <span class="badge bg-info" title="This is your account">YOU</span>
                             {% endif %}
                         </td>
-                        <td>{{ admin.email }}</td>
-                        <td>{{ admin.get_full_name|default:"N/A" }}</td>
+                        <td>{{ admin.email|upper }}</td>
+                        <td>{{ admin.get_full_name|default:"N/A"|upper }}</td>
                         <td>
                             {% if admin.is_active %}
                                 <span class="admin-badge active">✓ Active</span>
@@ -279,23 +301,31 @@
                         </td>
                         <td><small class="text-muted">{{ admin.date_joined|date:"d M Y" }}</small></td>
                         <td>
+                            {% if request.user.pk == 1 %}
                             <div class="admin-actions">
-                                <a href="{% url 'admin_edit' admin.pk %}" class="btn btn-sm btn-info action-btn">
-                                    ✏️ Edit
+                                <a href="{% url 'admin_edit' admin.pk %}" class="btn btn-sm btn-info action-btn" title="Edit admin">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                    </svg>
                                 </a>
                                 {% if admin != request.user %}
-                                    <a href="{% url 'admin_delete' admin.pk %}" class="btn btn-sm btn-danger action-btn">
-                                        🗑️ Delete
+                                    <a href="{% url 'admin_delete' admin.pk %}" class="btn btn-sm btn-danger action-btn" title="Delete admin">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
+                                            <path d="M10.5 5.5A.5.5 0 0 1 11 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
+                                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1z"/>
+                                        </svg>
                                     </a>
                                 {% endif %}
                             </div>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
-                            No admins found
+                            NO ADMINS FOUND
                         </td>
                     </tr>
                 {% endif %}
@@ -310,10 +340,10 @@
             <ul class="pagination justify-content-center">
                 {% if admins.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">First</a>
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">First</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ admins.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+                        <a class="page-link" href="?page={{ admins.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">Previous</a>
                     </li>
                 {% endif %}
 
@@ -325,14 +355,15 @@
 
                 {% if admins.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ admins.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Next</a>
+                        <a class="page-link" href="?page={{ admins.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">Next</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ admins.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">Last</a>
+                        <a class="page-link" href="?page={{ admins.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">Last</a>
                     </li>
                 {% endif %}
             </ul>
         </nav>
+
         {% endif %}
 
     </div>

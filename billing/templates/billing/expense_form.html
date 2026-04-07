@@ -2,7 +2,7 @@
 {% block title %}{{ title }}{% endblock %}
 {% block extra_css %}
 <style>
-    .product-form-card {
+    .expense-form-card {
         background: rgba(255, 255, 255, 0.96);
         padding: 1rem;
         border-radius: 1rem;
@@ -10,20 +10,20 @@
     }
 
     @media (min-width: 768px) {
-        .product-form-card {
+        .expense-form-card {
             padding: 2rem;
             border-radius: 1.5rem;
         }
     }
 
-    .product-form-card h2 {
+    .expense-form-card h2 {
         margin-bottom: 1rem;
         font-weight: 700;
         font-size: 1.3rem;
     }
 
     @media (min-width: 768px) {
-        .product-form-card h2 {
+        .expense-form-card h2 {
             margin-bottom: 1.25rem;
             font-size: 1.75rem;
         }
@@ -117,9 +117,9 @@
 {% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <div class="product-form-card">
+    <div class="expense-form-card">
         <h2>{{ title }}</h2>
-        <form id="productForm" method="post">{% csrf_token %}
+        <form id="expenseForm" method="post">{% csrf_token %}
             {{ form.non_field_errors }}
             {% for field in form %}
               <div class="form-group">
@@ -129,7 +129,7 @@
               </div>
             {% endfor %}
             <button class="btn btn-primary" type="button" id="confirmSaveBtn">SAVE</button>
-            <a class="btn btn-secondary" href="{% url 'product_list' %}">CANCEL</a>
+            <a class="btn btn-secondary" href="{% url 'expense_list' %}">CANCEL</a>
         </form>
     </div>
 </div>
@@ -142,8 +142,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                ARE YOU SURE YOU WANT TO SAVE THIS PRODUCT?
-                <p class="mt-2"><small class="text-muted">THIS WILL {{ title|upper }} THE PRODUCT IN THE SYSTEM.</small></p>
+                ARE YOU SURE YOU WANT TO SAVE THIS EXPENSE?
+                <p class="mt-2"><small class="text-muted">THIS WILL {{ title|upper }} THE EXPENSE IN THE SYSTEM.</small></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CANCEL</button>
@@ -152,14 +152,13 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
     const confirmSaveBtn = document.getElementById('confirmSaveBtn');
     const confirmSaveModalBtn = document.getElementById('confirmSaveModalBtn');
-    const productForm = document.getElementById('productForm');
+    const expenseForm = document.getElementById('expenseForm');
     const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 
     if (confirmSaveBtn) {
@@ -169,7 +168,7 @@
     }
     if (confirmSaveModalBtn) {
         confirmSaveModalBtn.addEventListener('click', function () {
-            productForm.submit();
+            expenseForm.submit();
         });
     }
 </script>

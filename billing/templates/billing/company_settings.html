@@ -1,5 +1,5 @@
 {% extends 'billing/base.html' %}
-{% block title %}Company Settings{% endblock %}
+{% block title %}COMPANY SETTINGS{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -78,6 +78,7 @@
         margin-bottom: 1rem;
         color: #1f2937;
         font-weight: 700;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -116,6 +117,7 @@
         color: #374151;
         margin-bottom: 0.4rem;
         font-size: 0.75rem;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -133,6 +135,7 @@
         font-size: 0.75rem;
         font-family: inherit;
         transition: border-color 0.2s, box-shadow 0.2s;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -166,6 +169,7 @@
         font-size: 0.65rem;
         color: #9ca3af;
         margin-top: 0.3rem;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -272,8 +276,8 @@
 <div class="settings-page">
     <div class="container mt-4">
         <div class="settings-hero">
-            <h2>Company Settings</h2>
-            <p>Manage your company information, contact details, and system preferences.</p>
+            <h2>COMPANY SETTINGS</h2>
+            <p>MANAGE YOUR COMPANY INFORMATION, CONTACT DETAILS, AND SYSTEM PREFERENCES.</p>
         </div>
 
         {% if messages %}
@@ -372,7 +376,7 @@
 
                 <!-- Digital Signature -->
                 <div class="divider"></div>
-                <h4 style="margin-top: 1.5rem;">Digital Signature</h4>
+                <h4 style="margin-top: 1.5rem;">DIGITAL SIGNATURE</h4>
                 <div class="form-group-wrapper form-group-full">
                     <div class="form-group">
                         <label for="{{ form.signature.id_for_label }}" class="form-label">
@@ -382,7 +386,7 @@
                         {% if form.signature.help_text %}<div class="form-help-text">{{ form.signature.help_text|safe }}</div>{% endif %}
                         {% if signature_obj and signature_obj.signature %}
                         <div style="margin-top: 1rem;">
-                            <strong>Current Signature:</strong><br>
+                            <strong>CURRENT SIGNATURE:</strong><br>
                             <img src="{{ signature_obj.signature.url }}" alt="Current Signature" style="max-width: 200px; max-height: 100px; border: 1px solid #ddd; padding: 5px; margin-top: 0.5rem;">
                         </div>
                         {% endif %}
@@ -391,14 +395,14 @@
 
                 <!-- Submit Button -->
                 <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="submit" class="btn-save">Save Settings</button>
-                    <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none;">Cancel</a>
+                    <button type="submit" class="btn-save">SAVE SETTINGS</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none;">CANCEL</a>
                 </div>
             </form>
 
             <!-- Info Box -->
             <div class="settings-info">
-                <strong>💡 Note:</strong> Changes to these settings will be reflected in future invoices and throughout the system.
+                <strong>💡 NOTE:</strong> CHANGES TO THESE SETTINGS WILL BE REFLECTED IN FUTURE INVOICES AND THROUGHOUT THE SYSTEM.
             </div>
         </div>
 

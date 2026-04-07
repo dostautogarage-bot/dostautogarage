@@ -153,32 +153,32 @@
             <div class="delete-icon">⚠️</div>
 
             <!-- Title -->
-            <h2 class="mb-2">Delete Admin Account?</h2>
-            <p class="text-muted mb-3">This action cannot be undone. Please review the details below.</p>
+            <h2 class="mb-2">DELETE ADMIN ACCOUNT?</h2>
+            <p class="text-muted mb-3">THIS ACTION CANNOT BE UNDONE. PLEASE REVIEW THE DETAILS BELOW.</p>
 
             <!-- Admin Info -->
             <div class="admin-info">
                 <div class="admin-info-row">
-                    <span class="admin-info-label">Username:</span>
+                    <span class="admin-info-label">USERNAME:</span>
                     <span class="admin-info-value"><strong>{{ admin.username }}</strong></span>
                 </div>
                 <div class="admin-info-row">
-                    <span class="admin-info-label">Email:</span>
+                    <span class="admin-info-label">EMAIL:</span>
                     <span class="admin-info-value">{{ admin.email }}</span>
                 </div>
                 <div class="admin-info-row">
-                    <span class="admin-info-label">Full Name:</span>
+                    <span class="admin-info-label">FULL NAME:</span>
                     <span class="admin-info-value">{{ admin.get_full_name|default:"N/A" }}</span>
                 </div>
                 <div class="admin-info-row">
-                    <span class="admin-info-label">Joined:</span>
+                    <span class="admin-info-label">JOINED:</span>
                     <span class="admin-info-value">{{ admin.date_joined|date:"d M Y, H:i" }}</span>
                 </div>
             </div>
 
             <!-- Warning Message -->
             <div class="alert alert-danger" role="alert">
-                <strong>⛔ Warning:</strong> Deleting this admin account will permanently remove all associated data. This includes any invoices or records created by this admin.
+                <strong>⛔ WARNING:</strong> DELETING THIS ADMIN ACCOUNT WILL PERMANENTLY REMOVE ALL ASSOCIATED DATA. THIS INCLUDES ANY INVOICES OR RECORDS CREATED BY THIS ADMIN.
             </div>
 
             <!-- Actions -->
@@ -186,11 +186,11 @@
                 <form method="post" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger btn-delete-action">
-                        🗑️ Yes, Delete Account
+                        🗑️ YES, DELETE ACCOUNT
                     </button>
                 </form>
                 <a href="{% url 'admin_list' %}" class="btn btn-secondary btn-delete-action">
-                    ← Cancel
+                    ← CANCEL
                 </a>
             </div>
 

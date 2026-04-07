@@ -247,7 +247,95 @@
             }
         }
 
+        .navbar {
+            position: relative;
+            overflow: visible;
+            z-index: 10000;
+        }
+
+        .navbar .user-dropdown {
+            position: relative;
+            margin-right: 0.75rem;
+            z-index: 10001;
+        }
+
+        .navbar .user-dropdown summary {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .navbar .user-dropdown summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .navbar .user-dropdown summary:focus-visible {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+        }
+
+        .navbar .user-dropdown .avatar {
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 50%;
+            background: #c2410c;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+
+        .navbar .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.45rem);
+            right: 0;
+            background: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+            padding: 0.75rem;
+            min-width: 10rem;
+            z-index: 10002;
+            display: none;
+            transform-origin: top right;
+        }
+
+        .navbar .user-dropdown[open] .user-dropdown-menu {
+            display: block;
+        }
+
+        .navbar .user-dropdown-menu form {
+            margin: 0;
+        }
+
+        .navbar .user-dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            color: #c2410c;
+            background: transparent;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .navbar .user-dropdown-menu button:hover {
+            background: rgba(242, 69, 42, 0.08);
+        }
+
         .navbar .logout {
+            display: none;
             color: #c2410c;
             font-weight: 700;
             text-decoration: none !important;
@@ -255,6 +343,29 @@
 
         .navbar .logout:hover {
             text-decoration: none !important;
+        }
+
+        .mobile-user-account {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+            margin-top: 0.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .mobile-avatar {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 50%;
+            background: #c2410c;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.95rem;
+            text-transform: uppercase;
         }
 
         .site-footer {
@@ -304,29 +415,49 @@
     
     <!-- Desktop Navbar -->
     <div class="navbar">
-        <a href="{% url 'product_list' %}">Products</a>
-        <a href="{% url 'invoice_list' %}">Invoices</a>
-        <a href="{% url 'dashboard' %}">Dashboard</a>
-        {% if user.is_superuser %}<a href="{% url 'company_settings' %}">Settings</a>{% endif %}
-        {% if user.is_superuser %}<a href="{% url 'admin_list' %}">Admins</a>{% endif %}
+        <a href="{% url 'product_list' %}">PRODUCTS</a>
+        <a href="{% url 'invoice_list' %}">INVOICES</a>
+        <a href="{% url 'dashboard' %}">DASHBOARD</a>
+        <a href="{% url 'expense_list' %}">EXPENSES</a>
+        {% if user.is_superuser %}<a href="{% url 'company_settings' %}">SETTINGS</a>{% endif %}
+        {% if user.is_superuser %}<a href="{% url 'admin_list' %}">ADMINS</a>{% endif %}
         <span class="spacer"></span>
-        <form method="post" action="{% url 'logout' %}" class="d-inline m-0">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-link logout p-0">Logout</button>
-        </form>
+        {% if user.is_authenticated %}
+        <details class="user-dropdown">
+            <summary class="user-account" title="Signed in as {{ user.get_full_name|default:user.username }}">
+                <span class="avatar">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</span>
+                <span class="username">{{ user.get_full_name|default:user.username|upper }}</span>
+            </summary>
+            <div class="user-dropdown-menu">
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Logout</button>
+                </form>
+            </div>
+        </details>
+        {% endif %}
     </div>
 
     <!-- Mobile Overlay Navbar -->
     <div class="mobile-navbar" id="mobileNavbar">
         <div class="mobile-navbar-header">
-            <h3 class="mobile-navbar-title">Menu</h3>
+            <div>
+                <h3 class="mobile-navbar-title">Menu</h3>
+                {% if user.is_authenticated %}
+                <div class="mobile-user-account">
+                    <span class="mobile-avatar">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</span>
+                    <span>{{ user.get_full_name|default:user.username|upper }}</span>
+                </div>
+                {% endif %}
+            </div>
             <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">✕</button>
         </div>
-        <a href="{% url 'product_list' %}">Products</a>
-        <a href="{% url 'invoice_list' %}">Invoices</a>
-        <a href="{% url 'dashboard' %}">Dashboard</a>
-        {% if user.is_superuser %}<a href="{% url 'company_settings' %}">Settings</a>{% endif %}
-        {% if user.is_superuser %}<a href="{% url 'admin_list' %}">Admins</a>{% endif %}
+        <a href="{% url 'product_list' %}">PRODUCTS</a>
+        <a href="{% url 'invoice_list' %}">INVOICES</a>
+        <a href="{% url 'dashboard' %}">DASHBOARD</a>
+        <a href="{% url 'expense_list' %}">EXPENSES</a>
+        {% if user.is_superuser %}<a href="{% url 'company_settings' %}">SETTINGS</a>{% endif %}
+        {% if user.is_superuser %}<a href="{% url 'admin_list' %}">ADMINS</a>{% endif %}
         <div class="mobile-navbar-logout">
             <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}

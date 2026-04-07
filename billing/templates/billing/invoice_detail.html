@@ -252,20 +252,25 @@
         {% endif %}
 
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
             <div>
                 <h3 class="mb-0">Invoice #{{ invoice.formatted_invoice_number }}</h3>
-                <small class="text-muted">Date: {{ invoice.created_at|date:"d M Y" }}</small><br>
+                <small class="text-muted">DATE: {{ invoice.created_at|date:"d M Y" }}</small><br>
                 <small class="text-muted">
-                    Created by: {% if invoice.created_by %}{{ invoice.created_by.get_full_name|default:invoice.created_by.username }}{% else %}Unknown{% endif %}
+                    CREATED BY: {% if invoice.created_by %}{{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}{% else %}UNKNOWN{% endif %}
                 </small>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="btn btn-success">
-                    Download PDF
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="btn btn-sm btn-success action-btn" title="Download PDF">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 13a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M8 1.5a.5.5 0 0 1 .5.5v8.793l2.146-2.147a.5.5 0 1 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 .708-.708L7.5 10.793V2a.5.5 0 0 1 .5-.5z"/>
+                    </svg>
                 </a>
-                <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
-                    Back
+                <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary action-btn" title="Back to invoices">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L6.707 7h6.793a.5.5 0 0 1 0 1H6.707l4.647 4.646a.5.5 0 0 1-.708.708l-5.5-5.5a.5.5 0 0 1 0-.708l5.5-5.5a.5.5 0 0 1 .708 0z"/>
+                    </svg>
                 </a>
             </div>
         </div>
@@ -276,17 +281,17 @@
             <div class="col-md-6">
                 <div class="card border-primary">
                     <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0">Customer Information</h6>
+                        <h6 class="mb-0">CUSTOMER INFORMATION</h6>
                     </div>
                     <div class="card-body">
                         {% if invoice.customer_name %}
-                        <p class="mb-1"><strong>Name:</strong> {{ invoice.customer_name }}</p>
+                        <p class="mb-1"><strong>NAME:</strong> {{ invoice.customer_name|upper }}</p>
                         {% endif %}
                         {% if invoice.customer_phone %}
-                        <p class="mb-1"><strong>Phone:</strong> {{ invoice.customer_phone }}</p>
+                        <p class="mb-1"><strong>PHONE:</strong> {{ invoice.customer_phone|upper }}</p>
                         {% endif %}
-                        {% if invoice.vehicle_details %}
-                        <p class="mb-0"><strong>Vehicle:</strong> {{ invoice.vehicle_details }}</p>
+                        {% if invoice.vehicle_number %}
+                        <p class="mb-0"><strong>VEHICLE NUMBER:</strong> {{ invoice.vehicle_number|upper }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -295,21 +300,21 @@
         {% endif %}
 
         <!-- Products Table -->
-        <h5 class="mb-3">Products / Services</h5>
+        <h5 class="mb-3">PRODUCTS / SERVICES</h5>
         <div class="table-responsive">
             <table class="table table-bordered align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th>Product</th>
-                        <th style="width:120px;">Quantity</th>
-                        <th style="width:150px;">Price</th>
-                        <th style="width:150px;">Total</th>
+                        <th>PRODUCT</th>
+                        <th style="width:120px;">QUANTITY</th>
+                        <th style="width:150px;">PRICE</th>
+                        <th style="width:150px;">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in invoice.items.all %}
                     <tr>
-                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.product.name|upper }}</td>
                         <td>{{ item.quantity }}</td>
                         <td>₹ {{ item.price }}</td>
                         <td>₹ {{ item.total_price }}</td>
@@ -318,7 +323,7 @@
                 </tbody>
                 <tfoot>
                     <tr class="table-light">
-                        <td colspan="3" class="text-end"><strong>Products Total</strong></td>
+                        <td colspan="3" class="text-end"><strong>PRODUCTS TOTAL</strong></td>
                         <td><strong>₹ {{ invoice.total }}</strong></td>
                     </tr>
                 </tfoot>
@@ -327,26 +332,26 @@
 
         <!-- Other Charges -->
         {% if invoice.other_charges.exists %}
-        <h5 class="mt-4 mb-3">Other Charges</h5>
+        <h5 class="mt-4 mb-3">OTHER CHARGES</h5>
         <div class="table-responsive">
             <table class="table table-bordered align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th>Charge</th>
-                        <th style="width:150px;">Amount</th>
+                        <th>CHARGE</th>
+                        <th style="width:150px;">AMOUNT</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for charge in invoice.other_charges.all %}
                     <tr>
-                        <td>{{ charge.name }}</td>
+                        <td>{{ charge.name|upper }}</td>
                         <td>₹ {{ charge.amount }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr class="table-light">
-                        <td class="text-end"><strong>Charges Total</strong></td>
+                        <td class="text-end"><strong>CHARGES TOTAL</strong></td>
                         <td>
                             <strong>₹ {{ invoice.other_charges_total }}</strong>
                         </td>
@@ -357,33 +362,33 @@
         {% endif %}
 
         <!-- Payment Summary -->
-        <h5 class="mt-4 mb-3">Payment Summary</h5>
+        <h5 class="mt-4 mb-3">PAYMENT SUMMARY</h5>
         <div class="row g-3">
 
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center">
-                    <small class="text-muted d-block">Products Total</small>
+                    <small class="text-muted d-block">PRODUCTS TOTAL</small>
                     <strong class="fs-5">₹ {{ invoice.total }}</strong>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center">
-                    <small class="text-muted d-block">Other Charges</small>
+                    <small class="text-muted d-block">OTHER CHARGES</small>
                     <strong class="fs-5">₹ {{ invoice.other_charges_total }}</strong>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center">
-                    <small class="text-muted d-block">Paid Amount</small>
-                    <strong class="fs-5">₹ {{ invoice.paid_amount }}</strong>
+                    <small class="text-muted d-block">DISCOUNT AMOUNT</small>
+                    <strong class="fs-5">₹ {{ invoice.discount_amount }}</strong>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center bg-light">
-                    <small class="text-muted d-block">Balance</small>
+                    <small class="text-muted d-block">FINAL TOTAL</small>
                     <strong class="fs-5 text-danger">₹ {{ invoice.balance_amount }}</strong>
                 </div>
             </div>
@@ -393,9 +398,9 @@
         <!-- Next Service Info -->
         {% if invoice.next_due_date %}
         <div class="alert alert-info mt-4 mb-0">
-            Next service due on <strong>{{ invoice.next_due_date|date:"d M Y" }}</strong>
+            NEXT SERVICE DUE ON <strong>{{ invoice.next_due_date|date:"d M Y" }}</strong>
             {% if invoice.ran_kilometer %}
-                before <strong>{{ invoice.ran_kilometer }} KM</strong>.
+                AT <strong>{{ invoice.ran_kilometer }} KM</strong>.
             {% endif %}
         </div>
         {% endif %}

@@ -1,5 +1,5 @@
 {% extends 'billing/base.html' %}
-{% block title %}Create Invoice{% endblock %}
+{% block title %}{% if editing %}EDIT INVOICE{% else %}CREATE INVOICE{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -45,6 +45,7 @@
     .form-label {
         font-size: 0.75rem;
         font-weight: 600;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -57,6 +58,7 @@
         font-size: 0.75rem;
         padding: 0.4rem 0.6rem;
         border-radius: 0.4rem;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -79,6 +81,22 @@
             padding: 0.6rem 1.2rem;
             min-height: 40px;
         }
+    }
+
+    .action-btn {
+        padding: 4px 7px;
+        line-height: 1;
+        font-size: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+        .action-btn {
+            font-size: 0.9rem;
+        }
+    }
+
+    .action-btn svg {
+        display: block;
     }
 
     .input-group .form-control.is-invalid { border-color: #dc3545; z-index: 0; }
@@ -266,7 +284,7 @@
 <div class="container mt-4">
     <div class="card shadow-sm p-4">
 
-        <h3 class="mb-4">Create Invoice</h3>
+        <h3 class="mb-4">CREATE INVOICE</h3>
 
         <form method="post" id="invoiceForm" novalidate>
             {% csrf_token %}
@@ -288,7 +306,7 @@
             {% endif %}
 
             <!-- CUSTOMER DETAILS -->
-            <h5 class="mb-3">Customer Details</h5>
+            <h5 class="mb-3">CUSTOMER DETAILS</h5>
             <div class="row g-3 mb-4">
 
                 <div class="col-md-6">
@@ -299,34 +317,20 @@
 
                 <div class="col-md-6">
                     <label class="form-label">{{ main_form.customer_phone.label }}</label>
-                    <div class="input-group">
-                        <select class="form-select" id="countryCode" style="max-width: 130px;">
-                            <option value="+91"  selected>🇮🇳 +91</option>
-                            <option value="+1">🇺🇸  +1</option>
-                            <option value="+44">🇬🇧  +44</option>
-                            <option value="+971">🇦🇪 +971</option>
-                            <option value="+966">🇸🇦 +966</option>
-                            <option value="+60">🇲🇾  +60</option>
-                            <option value="+65">🇸🇬  +65</option>
-                            <option value="+61">🇦🇺  +61</option>
-                            <option value="+49">🇩🇪  +49</option>
-                            <option value="+33">🇫🇷  +33</option>
-                        </select>
-                        {{ main_form.customer_phone }}
-                    </div>
+                    {{ main_form.customer_phone }}
                     <div id="phoneError" class="text-danger small mt-1"></div>
                 </div>
 
             </div>
 
             <!-- VEHICLE & INVOICE DETAILS -->
-            <h5 class="mb-3">Vehicle & Invoice Details</h5>
+            <h5 class="mb-3">VEHICLE & INVOICE DETAILS</h5>
             <div class="row g-3 mb-4">
 
                 <div class="col-md-6">
-                    <label class="form-label">{{ main_form.vehicle_details.label }}</label>
-                    {{ main_form.vehicle_details }}
-                    <div class="invalid-feedback">Vehicle details are required.</div>
+                    <label class="form-label">VEHICLE NUMBER</label>
+                    {{ main_form.vehicle_number }}
+                    <div class="invalid-feedback">Vehicle number is required.</div>
                 </div>
 
                 <div class="col-md-6">
@@ -342,15 +346,15 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">{{ main_form.paid_amount.label }}</label>
-                    {{ main_form.paid_amount }}
-                    <div class="invalid-feedback">Enter a valid paid amount (0 or more).</div>
+                    <label class="form-label">{{ main_form.discount_amount.label }}</label>
+                    {{ main_form.discount_amount }}
+                    <div class="invalid-feedback">Enter a valid discount amount (0 or more).</div>
                 </div>
 
             </div>
 
             <!-- PRODUCTS SECTION -->
-            <h5 class="mb-3">Products / Services</h5>
+            <h5 class="mb-3">PRODUCTS / SERVICES</h5>
 
             {{ formset.management_form }}
 
@@ -370,9 +374,10 @@
                 <table class="table table-bordered align-middle" id="product-table">
                     <thead class="table-dark">
                         <tr>
-                            <th>Product</th>
-                            <th style="width:160px;">Quantity</th>
-                            <th style="width:80px;" class="text-center">Remove</th>
+                            <th>PRODUCT</th>
+                            <th style="width:160px;">QUANTITY</th>
+                            {% if editing %}<th style="width:80px;" class="text-center">DELETE</th>{% endif %}
+                            <th style="width:80px;" class="text-center">REMOVE</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -383,25 +388,35 @@
                                 <div class="product-search-wrapper">
                                     <input type="text"
                                            class="form-control product-search-input"
-                                           placeholder="🔍 Type to search product..."
+                                           placeholder="🔍 TYPE TO SEARCH PRODUCT..."
                                            autocomplete="off"
                                            spellcheck="false">
                                 </div>
                                 {% for error in form.product.errors %}
                                     <div class="text-danger small mt-1">{{ error }}</div>
                                 {% endfor %}
-                                <div class="invalid-feedback">Please select a product.</div>
+                                <div class="invalid-feedback">PLEASE SELECT A PRODUCT.</div>
                             </td>
                             <td>
                                 {{ form.quantity }}
                                 {% for error in form.quantity.errors %}
                                     <div class="text-danger small">{{ error }}</div>
                                 {% endfor %}
-                                <div class="invalid-feedback">Enter quantity (min 1).</div>
+                                <div class="invalid-feedback">ENTER QUANTITY (MIN 1).</div>
                             </td>
+                            {% if editing %}
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                        onclick="removeRow(this)">✕</button>
+                                {{ form.DELETE }}
+                            </td>
+                            {% endif %}
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger action-btn"
+                                        onclick="removeRow(this)">
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                    </svg>
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -410,11 +425,11 @@
             </div>
 
             <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addRow()">
-                + Add Product
+                + ADD PRODUCT
             </button>
 
             <!-- OTHER CHARGES -->
-            <h5 class="mb-3 mt-2">Other Charges</h5>
+            <h5 class="mb-3 mt-2">OTHER CHARGES</h5>
 
             <div id="chargesError" class="alert alert-danger d-none">
                 Please fill in all charge names and valid amounts.
@@ -424,24 +439,25 @@
                 <table class="table table-bordered align-middle" id="charges-table">
                     <thead class="table-dark">
                         <tr>
-                            <th>Charge Name</th>
-                            <th style="width:200px;">Amount (₹)</th>
-                            <th style="width:80px;" class="text-center">Remove</th>
+                            <th>CHARGE NAME</th>
+                            <th style="width:200px;">AMOUNT (₹)</th>
+                            <th style="width:80px;" class="text-center">REMOVE</th>
                         </tr>
                     </thead>
                     <tbody id="charges-body"></tbody>
                 </table>
             </div>
 
+            <div class="mb-2 text-muted" style="font-size:0.85rem;">Choose a predefined charge, or select OTHER to type a custom description.</div>
             <button type="button" class="btn btn-outline-secondary btn-sm mb-4" onclick="addCharge()">
-                + Add Charge
+                + ADD CHARGE
             </button>
 
             <input type="hidden" name="other_charges" id="otherChargesData">
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-success">Create Invoice</button>
-                <a href="{% url 'invoice_list' %}" class="btn btn-secondary">Cancel</a>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-sm btn-success">CREATE INVOICE</button>
+                <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary">CANCEL</a>
             </div>
 
         </form>
@@ -462,7 +478,7 @@
 // Without this, a product like "Castrol's Oil" breaks the entire JS array.
 const ALL_PRODUCTS = [
     {% for product in products %}
-    { id: "{{ product.pk }}", name: "{{ product.name|escapejs }}", price: "{{ product.price|escapejs }}", stock: {{ product.stock }} },
+    { id: "{{ product.pk }}", name: "{{ product.name|escapejs }}", price: "{{ product.price|escapejs }}", stock: {{ product.stock }}, part_number: "{{ product.part_number|escapejs }}" },
     {% endfor %}
 ];
 
@@ -501,10 +517,48 @@ function getSelectedProductIds(excludeSelect = null) {
     return selected;
 }
 
+function getProductById(productId) {
+    return ALL_PRODUCTS.find(p => String(p.id) === String(productId));
+}
+
+function isDuplicatePartNumber(productId, excludeSelect) {
+    const product = getProductById(productId);
+    if (!product || !product.part_number) return false;
+
+    const partNumber = product.part_number.trim().toUpperCase();
+    const selects = document.querySelectorAll('#product-table tbody tr select[name*="product"]');
+
+    let duplicate = false;
+    selects.forEach(sel => {
+        if (sel === excludeSelect || !sel.value) return;
+        const selectedProduct = getProductById(sel.value);
+        if (selectedProduct && selectedProduct.part_number && selectedProduct.part_number.trim().toUpperCase() === partNumber) {
+            duplicate = true;
+        }
+    });
+    return duplicate;
+}
+
+function getSelectedPartNumbers(excludeSelect = null) {
+    const selects = document.querySelectorAll('#product-table tbody tr select[name*="product"]');
+    const partNumbers = new Set();
+
+    selects.forEach(sel => {
+        if (sel === excludeSelect || !sel.value) return;
+        const product = getProductById(sel.value);
+        if (product && product.part_number) {
+            partNumbers.add(product.part_number.trim().toUpperCase());
+        }
+    });
+
+    return partNumbers;
+}
+
 function renderDropdown(filter) {
     if (!activeInput || !activeSelect) return;
 
     const selected = getSelectedProductIds(activeSelect);
+    const selectedPartNumbers = getSelectedPartNumbers(activeSelect);
     const lower    = filter.toLowerCase().trim();
     const matched  = lower
         ? ALL_PRODUCTS.filter(p => p.name.toLowerCase().includes(lower))
@@ -516,7 +570,9 @@ function renderDropdown(filter) {
         sharedDropdown.innerHTML = '<div class="no-results">No products found</div>';
     } else {
         matched.forEach(p => {
-            const isUsed = selected.has(String(p.id));
+            const partKey = p.part_number ? p.part_number.trim().toUpperCase() : null;
+            const isPartDuplicate = partKey ? selectedPartNumbers.has(partKey) : false;
+            const isUsed = selected.has(String(p.id)) || isPartDuplicate;
             const div    = document.createElement('div');
             div.className = 'drop-item' + (isUsed ? ' used' : '');
 
@@ -538,11 +594,22 @@ function renderDropdown(filter) {
                 // e.preventDefault() stops the input from blurring at all.
                 div.addEventListener('mousedown', function (e) {
                     e.preventDefault();
+                    if (isDuplicatePartNumber(p.id, activeSelect)) {
+                        alert('Duplicate product not allowed: the same part number has already been selected.');
+                        return;
+                    }
                     activeSelect.value = p.id;
                     activeInput.value  = p.name;
                     activeInput.classList.remove('is-invalid');
                     activeInput.classList.add('selected-product');
                     hideDropdown();
+                });
+            } else {
+                div.addEventListener('mousedown', function (e) {
+                    if (isPartDuplicate) {
+                        e.preventDefault();
+                        alert('Duplicate product not allowed: the same part number has already been selected.');
+                    }
                 });
             }
 
@@ -613,6 +680,27 @@ function initProductSearch(row) {
 
 // Init existing formset rows on page load
 document.querySelectorAll('#product-table tbody tr').forEach(row => initProductSearch(row));
+removeEmptyExtraRows();
+
+function removeEmptyExtraRows() {
+    const tbody = document.querySelector('#product-table tbody');
+    const rows  = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.slice(1).forEach(row => {
+        const select = row.querySelector('select[name*="product"]');
+        const quantity = row.querySelector('input[name*="quantity"]');
+        const hasErrors = row.querySelector('.text-danger') !== null;
+
+        const productValue = select ? select.value.trim() : '';
+        const quantityValue = quantity ? quantity.value.trim() : '';
+
+        if (!productValue && !quantityValue && !hasErrors) {
+            row.remove();
+        }
+    });
+
+    document.getElementById('id_form-TOTAL_FORMS').value = tbody.querySelectorAll('tr').length;
+}
 
 // ─── Add Product Row ──────────────────────────────────────────────────────────
 function addRow() {
@@ -668,54 +756,79 @@ function removeRow(btn) {
     }
 }
 
-// ─── Add Charge Row ───────────────────────────────────────────────────────────
 function addCharge() {
     const tbody = document.getElementById('charges-body');
     const tr    = document.createElement('tr');
     tr.innerHTML = `
         <td>
-            <select class="form-select charge-type-select">
-                ${CHARGE_PRESETS.map(c => `<option value="${c}">${c}</option>`).join('')}
+            <select class="form-select charge-select">
+                <option value="" disabled selected >SELECT OR CHOOSE CHARGE</option>
+                <option value="LABOR CHARGE">LABOR CHARGE</option>
+                <option value="CLEANING CHARGE">CLEANING CHARGE</option>
+                <option value="TRANSPORT CHARGE">TRANSPORT CHARGE</option>
+                <option value="INDUSTRIAL CHARGE">INDUSTRIAL CHARGE</option>
+                <option value="OTHER">OTHER</option>
             </select>
-            <input type="text"
-                   class="form-control mt-2 charge-custom-name d-none"
-                   placeholder="Enter charge name...">
-            <div class="invalid-feedback">Charge name is required.</div>
+            <textarea class="form-control charge-name d-none mt-2" rows="3" placeholder="TYPE OTHER CHARGE DESCRIPTION..." autocomplete="off"></textarea>
+            <div class="invalid-feedback name-feedback">Charge description is required.</div>
         </td>
         <td>
-            <input type="number" class="form-control charge-amount"
+            <input type="number" class="form-control charge-amount" style="min-height:3rem;" 
                    min="0" step="0.01" placeholder="0.00">
             <div class="invalid-feedback">Enter a valid amount.</div>
         </td>
         <td class="text-center">
-            <button type="button" class="btn btn-sm btn-outline-danger"
-                    onclick="this.closest('tr').remove()">✕</button>
+            <button type="button" class="btn btn-sm btn-danger action-btn" title="Delete charge"
+                    onclick="this.closest('tr').remove()">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                </svg>
+            </button>
         </td>
     `;
     tbody.appendChild(tr);
+    initChargeRow(tr);
+}
 
-    const sel    = tr.querySelector('.charge-type-select');
-    const custom = tr.querySelector('.charge-custom-name');
-    sel.addEventListener('change', function () {
-        if (this.value === 'Other') {
-            custom.classList.remove('d-none');
-            custom.focus();
+function initChargeRow(row) {
+    const chargeSelect = row.querySelector('.charge-select');
+    const chargeInput  = row.querySelector('.charge-name');
+
+    if (!chargeSelect || !chargeInput) return;
+
+    chargeSelect.addEventListener('change', () => {
+        if (chargeSelect.value === 'OTHER') {
+            chargeInput.classList.remove('d-none');
+            chargeInput.focus();
         } else {
-            custom.classList.add('d-none');
-            custom.value = '';
+            chargeInput.classList.add('d-none');
+            chargeInput.value = '';
+            chargeInput.classList.remove('is-invalid');
         }
     });
+}
+
+function getChargeName(row) {
+    const chargeSelect = row.querySelector('.charge-select');
+    const chargeInput  = row.querySelector('.charge-name');
+
+    if (!chargeSelect) return '';
+
+    if (chargeSelect.value === 'OTHER') {
+        return chargeInput ? chargeInput.value.trim() : '';
+    }
+
+    return chargeSelect.value.trim();
 }
 
 // ─── Collect charges into hidden field ───────────────────────────────────────
 function collectCharges() {
     const charges = [];
     document.querySelectorAll('#charges-body tr').forEach(row => {
-        const sel    = row.querySelector('.charge-type-select');
-        const custom = row.querySelector('.charge-custom-name');
-        const amt    = row.querySelector('.charge-amount');
-        const name   = sel.value === 'Other' ? custom.value.trim() : sel.value;
-        const amount = parseFloat(amt.value) || 0;
+        const name      = getChargeName(row);
+        const amt       = row.querySelector('.charge-amount');
+        const amount    = parseFloat(amt.value) || 0;
         if (name) charges.push({ name, amount });
     });
     document.getElementById('otherChargesData').value = JSON.stringify(charges);
@@ -735,20 +848,17 @@ document.getElementById('invoiceForm').addEventListener('submit', function (e) {
 
     // 2. Phone
     const phone       = document.getElementById('id_customer_phone');
-    const countryCode = document.getElementById('countryCode').value;
     const phoneError  = document.getElementById('phoneError');
 
     if (phone && phone.value.trim() !== '') {
         const digits = phone.value.trim().replace(/\D/g, '');
-        const expectedLength = phoneLengths[countryCode] || 10;
-        if (digits.length !== expectedLength) {
+        if (digits.length < 10 || digits.length > 15) {
             phone.classList.add('is-invalid');
-            phoneError.textContent = `Enter a valid ${expectedLength}-digit number for ${countryCode}.`;
+            phoneError.textContent = 'Enter a valid phone number (10-15 digits).';
             valid = false;
         } else {
             phone.classList.remove('is-invalid'); phone.classList.add('is-valid');
             phoneError.textContent = '';
-            phone.value = countryCode + digits;
         }
     } else if (phone) {
         phone.classList.remove('is-invalid', 'is-valid');
@@ -756,41 +866,49 @@ document.getElementById('invoiceForm').addEventListener('submit', function (e) {
     }
 
     // 3. Vehicle Details
-    const vehicle = document.getElementById('id_vehicle_details');
+    const vehicle = document.getElementById('id_vehicle_number');
     if (vehicle && vehicle.value.trim() === '') {
         vehicle.classList.add('is-invalid'); valid = false;
     } else if (vehicle) {
         vehicle.classList.remove('is-invalid'); vehicle.classList.add('is-valid');
     }
 
-    // 4. Ran Kilometer
-    const km = document.getElementById('id_ran_kilometer');
-    if (km) {
-        if (km.value.trim() === '' || isNaN(km.value) || Number(km.value) < 0) {
+    // 4. Next Service Kilometer (OPTIONAL ✅)
+const km = document.getElementById('id_ran_kilometer');
+if (km) {
+    if (km.value.trim() !== '') {
+        if (isNaN(km.value) || Number(km.value) < 0) {
             km.classList.add('is-invalid'); valid = false;
         } else {
             km.classList.remove('is-invalid'); km.classList.add('is-valid');
         }
+    } else {
+        km.classList.remove('is-invalid', 'is-valid');
     }
+}
 
-    // 5. Next Due Date
-    const dueDate = document.getElementById('id_next_due_date');
-    if (dueDate) {
+// 5. Next Due Date (OPTIONAL ✅)
+const dueDate = document.getElementById('id_next_due_date');
+if (dueDate) {
+    if (dueDate.value !== '') {
         const today = new Date().toISOString().split('T')[0];
-        if (dueDate.value === '' || dueDate.value < today) {
+        if (dueDate.value < today) {
             dueDate.classList.add('is-invalid'); valid = false;
         } else {
             dueDate.classList.remove('is-invalid'); dueDate.classList.add('is-valid');
         }
+    } else {
+        dueDate.classList.remove('is-invalid', 'is-valid');
     }
+}
 
-    // 6. Paid Amount
-    const paid = document.getElementById('id_paid_amount');
-    if (paid) {
-        if (paid.value.trim() === '' || isNaN(paid.value) || Number(paid.value) < 0) {
-            paid.classList.add('is-invalid'); valid = false;
+    // 6. Discount Amount
+    const discount = document.getElementById('id_discount_amount');
+    if (discount) {
+        if (discount.value.trim() === '' || isNaN(discount.value) || Number(discount.value) < 0) {
+            discount.classList.add('is-invalid'); valid = false;
         } else {
-            paid.classList.remove('is-invalid'); paid.classList.add('is-valid');
+            discount.classList.remove('is-invalid'); discount.classList.add('is-valid');
         }
     }
 
@@ -798,6 +916,7 @@ document.getElementById('invoiceForm').addEventListener('submit', function (e) {
     const rows = document.querySelectorAll('#product-table tbody tr');
     let productValid = false;
 
+    const selectedParts = new Set();
     rows.forEach(row => {
         const hiddenSelect = row.querySelector('select[name*="product"]');
         const searchInput  = row.querySelector('.product-search-input');
@@ -809,6 +928,18 @@ document.getElementById('invoiceForm').addEventListener('submit', function (e) {
             rowOk = false;
         } else {
             if (searchInput) searchInput.classList.remove('is-invalid');
+            const prod = getProductById(hiddenSelect.value);
+            if (prod && prod.part_number) {
+                const partKey = prod.part_number.trim().toUpperCase();
+                if (selectedParts.has(partKey)) {
+                    if (searchInput) searchInput.classList.add('is-invalid');
+                    rowOk = false;
+                    productValid = false;
+                    alert('Duplicate product not allowed: the same part number has already been selected.');
+                } else {
+                    selectedParts.add(partKey);
+                }
+            }
         }
 
         if (qtyInput) {
@@ -832,14 +963,28 @@ document.getElementById('invoiceForm').addEventListener('submit', function (e) {
     // 8. Other Charges
     let chargesOk = true;
     document.querySelectorAll('#charges-body tr').forEach(row => {
-        const sel    = row.querySelector('.charge-type-select');
-        const custom = row.querySelector('.charge-custom-name');
-        const amt    = row.querySelector('.charge-amount');
+        const chargeSelect = row.querySelector('.charge-select');
+        const nameInput    = row.querySelector('.charge-name');
+        const amt          = row.querySelector('.charge-amount');
+        const selected     = chargeSelect ? chargeSelect.value : '';
+        const nameValue    = selected === 'OTHER' ? (nameInput ? nameInput.value.trim() : '') : selected;
 
-        if (sel.value === 'Other' && custom.value.trim() === '') {
-            custom.classList.add('is-invalid'); chargesOk = false;
+        if (!selected) {
+            if (chargeSelect) chargeSelect.classList.add('is-invalid');
+            chargesOk = false;
         } else {
-            custom.classList.remove('is-invalid');
+            if (chargeSelect) chargeSelect.classList.remove('is-invalid');
+        }
+
+        if (selected === 'OTHER') {
+            if (!nameValue) {
+                if (nameInput) nameInput.classList.add('is-invalid');
+                chargesOk = false;
+            } else {
+                if (nameInput) nameInput.classList.remove('is-invalid');
+            }
+        } else {
+            if (nameInput) nameInput.classList.remove('is-invalid');
         }
 
         if (amt.value.trim() === '' || Number(amt.value) < 0) {
@@ -876,6 +1021,53 @@ document.getElementById('invoiceForm').addEventListener('input', function (e) {
         }
     }
 });
+
+// ─── Handle Editing Mode ──────────────────────────────────────────────────────
+{% if editing %}
+// Populate product search inputs with selected product names
+document.querySelectorAll('#product-table tbody tr').forEach((row, index) => {
+    const hiddenSelect = row.querySelector('select[name*="product"]');
+    const searchInput  = row.querySelector('.product-search-input');
+    if (hiddenSelect && hiddenSelect.value) {
+        const product = ALL_PRODUCTS.find(p => p.id == hiddenSelect.value);
+        if (product) {
+            searchInput.value = product.name;
+            searchInput.classList.add('selected-product');
+        }
+    }
+});
+
+// Populate other charges
+{% for charge in other_charges %}
+addCharge();
+const lastRow = document.querySelector('#charges-body tr:last-child');
+if (lastRow) {
+    const chargeSelect = lastRow.querySelector('.charge-select');
+    const nameInput    = lastRow.querySelector('.charge-name');
+    const amtInput     = lastRow.querySelector('.charge-amount');
+    const storedName   = '{{ charge.name|escapejs }}';
+    const predefined   = ['LABOR CHARGE','PARTS REPLACEMENT','WASHING SERVICE','PAINT WORK','TOWING CHARGE','MISCELLANEOUS'];
+
+    if (chargeSelect) {
+        if (predefined.includes(storedName)) {
+            chargeSelect.value = storedName;
+            if (nameInput) {
+                nameInput.classList.add('d-none');
+                nameInput.value = '';
+            }
+        } else {
+            chargeSelect.value = 'OTHER';
+            if (nameInput) {
+                nameInput.classList.remove('d-none');
+                nameInput.value = storedName;
+            }
+        }
+    }
+
+    if (amtInput) amtInput.value = '{{ charge.amount|escapejs }}';
+}
+{% endfor %}
+{% endif %}
 </script>
 
 {% endblock %}

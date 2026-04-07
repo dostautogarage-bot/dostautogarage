@@ -1,0 +1,98 @@
+{% extends 'billing/base.html' %}
+{% block title %}Expense Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border-radius: 1rem;
+        padding: 1rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    @media (min-width: 768px) {
+        .card {
+            border-radius: 1.5rem;
+            padding: 2rem !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    }
+
+    h3 {
+        font-size: 1.2rem;
+    }
+
+    @media (min-width: 768px) {
+        h3 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .detail-row {
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .detail-value {
+        color: #111827;
+        text-transform: uppercase;
+    }
+
+    .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+        margin: 0.25rem;
+        min-height: 36px;
+    }
+
+    @media (min-width: 768px) {
+        .btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            margin: 0;
+        }
+    }
+
+    .container {
+        padding: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <h3>Expense Details</h3>
+        <div class="detail-row">
+            <span class="detail-label">Date:</span>
+            <span class="detail-value">{{ expense.date }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Property:</span>
+            <span class="detail-value">{{ expense.property_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Amount:</span>
+            <span class="detail-value">₹ {{ expense.amount|floatformat:2 }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Created By:</span>
+            <span class="detail-value">{{ expense.created_by.get_full_name|default:expense.created_by.username }}</span>
+        </div>
+        <div class="mt-3">
+            <a href="{% url 'expense_edit' expense.pk %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'expense_delete' expense.pk %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'expense_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

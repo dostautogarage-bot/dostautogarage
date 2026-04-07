@@ -130,32 +130,91 @@ table tr:hover {
     font-size: 1rem;
     cursor: pointer;
     margin-right: 0.5rem;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.15s ease;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
 }
 
 .btn:hover {
     background: #9a8c98;
     color: #22223b;
+    transform: translateY(-1px);
 }
 
-.form-group {
-    margin-bottom: 1.2rem;
+.btn-sm {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
+    border-radius: 0.45rem;
 }
 
-input, select {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    width: 100%;
-    font-size: 1rem;
-    margin-top: 0.3rem;
+.action-btn {
+    min-width: 2.4rem;
+    min-height: 2.4rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.85rem;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-label {
-    font-weight: 500;
-    color: #4a4e69;
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+}
+
+.action-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.card {
+    border-radius: 1rem;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+
+.form-label {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: #343a40;
+    font-size: 0.85rem;
+}
+
+.form-control,
+.form-select,
+textarea {
+    border-radius: 0.8rem;
+}
+
+.btn,
+.btn-secondary,
+.btn-primary,
+.btn-danger,
+.btn-warning,
+.btn-info,
+.btn-success {
+    border-radius: 0.85rem;
+}
+
+.table th,
+.table td {
+    overflow-wrap: anywhere;
+}
+
+.table-responsive {
+    overflow-x: auto;
 }
 
 .errorlist {

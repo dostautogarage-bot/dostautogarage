@@ -93,6 +93,11 @@
         padding: 0.4rem 0.6rem;
     }
 
+    .invoice-table th,
+    .invoice-table td {
+        text-transform: uppercase;
+    }
+
     @media (min-width: 768px) {
         .form-control, .form-select, .btn {
             font-size: 1rem;
@@ -170,8 +175,8 @@
         
         <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-            <h3>Invoices</h3>
-            <a href="{% url 'invoice_create' %}" class="btn btn-primary">+ Create</a>
+            <h3>INVOICES</h3>
+            <a href="{% url 'invoice_create' %}" class="btn btn-primary">+ CREATE</a>
         </div>
 
         <!-- Search + Date Range + Per Page -->
@@ -180,8 +185,8 @@
                 <div class="invoice-filter-card">
                     <form method="get" class="row gx-3 gy-3 align-items-end">
                         <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label">Search</label>
-                            <input type="text" name="q" class="form-control" placeholder="ID / Invoice / customer / phone / user" value="{{ query }}">
+                            <label class="form-label">SEARCH</label>
+                            <input type="text" name="q" class="form-control" placeholder="ID / INVOICE / CUSTOMER / PHONE / USER" value="{{ query }}">
                         </div>
                         <div class="col-6 col-sm-4 col-lg-2">
                             <label class="form-label">Start Date</label>
@@ -192,27 +197,28 @@
                             <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
                         </div>
                         <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label">Created By</label>
+                            <label class="form-label">CREATED BY</label>
                             <select name="creator" class="form-select">
-                                <option value="">All users</option>
+                                <option value="">ALL USERS</option>
                                 {% for user in users %}
                                     <option value="{{ user.pk }}" {% if selected_creator == user.pk|stringformat:"s" %}selected{% endif %}>
-                                        {{ user.get_full_name|default:user.username }}
+                                        {{ user.get_full_name|default:user.username|upper }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-6 col-sm-4 col-lg-2">
+                            <label class="form-label">Per Page</label>
+                            <select name="per_page" class="form-select">
+                                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                                <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+                                <option value="300" {% if per_page == 300 %}selected{% endif %}>300</option>
+                                <option value="500" {% if per_page == 500 %}selected{% endif %}>500</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-4 col-lg-2">
                             <label class="form-label opacity-0">Search</label>
                             <button class="btn btn-secondary w-100">Search</button>
-                        </div>
-                        <div class="col-6 col-sm-4 col-lg-1">
-                            <label class="form-label">Per Page</label>
-                            <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                <option value="5"  {% if per_page == 5  %}selected{% endif %}>5</option>
-                                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                                <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
-                            </select>
                         </div>
                     </form>
                 </div>
@@ -221,7 +227,7 @@
 
         <!-- Table -->
         <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
+            <table class="table table-striped table-hover align-middle invoice-table">
 
                 <thead class="table-dark">
                     <tr>
@@ -230,7 +236,7 @@
                         <th>Created By</th>
                         <th>Date</th>
                         <th>Total</th>
-                        <th>Balance</th>
+                        <th>Discount</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -242,15 +248,15 @@
                         <td><strong>{{ invoice.formatted_invoice_number }}</strong></td>
 
                         <td>
-                            <strong>{{ invoice.customer_name|default:"Walk-in" }}</strong><br>
-                            <small class="text-muted">{{ invoice.customer_phone }}</small>
+                            <strong>{{ invoice.customer_name|default:"Walk-in"|upper }}</strong><br>
+                            <small class="text-muted">{{ invoice.customer_phone|upper }}</small>
                         </td>
 
                         <td>
                             {% if invoice.created_by %}
-                                {{ invoice.created_by.get_full_name|default:invoice.created_by.username }}
+                                {{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}
                             {% else %}
-                                <span class="text-muted">Unknown</span>
+                                <span class="text-muted">UNKNOWN</span>
                             {% endif %}
                         </td>
 
@@ -258,26 +264,41 @@
 
                         <td>₹ {{ invoice.total }}</td>
 
-                        <td>₹ {{ invoice.balance_amount }}</td>
+                        <td>₹ {{ invoice.discount_amount }}</td>
 
-                        <td>
-                            <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-sm btn-info">View</a>
+                        <td class="text-center">
+                            <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-sm btn-info action-btn" title="View invoice">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.333-8-5.333S0 8 0 8s3 5.333 8 5.333S16 8 16 8z"/>
+                                    <path d="M8 10.667A2.667 2.667 0 1 1 10.667 8 2.667 2.667 0 0 1 8 10.667z"/>
+                                </svg>
+                            </a>
+                            <a href="{% url 'invoice_edit' invoice.pk %}" class="btn btn-sm btn-warning action-btn" title="Edit invoice">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                </svg>
+                            </a>
 
                             <!-- 🔴 Delete button triggers modal -->
                             <button type="button"
-                                    class="btn btn-sm btn-danger"
+                                    class="btn btn-sm btn-danger action-btn"
+                                    title="Delete invoice"
                                     data-bs-toggle="modal"
                                     data-bs-target="#deleteModal"
                                     data-invoice-id="{{ invoice.pk }}"
                                     data-invoice-number="{{ invoice.formatted_invoice_number }}">
-                                Delete
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
+                                    <path d="M10.5 5.5A.5.5 0 0 1 11 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1z"/>
+                                </svg>
                             </button>
                         </td>
 
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted">No data found</td>
+                        <td colspan="6" class="text-center text-muted">NO DATA FOUND</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -286,6 +307,7 @@
         </div>
 
         <!-- Pagination -->
+        {% if invoices.has_other_pages %}
         <nav class="mt-3">
             <ul class="pagination invoice-pagination justify-content-center flex-wrap gap-2">
 
@@ -325,6 +347,7 @@
 
             </ul>
         </nav>
+        {% endif %}
 
     </div>
 </div>

@@ -109,18 +109,18 @@
 
     <!-- ✅ No trigger button — just a clean confirmation card -->
     <div class="card shadow-sm">
-        <h5 class="text-danger mb-3">Delete Invoice</h5>
+        <h5 class="text-danger mb-3">DELETE INVOICE</h5>
         <p>
-            Are you sure you want to delete invoice <strong>{{ invoice.formatted_invoice_number }}</strong>?
+            ARE YOU SURE YOU WANT TO DELETE INVOICE <strong>{{ invoice.formatted_invoice_number }}</strong>?
             <br>
-            <small class="text-muted">This action cannot be undone.</small>
+            <small class="text-muted">THIS ACTION CANNOT BE UNDONE.</small>
         </p>
         <div class="d-flex gap-2">
             <form method="post">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                <button type="submit" class="btn btn-danger">YES, DELETE</button>
             </form>
-            <a href="{% url 'invoice_list' %}" class="btn btn-secondary">Cancel</a>
+            <a href="{% url 'invoice_list' %}" class="btn btn-secondary">CANCEL</a>
         </div>
     </div>
 

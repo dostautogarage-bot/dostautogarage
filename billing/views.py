@@ -9,9 +9,10 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count
 from datetime import datetime, timedelta
+from decimal import Decimal
 import os
 
-from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings
+from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expense
 
 # ReportLab
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, KeepTogether
@@ -45,31 +46,87 @@ class InvoiceItemForm(forms.Form):
         queryset=Product.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    quantity = forms.IntegerField(
-        min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    quantity = forms.DecimalField(
+        min_value=Decimal('0.01'),
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
     )
 
 
+class BaseInvoiceItemFormSet(forms.BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+
+        seen_part_numbers = set()
+        for form in self.forms:
+            if self.can_delete and form.cleaned_data.get('DELETE', False):
+                continue
+            product = form.cleaned_data.get('product')
+            if product and product.part_number:
+                part_key = product.part_number.strip().upper()
+                if part_key in seen_part_numbers:
+                    raise forms.ValidationError('Duplicate products with the same part number are not allowed.')
+                seen_part_numbers.add(part_key)
+
+
 class InvoiceMainForm(forms.ModelForm):
+    discount_amount = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        initial=0,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    next_due_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    ran_kilometer = forms.IntegerField(
+        required=False,
+        label='Next Service Kilometer',
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    
     class Meta:
         model = Invoice
         fields = [
             'customer_name',
             'customer_phone',
-            'vehicle_details',
-            'paid_amount',
+            'vehicle_number',
+            'discount_amount',
             'next_due_date',
             'ran_kilometer'
         ]
         widgets = {
             'customer_name': forms.TextInput(attrs={'class': 'form-control'}),
             'customer_phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'vehicle_details': forms.TextInput(attrs={'class': 'form-control'}),
-            'paid_amount': forms.NumberInput(attrs={'class': 'form-control'}),
-            'next_due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'ran_kilometer': forms.NumberInput(attrs={'class': 'form-control'}),
+            'vehicle_number': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class ExpenseForm(forms.ModelForm):
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        required=True,
+        label='Date'
+    )
+    property_name = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label='Property'
+    )
+    amount = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        label='Amount'
+    )
+
+    class Meta:
+        model = Expense
+        fields = ['date', 'property_name', 'amount']
 
 
 # -------------------- SETTINGS FORM --------------------
@@ -156,17 +213,10 @@ class AdminCreationForm(UserCreationForm):
         self.fields['password2'].validators = []
 
     def clean(self):
-        """Override to skip ALL password validation - only check they match"""
-        cleaned_data = super().clean()
+        cleaned_data = self.cleaned_data
         
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
-        
-        # Remove password validation errors if they exist
-        if 'password1' in self.errors:
-            del self.errors['password1']
-        if 'password2' in self.errors:
-            del self.errors['password2']
         
         # Only validate that passwords match
         if password1 and password2 and password1 != password2:
@@ -183,9 +233,22 @@ class AdminCreationForm(UserCreationForm):
         return self.cleaned_data.get('password2')
 
     def save(self, commit=True):
-        user = super().save(commit=False)
-        user.is_staff = True
-        user.is_superuser = True
+        username = self.cleaned_data['username']
+        email = self.cleaned_data.get('email')
+        first_name = self.cleaned_data['first_name']
+        last_name = self.cleaned_data['last_name']
+        password = self.cleaned_data['password1']
+        
+        user = get_user_model()(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            is_staff=True,
+            is_superuser=True
+        )
+        user.set_password(password)
+        
         if commit:
             user.save()
         return user
@@ -275,6 +338,67 @@ def product_delete(request, pk):
     return render(request, 'billing/product_confirm_delete.html', {'product': product})
 
 
+@login_required
+def expense_list(request):
+    admin_filter = request.GET.get('admin', '').strip()
+    if request.user.is_superuser:
+        expenses = Expense.objects.all().order_by('-date')
+        users = get_user_model().objects.filter(is_active=True).order_by('username')
+        if admin_filter:
+            expenses = expenses.filter(created_by_id=admin_filter)
+    else:
+        expenses = Expense.objects.filter(created_by=request.user).order_by('-date')
+        users = None
+
+    form = ExpenseForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        expense = form.save(commit=False)
+        expense.created_by = request.user
+        expense.save()
+        return redirect('expense_list')
+
+    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+    return render(request, 'billing/expense_list.html', {
+        'expenses': expenses,
+        'form': form,
+        'users': users,
+        'selected_admin': admin_filter,
+        'total_expenses': total_expenses,
+    })
+
+
+@login_required
+def expense_detail(request, pk):
+    expense = get_object_or_404(Expense, pk=pk)
+    if not request.user.is_superuser and expense.created_by != request.user:
+        return redirect('expense_list')
+    return render(request, 'billing/expense_detail.html', {'expense': expense})
+
+
+@login_required
+def expense_edit(request, pk):
+    expense = get_object_or_404(Expense, pk=pk)
+    if not request.user.is_superuser and expense.created_by != request.user:
+        return redirect('expense_list')
+    form = ExpenseForm(request.POST or None, instance=expense)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('expense_list')
+    return render(request, 'billing/expense_form.html', {'form': form, 'title': 'Edit Expense'})
+
+
+@login_required
+def expense_delete(request, pk):
+    expense = get_object_or_404(Expense, pk=pk)
+    if not request.user.is_superuser and expense.created_by != request.user:
+        return redirect('expense_list')
+    if request.method == 'POST':
+        expense.delete()
+        return redirect('expense_list')
+    return render(request, 'billing/expense_confirm_delete.html', {'expense': expense})
+
+
 # -------------------- INVOICE LIST --------------------
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -292,15 +416,34 @@ def invoice_list(request):
         invoices = invoices.filter(created_by_id=creator_id)
 
     if query:
-        invoices = invoices.filter(
-            Q(id__icontains=query) |
-            Q(invoice_number__icontains=query) |
+        # Get invoice prefix for formatted search
+        try:
+            prefix = Settings.objects.get(key='invoice_prefix').value.upper()
+        except Settings.DoesNotExist:
+            prefix = 'KNJ'
+        
+        search_filters = Q(
             Q(customer_name__icontains=query) |
             Q(customer_phone__icontains=query) |
             Q(created_by__username__icontains=query) |
             Q(created_by__first_name__icontains=query) |
             Q(created_by__last_name__icontains=query)
         )
+        
+        # Search by ID (primary key)
+        if query.isdigit():
+            search_filters |= Q(id=query)
+        
+        # Search by invoice number (numeric part)
+        if query.isdigit():
+            search_filters |= Q(invoice_number=query)
+        
+        # Search by formatted invoice number (e.g., KNJ00000001)
+        if query.upper().startswith(prefix) and query[len(prefix):].isdigit():
+            number_part = int(query[len(prefix):])
+            search_filters |= Q(invoice_number=number_part)
+        
+        invoices = invoices.filter(search_filters)
 
     if start_date:
         try:
@@ -381,21 +524,24 @@ def dashboard(request):
     total_invoice_value = sum(invoice.grand_total for invoice in invoices)
     products_sold = InvoiceItem.objects.filter(invoice__in=invoices).aggregate(total_qty=Sum('quantity'))['total_qty'] or 0
     total_other_charges = OtherCharge.objects.filter(invoice__in=invoices).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-    total_paid = invoices.aggregate(total_paid=Sum('paid_amount'))['total_paid'] or 0
-    balance_amount = total_invoice_value - total_paid
+    total_discount = invoices.aggregate(total_discount=Sum('discount_amount'))['total_discount'] or 0
+    balance_amount = total_invoice_value - total_discount
+    total_expenses = Expense.objects.filter(date__gte=start, date__lte=end).aggregate(total_amount=Sum('amount'))['total_amount'] or Decimal('0')
 
     if admin_invoices is not None:
         admin_invoice_count = admin_invoices.count()
         admin_products_sold = InvoiceItem.objects.filter(invoice__in=admin_invoices).aggregate(total_qty=Sum('quantity'))['total_qty'] or 0
         admin_other_charges = OtherCharge.objects.filter(invoice__in=admin_invoices).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-        admin_total_paid = admin_invoices.aggregate(total_paid=Sum('paid_amount'))['total_paid'] or 0
-        admin_balance_amount = sum(invoice.grand_total for invoice in admin_invoices) - admin_total_paid
+        admin_total_discount = admin_invoices.aggregate(total_discount=Sum('discount_amount'))['total_discount'] or 0
+        admin_balance_amount = sum(invoice.grand_total for invoice in admin_invoices) - admin_total_discount
+        admin_expenses = Expense.objects.filter(created_by=admin_user, date__gte=start, date__lte=end).aggregate(total_amount=Sum('amount'))['total_amount'] or Decimal('0')
         admin_stats = {
             'invoice_count': admin_invoice_count,
             'products_sold': admin_products_sold,
             'other_charges': admin_other_charges,
-            'total_paid': admin_total_paid,
+            'total_discount': admin_total_discount,
             'balance_amount': admin_balance_amount,
+            'expenses': admin_expenses,
         }
     else:
         admin_stats = None
@@ -425,7 +571,7 @@ def dashboard(request):
         'total_invoice_value': total_invoice_value,
         'products_sold': products_sold,
         'total_other_charges': total_other_charges,
-        'total_paid': total_paid,
+        'total_discount': total_discount,
         'balance_amount': balance_amount,
         'user_counts': user_counts,
         'user_chart_labels': user_chart_labels,
@@ -435,6 +581,7 @@ def dashboard(request):
         'selected_admin': selected_admin,
         'admin_user': admin_user,
         'admin_stats': admin_stats,
+        'total_expenses': total_expenses,
     })
 
 from django.shortcuts import get_object_or_404, redirect
@@ -458,7 +605,12 @@ import json
 @user_passes_test(lambda u: u.is_superuser)
 def invoice_create(request):
     ItemFormSet = forms.formset_factory(
-        InvoiceItemForm, extra=1, min_num=1, validate_min=True
+        InvoiceItemForm,
+        formset=BaseInvoiceItemFormSet,
+        extra=1,
+        min_num=1,
+        validate_min=True,
+        can_delete=False
     )
 
     formset   = ItemFormSet(request.POST or None)
@@ -466,6 +618,27 @@ def invoice_create(request):
 
     if request.method == 'POST':
         if formset.is_valid() and main_form.is_valid():
+            selected_parts = set()
+            duplicate_found = False
+
+            for form in formset:
+                if not form.cleaned_data:
+                    continue
+                product = form.cleaned_data.get('product')
+                if product and product.part_number:
+                    part_key = product.part_number.strip().upper()
+                    if part_key in selected_parts:
+                        form.add_error('product', 'Duplicate product part number not allowed.')
+                        duplicate_found = True
+                    else:
+                        selected_parts.add(part_key)
+
+            if duplicate_found:
+                return render(request, 'billing/invoice_form.html', {
+                    'formset'  : formset,
+                    'main_form': main_form,
+                    'products' : Product.objects.all()
+                })
 
             # ── Invoice number ───────────────────────────────────────────────
             last_invoice = Invoice.objects.order_by('-invoice_number').first()
@@ -555,6 +728,93 @@ def invoice_delete(request, pk):
         return redirect('invoice_list')
 
     return render(request, 'billing/invoice_confirm_delete.html', {'invoice': invoice})
+
+
+# -------------------- INVOICE EDIT --------------------
+@login_required
+@user_passes_test(lambda u: u.is_superuser) 
+def invoice_edit(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    ItemFormSet = forms.formset_factory(
+        InvoiceItemForm,
+        formset=BaseInvoiceItemFormSet,
+        extra=1,
+        min_num=1,
+        validate_min=True,
+        can_delete=True
+    )
+    formset = ItemFormSet(request.POST or None, initial=[{'product': item.product.pk, 'quantity': item.quantity} for item in invoice.items.all()])
+    main_form = InvoiceMainForm(request.POST or None, instance=invoice)
+    other_charges = list(invoice.other_charges.all())
+
+    if request.method == 'POST' and formset.is_valid() and main_form.is_valid():
+        selected_parts = set()
+        duplicate_found = False
+
+        for form in formset:
+            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                product = form.cleaned_data.get('product')
+                if product and product.part_number:
+                    part_key = product.part_number.strip().upper()
+                    if part_key in selected_parts:
+                        form.add_error('product', 'Duplicate product part number not allowed.')
+                        duplicate_found = True
+                    else:
+                        selected_parts.add(part_key)
+
+        if duplicate_found:
+            return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+
+        # Update main invoice
+        main_form.save()
+
+        # Handle invoice items - restore stock for existing items, then recreate
+        for item in invoice.items.all():
+            item.product.stock += item.quantity  # Restore stock
+            item.product.save()
+        invoice.items.all().delete()  # Clear existing items
+        
+        for form in formset:
+            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                product = form.cleaned_data.get('product')
+                quantity = form.cleaned_data.get('quantity')
+                if product and quantity > 0:
+                    if product.stock >= quantity:
+                        InvoiceItem.objects.create(invoice=invoice, product=product, quantity=quantity, price=product.price)
+                        product.stock -= quantity
+                        product.save()
+                    else:
+                        # Restore stock for previously processed items
+                        for prev_item in invoice.items.all():
+                            prev_item.product.stock -= prev_item.quantity
+                            prev_item.product.save()
+                        form.add_error('quantity', f'Not enough stock for {product.name}')
+                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+
+        # Handle other charges - delete existing and recreate
+        invoice.other_charges.all().delete()  # Clear existing charges
+        charges_raw = request.POST.get('other_charges', '[]')
+        try:
+            charges = json.loads(charges_raw)
+            for charge in charges:
+                name = charge.get('name', '').strip()
+                amount = charge.get('amount', 0)
+                if name and float(amount) > 0:
+                    OtherCharge.objects.create(invoice=invoice, name=name, amount=amount)
+        except (ValueError, KeyError, json.JSONDecodeError):
+            pass
+
+        messages.success(request, f'Invoice #{invoice.formatted_invoice_number} updated successfully.')
+        return redirect('invoice_detail', pk=invoice.pk)
+
+    return render(request, 'billing/invoice_form.html', {
+        'formset': formset, 
+        'main_form': main_form, 
+        'products': Product.objects.all(), 
+        'editing': True, 
+        'invoice': invoice, 
+        'other_charges': other_charges
+    })
 
 
 # -------------------- PREMIUM PDF --------------------
@@ -667,7 +927,7 @@ def invoice_pdf(request, pk):
     total              = invoice.total
     other_charges_total = invoice.other_charges_total
     grand_total        = invoice.grand_total
-    paid               = invoice.paid_amount
+    discount           = invoice.discount_amount
     balance            = invoice.balance_amount
     currency_symbol    = 'Rs.'
 
@@ -733,9 +993,9 @@ def invoice_pdf(request, pk):
 
     info_data = [
         ["Invoice No:", invoice_number,          "Date:",    invoice.created_at.strftime("%d-%m-%Y")],
-        ["Customer:",  invoice.customer_name,    "Phone:",   invoice.customer_phone],
-        ["Vehicle:",   invoice.vehicle_details or "-", "KM:", invoice.ran_kilometer or "-"],
-        ["Prepared by:", created_by_name, "", ""]
+        ["Customer:",  invoice.customer_name.upper() if invoice.customer_name else "",    "Phone:",   invoice.customer_phone],
+        ["Vehicle Number:",   invoice.vehicle_number.upper() if invoice.vehicle_number else "-", "KM:", invoice.ran_kilometer or "-"],
+        ["Prepared by:", created_by_name.upper(), "", ""]
     ]
 
     info_table = Table(info_data, colWidths=[90, 150, 70, 120])
@@ -753,7 +1013,7 @@ def invoice_pdf(request, pk):
 
     for item in invoice.items.all():
         data.append([
-            item.product.name,
+            item.product.name.upper(),
             item.quantity,
             f"{currency_symbol} {item.price:.2f}",
             f"{currency_symbol} {item.total_price:.2f}"
@@ -806,7 +1066,7 @@ def invoice_pdf(request, pk):
         charges_data = [["Charge", "Amount"]]
         for charge in other_charges:
             charges_data.append([
-                charge.name,
+                charge.name.upper(),
                 f"{currency_symbol} {charge.amount:.2f}"
             ])
         charges_table = Table(charges_data, colWidths=[340, 120])
@@ -851,8 +1111,8 @@ def invoice_pdf(request, pk):
 
     totals_data += [
         ["Grand Total",    f"{currency_symbol} {grand_total:.2f}"],
-        ["Paid",           f"{currency_symbol} {paid:.2f}"],
-        ["Balance",        f"{currency_symbol} {balance:.2f}"],
+        ["Discount",       f"{currency_symbol} {discount:.2f}"],
+        ["Final Total",    f"{currency_symbol} {balance:.2f}"],
     ]
 
     totals_table = Table(totals_data, colWidths=[100, 100], hAlign='RIGHT')
@@ -874,6 +1134,31 @@ def invoice_pdf(request, pk):
 
     elements.append(totals_table)
     elements.append(Spacer(1, 30))
+
+    # ---------------- NEXT DUE DATE (CONDITIONAL) ----------------
+    if invoice.next_due_date:
+        next_due_text = f"NEXT SERVICE DUE: {invoice.next_due_date.strftime('%d-%m-%Y')}"
+        if invoice.ran_kilometer:
+            next_due_text += f" (BEFORE {invoice.ran_kilometer} KM)"
+        
+        next_due_paragraph = Paragraph(
+            f"<b><font size=10 color='#E74C3C'>{next_due_text}</font></b>", 
+            styles['Normal']
+        )
+
+        next_due_table = Table([[next_due_paragraph]], colWidths=[460], hAlign='LEFT')
+        next_due_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#fdecea')),
+            ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#E74C3C')),
+            ('LEFTPADDING', (0,0), (-1,-1), 10),
+            ('RIGHTPADDING', (0,0), (-1,-1), 10),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ]))
+
+        elements.append(next_due_table)
+        elements.append(Spacer(1, 15))
 
     # ---------------- FOOTER ----------------
     # Create a table for proper alignment of footer text and signature
@@ -1007,18 +1292,23 @@ def admin_list(request):
             Q(last_name__icontains=query)
         )
     
-    paginator = Paginator(admins, 10)
+    per_page = int(request.GET.get('per_page', 100))
+    if per_page not in [100, 200, 300, 500]:
+        per_page = 100
+
+    paginator = Paginator(admins, per_page)
     page_number = request.GET.get('page')
     admin_page = paginator.get_page(page_number)
     
     return render(request, 'billing/admin_list.html', {
         'admins': admin_page,
-        'query': query
+        'query': query,
+        'per_page': per_page,
     })
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser and u.pk == 1)
 def admin_create(request):
     """Create a new admin user"""
     if request.method == 'POST':
@@ -1039,7 +1329,7 @@ def admin_create(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser and u.pk == 1)
 def admin_edit(request, pk):
     """Edit an admin user"""
     User = get_user_model()
@@ -1064,7 +1354,7 @@ def admin_edit(request, pk):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser and u.pk == 1)
 def admin_delete(request, pk):
     """Delete an admin user"""
     User = get_user_model()

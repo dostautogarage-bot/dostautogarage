@@ -15,14 +15,12 @@ class Settings(models.Model):
 
 class Product(models.Model):
 	name = models.CharField(max_length=100)
-	part_number = models.CharField(max_length=100, default='')
+	part_number = models.CharField(max_length=100, unique=True, default='')
 	price = models.DecimalField(max_digits=10, decimal_places=2)
-	stock = models.PositiveIntegerField(default=0)
+	stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
 	def __str__(self):
 		return self.name
-
-
 
 
 class Invoice(models.Model):
@@ -35,9 +33,9 @@ class Invoice(models.Model):
         blank=True,
         related_name='invoices'
     )
-    vehicle_details = models.CharField(max_length=255, blank=True)
+    vehicle_number = models.CharField(max_length=255, blank=True)
 
-    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     next_due_date = models.DateField(null=True, blank=True)
     ran_kilometer = models.PositiveIntegerField(null=True, blank=True)
 
@@ -61,7 +59,7 @@ class Invoice(models.Model):
 
     @property
     def balance_amount(self):
-        return self.grand_total - self.paid_amount  # ← now includes other charges
+        return self.grand_total - self.discount_amount  # Subtract discount from grand total
 
     @property
     def formatted_invoice_number(self):
@@ -78,7 +76,7 @@ class Invoice(models.Model):
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)  # ← changed
-    quantity = models.PositiveIntegerField()
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Price at time of sale
 
     @property
@@ -93,3 +91,17 @@ class OtherCharge(models.Model):
 
     def __str__(self):
         return f"{self.name} - ₹{self.amount}"
+
+
+class Expense(models.Model):
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='expenses'
+    )
+    date = models.DateField()
+    property_name = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.property_name} - ₹{self.amount}"
