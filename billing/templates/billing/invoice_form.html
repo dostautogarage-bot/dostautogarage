@@ -102,32 +102,10 @@
     .input-group .form-control.is-invalid { border-color: #dc3545; z-index: 0; }
     .input-group .form-control.is-valid   { border-color: #198754; z-index: 0; }
 
-    /* Product search */
-    .product-search-wrapper { position: relative; }
-
-    #productDropdownPortal {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 0;
-        height: 0;
-        z-index: 99999;
-        pointer-events: none;
-    }
-
-    .product-dropdown {
-        position: absolute;
-        background: #fff;
-        border: 1px solid #ced4da;
-        border-radius: 0.4rem;
-        max-height: 260px;
-        overflow-y: auto;
-        z-index: 99999;
-        display: none;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        min-width: 280px;
-        pointer-events: all;
-        font-size: 0.7rem;
+    /* Product search - using datalist now */
+    .product-search-input {
+        min-width: 400px;
+        text-transform: uppercase;
     }
 
     @media (min-width: 768px) {
@@ -208,6 +186,68 @@
         border-color: #198754;
     }
 
+    .discount-input-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1.1rem;
+        padding: 1.25rem;
+        box-shadow: 0 18px 40px rgba(37, 99, 235, 0.18);
+        background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+        color: #ffffff;
+    }
+
+    .discount-input-card .stat-label {
+        color: rgba(255, 255, 255, 0.85);
+        letter-spacing: 0.08em;
+        margin-bottom: 0.45rem;
+    }
+
+    .discount-input-card .stat-value input {
+        width: 100%;
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: 0.01em;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    #discountAmount {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #1cb933;
+    }
+
+    .discount-input-note {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.8rem;
+        margin-top: 0.75rem;
+    }
+
+    /* Hide number input spinners for discount */
+    #id_discount_amount::-webkit-outer-spin-button,
+    #id_discount_amount::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    #id_discount_amount {
+        -moz-appearance: textfield;
+    }
+
+    @media (max-width: 768px) {
+        .discount-input-card {
+            padding: 1rem;
+        }
+        .discount-input-card .stat-value input {
+            font-size: 1rem;
+        }
+        .discount-input-note {
+            font-size: 0.7rem;
+        }
+    }
+
     .alert {
         font-size: 0.75rem;
         padding: 0.75rem;
@@ -267,7 +307,9 @@
     }
 
     .table-responsive table {
-        min-width: 700px;
+        width: 100%;
+        min-width: auto;
+        table-layout: auto;
     }
 
     @media (min-width: 768px) {
@@ -278,6 +320,63 @@
         .table-responsive table {
             min-width: auto;
         }
+    }
+
+    .product-search-wrapper {
+        width: 100%;
+    }
+
+    .product-search-input {
+        width: 100%;
+    }
+
+    .product-dropdown {
+        min-width: 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    @media (max-width: 991px) {
+        h3 { font-size: 1.2rem; }
+        h5 { font-size: 0.85rem; }
+        .form-label { font-size: 0.8rem; }
+        .form-control, .form-select, .btn, .product-search-input, .charge-amount, .charge-select, .charge-name {
+            font-size: 0.9rem;
+        }
+        .action-btn { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+        .card { padding: 1rem !important; }
+        .table thead th, .table tbody td { padding: 0.45rem 0.5rem; }
+        .table { font-size: 0.82rem; }
+        .table-responsive table { min-width: 100%; }
+        .product-dropdown { max-width: calc(100vw - 2rem); left: 0 !important; right: auto; }
+    }
+
+    @media (max-width: 575px) {
+        .btn { padding: 0.45rem 0.75rem; }
+        .table thead th, .table tbody td { padding: 0.35rem 0.4rem; }
+        .card { padding: 0.9rem !important; }
+    }
+
+    @media (max-width: 768px) {
+        .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .card { padding: 1rem !important; }
+        h3 { font-size: 1.15rem; }
+        h5 { font-size: 0.9rem; }
+        .form-label { font-size: 0.8rem; }
+        .form-control, .form-select, .product-search-input, .charge-amount, .charge-select, .charge-name {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.65rem;
+        }
+        .btn, .btn-sm { font-size: 0.9rem; }
+        .action-btn { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
+        .table { font-size: 0.82rem; }
+        .table thead th, .table tbody td { padding: 0.45rem 0.55rem; }
+        .table-responsive table { min-width: 100%; }
+        .table-responsive { overflow-x: auto; }
+        .table-responsive table th, .table-responsive table td { white-space: normal; }
+        .product-dropdown { max-width: calc(100vw - 1.5rem); left: 0 !important; right: auto; }
+        .d-flex.justify-content-between.align-items-center { flex-wrap: wrap; gap: 0.5rem; }
+        .card.p-3.mb-4 { padding: 0.85rem; }
     }
 </style>
 
@@ -345,12 +444,6 @@
                     <div class="invalid-feedback">Please select a valid future date.</div>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">{{ main_form.discount_amount.label }}</label>
-                    {{ main_form.discount_amount }}
-                    <div class="invalid-feedback">Enter a valid discount amount (0 or more).</div>
-                </div>
-
             </div>
 
             <!-- PRODUCTS SECTION -->
@@ -376,7 +469,6 @@
                         <tr>
                             <th>PRODUCT</th>
                             <th style="width:160px;">QUANTITY</th>
-                            {% if editing %}<th style="width:80px;" class="text-center">DELETE</th>{% endif %}
                             <th style="width:80px;" class="text-center">REMOVE</th>
                         </tr>
                     </thead>
@@ -385,13 +477,13 @@
                         <tr>
                             <td style="min-width: 280px;">
                                 <div style="display:none;">{{ form.product }}</div>
-                                <div class="product-search-wrapper">
-                                    <input type="text"
-                                           class="form-control product-search-input"
-                                           placeholder="🔍 TYPE TO SEARCH PRODUCT..."
-                                           autocomplete="off"
-                                           spellcheck="false">
-                                </div>
+                                <input type="text" 
+                                       list="productList"
+                                       class="form-control product-search-input"
+                                       placeholder="🔍 TYPE TO SEARCH PRODUCT..."
+                                       autocomplete="off"
+                                       spellcheck="false">
+                                <datalist id="productList"></datalist>
                                 {% for error in form.product.errors %}
                                     <div class="text-danger small mt-1">{{ error }}</div>
                                 {% endfor %}
@@ -404,11 +496,6 @@
                                 {% endfor %}
                                 <div class="invalid-feedback">ENTER QUANTITY (MIN 1).</div>
                             </td>
-                            {% if editing %}
-                            <td class="text-center">
-                                {{ form.DELETE }}
-                            </td>
-                            {% endif %}
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-danger action-btn"
                                         onclick="removeRow(this)">
@@ -436,7 +523,7 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-bordered align-middle" id="charges-table">
+                <table class="table table-bordered align-middle" id="charges-table" style="min-width: 400px;">
                     <thead class="table-dark">
                         <tr>
                             <th>CHARGE NAME</th>
@@ -453,9 +540,52 @@
                 + ADD CHARGE
             </button>
 
+            <div class="card p-3 mb-4" style="background:#f8fafc; border:1px solid #d1d5db;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-uppercase text-muted" style="font-size:0.75rem;">Subtotal</span>
+                    <strong id="subtotalAmount">₹ 0.00</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-uppercase text-muted" style="font-size:0.75rem;">Other Charges</span>
+                    <strong id="chargesAmount">₹ 0.00</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-uppercase text-muted" style="font-size:0.75rem;">Discount</span>
+                    <strong id="discountAmount">₹ 0.00</strong>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-uppercase" style="font-size:0.85rem; font-weight:600;">Total</span>
+                    <strong id="grandTotalAmount" style="font-size:1rem;">₹ 0.00</strong>
+                </div>
+            </div>
+
             <input type="hidden" name="other_charges" id="otherChargesData">
 
-            <div class="d-flex gap-2 flex-wrap">
+            <!-- DISCOUNT INPUT -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="dashboard-stat-card dashboard-stat-blue discount-input-card">
+                        <div class="stat-label">{{ main_form.discount_amount.label }}</div>
+                        <div class="stat-value">
+                            <input type="number" 
+                                   name="discount_amount" 
+                                   id="id_discount_amount"
+                                   class="form-control border-0 bg-transparent text-white p-0"
+                                   min="0" 
+                                   step="0.01" 
+                                   placeholder="0.00"
+                                   value="{% if editing %}{{ invoice.discount_amount }}{% endif %}"
+                                   style="font-size: 1.25rem; font-weight: 800; color: #1cb933;">
+                                   
+                        </div>
+                        <div class="invalid-feedback">Enter a valid discount amount (0 or more).</div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap mt-3">
                 <button type="submit" class="btn btn-sm btn-success">CREATE INVOICE</button>
                 <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary">CANCEL</a>
             </div>
@@ -465,17 +595,11 @@
 </div>
 
 <!--
-    PORTAL DIV: appended to <body> so it's never clipped by any ancestor's
-    overflow:hidden or CSS transform. The dropdown sits inside this as
-    position:absolute, positioned with page coordinates (rect + scrollY).
+    PORTAL DIV: removed, using datalist instead
 -->
-<div id="productDropdownPortal">
-    <div class="product-dropdown" id="sharedDropdown"></div>
-</div>
 
 <script>
-// FIX 1: Use |escapejs to safely encode names/prices with quotes, apostrophes, etc.
-// Without this, a product like "Castrol's Oil" breaks the entire JS array.
+// ─── Product search with datalist ───────────────────────────────
 const ALL_PRODUCTS = [
     {% for product in products %}
     { id: "{{ product.pk }}", name: "{{ product.name|escapejs }}", price: "{{ product.price|escapejs }}", stock: {{ product.stock }}, part_number: "{{ product.part_number|escapejs }}" },
@@ -492,14 +616,30 @@ const phoneLengths = {
 
 // ─── Shared dropdown (portal, appended to body) ───────────────────────────────
 const sharedDropdown = document.getElementById('sharedDropdown');
+const dropdownBackdrop = document.getElementById('dropdownBackdrop');
 let   activeInput    = null;
 let   activeSelect   = null;
+
+// Move portal to body to ensure correct positioning
+const portal = document.getElementById('productDropdownPortal');
+if (portal && portal.parentNode !== document.body) {
+    document.body.appendChild(portal);
+}
+
+// Click on backdrop closes dropdown
+if (dropdownBackdrop) {
+    dropdownBackdrop.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        hideDropdown();
+    });
+}
 
 // FIX 2: Correct positioning math.
 // The portal div is position:absolute at the body origin (top:0, left:0).
 // getBoundingClientRect() returns viewport coords, so we add window.scroll*
 // to convert to page (document) coordinates — which is what absolute children need.
 function positionDropdown(input) {
+    if (!sharedDropdown) return;
     const rect = input.getBoundingClientRect();
     const top  = rect.bottom + window.scrollY;
     const left = rect.left   + window.scrollX;
@@ -555,7 +695,7 @@ function getSelectedPartNumbers(excludeSelect = null) {
 }
 
 function renderDropdown(filter) {
-    if (!activeInput || !activeSelect) return;
+    if (!activeInput || !activeSelect || !sharedDropdown) return;
 
     const selected = getSelectedProductIds(activeSelect);
     const selectedPartNumbers = getSelectedPartNumbers(activeSelect);
@@ -602,6 +742,7 @@ function renderDropdown(filter) {
                     activeInput.value  = p.name;
                     activeInput.classList.remove('is-invalid');
                     activeInput.classList.add('selected-product');
+                    calculateInvoiceTotals();
                     hideDropdown();
                 });
             } else {
@@ -619,10 +760,16 @@ function renderDropdown(filter) {
 
     positionDropdown(activeInput);
     sharedDropdown.style.display = 'block';
+    if (dropdownBackdrop) dropdownBackdrop.style.display = 'block';
 }
 
 function hideDropdown() {
-    sharedDropdown.style.display = 'none';
+    if (sharedDropdown) {
+        sharedDropdown.style.display = 'none';
+    }
+    if (dropdownBackdrop) {
+        dropdownBackdrop.style.display = 'none';
+    }
     activeInput  = null;
     activeSelect = null;
 }
@@ -633,54 +780,72 @@ window.addEventListener('resize',  () => { if (activeInput) positionDropdown(act
 
 // Click outside the dropdown closes it
 document.addEventListener('mousedown', function (e) {
-    if (!sharedDropdown.contains(e.target) && e.target !== activeInput) {
+    if (sharedDropdown && !sharedDropdown.contains(e.target) && e.target !== activeInput && e.target !== dropdownBackdrop) {
         hideDropdown();
     }
 });
 
-// ─── Attach search events to a row ───────────────────────────────────────────
+// ─── Product search with datalist ───────────────────────────────
 function initProductSearch(row) {
     const input  = row.querySelector('.product-search-input');
     const select = row.querySelector('select[name*="product"]');
+    const qty    = row.querySelector('input[name*="quantity"]');
 
-    input.addEventListener('focus', function () {
-        activeInput  = input;
-        activeSelect = select;
-        renderDropdown(input.value);
-    });
-
-    input.addEventListener('input', function () {
-        activeInput  = input;
-        activeSelect = select;
-        // Clear the hidden selection if the user starts typing again
-        if (select.value) {
+    input.addEventListener('change', function () {
+        const selectedProduct = ALL_PRODUCTS.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+        if (selectedProduct) {
+            select.value = selectedProduct.id;
+            input.classList.remove('is-invalid');
+            input.classList.add('selected-product');
+        } else {
             select.value = '';
             input.classList.remove('selected-product');
         }
-        renderDropdown(input.value);
+        calculateInvoiceTotals();
+        updateDatalist();
     });
 
-    // FIX 5: On blur, only clear if nothing was selected.
-    // No arbitrary setTimeout — the mousedown handler on items calls
-    // e.preventDefault() which prevents blur from firing at all during selection.
-    input.addEventListener('blur', function () {
-        // Small delay only to allow mousedown on dropdown items to fire first
-        // in the rare edge case of a trackpad tap (touchstart doesn't prevent blur)
-        setTimeout(() => {
-            if (sharedDropdown.style.display === 'block' && activeInput === input) {
-                hideDropdown();
-            }
-            if (!select.value) {
-                input.value = '';
-                input.classList.remove('selected-product');
-            }
-        }, 150);
+    input.addEventListener('input', function () {
+        if (select.value && input.value !== getProductById(select.value)?.name) {
+            select.value = '';
+            input.classList.remove('selected-product');
+        }
+        calculateInvoiceTotals();
+    });
+
+    if (qty) {
+        qty.addEventListener('input', calculateInvoiceTotals);
+    }
+}
+
+// ─── Update datalist to exclude selected products ─────────────────────────────
+function updateDatalist() {
+    const datalist = document.getElementById('productList');
+    if (!datalist) return;
+
+    const selectedIds = getSelectedProductIds();
+    datalist.innerHTML = '';
+
+    ALL_PRODUCTS.forEach(product => {
+        if (!selectedIds.has(String(product.id))) {
+            const option = document.createElement('option');
+            option.value = product.name;
+            option.textContent = `${product.name.toUpperCase()} (₹${product.price}, STOCK: ${product.stock})`;
+            datalist.appendChild(option);
+        }
     });
 }
 
 // Init existing formset rows on page load
 document.querySelectorAll('#product-table tbody tr').forEach(row => initProductSearch(row));
 removeEmptyExtraRows();
+calculateInvoiceTotals();
+updateDatalist();
+
+const discountInputField = document.getElementById('id_discount_amount');
+if (discountInputField) {
+    discountInputField.addEventListener('input', calculateInvoiceTotals);
+}
 
 function removeEmptyExtraRows() {
     const tbody = document.querySelector('#product-table tbody');
@@ -729,6 +894,8 @@ function addRow() {
     tbody.appendChild(newRow);
     totalForms.value = formIndex + 1;
     initProductSearch(newRow);
+    calculateInvoiceTotals();
+    updateDatalist();
 }
 
 // ─── Remove Product Row ───────────────────────────────────────────────────────
@@ -751,8 +918,18 @@ function removeRow(btn) {
             });
         });
         document.getElementById('id_form-TOTAL_FORMS').value = rows.length;
+        calculateInvoiceTotals();
+        updateDatalist();
     } else {
         alert('At least one product row is required.');
+    }
+}
+
+function removeChargeRow(btn) {
+    const row = btn.closest('tr');
+    if (row) {
+        row.remove();
+        calculateInvoiceTotals();
     }
 }
 
@@ -779,7 +956,7 @@ function addCharge() {
         </td>
         <td class="text-center">
             <button type="button" class="btn btn-sm btn-danger action-btn" title="Delete charge"
-                    onclick="this.closest('tr').remove()">
+                    onclick="removeChargeRow(this)">
                 <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
                     <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
@@ -789,6 +966,7 @@ function addCharge() {
     `;
     tbody.appendChild(tr);
     initChargeRow(tr);
+    calculateInvoiceTotals();
 }
 
 function initChargeRow(row) {
@@ -806,7 +984,13 @@ function initChargeRow(row) {
             chargeInput.value = '';
             chargeInput.classList.remove('is-invalid');
         }
+        calculateInvoiceTotals();
     });
+
+    const chargeAmount = row.querySelector('.charge-amount');
+    if (chargeAmount) {
+        chargeAmount.addEventListener('input', calculateInvoiceTotals);
+    }
 }
 
 function getChargeName(row) {
@@ -832,6 +1016,45 @@ function collectCharges() {
         if (name) charges.push({ name, amount });
     });
     document.getElementById('otherChargesData').value = JSON.stringify(charges);
+}
+
+function formatCurrency(value) {
+    return '₹ ' + Number(value).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function calculateInvoiceTotals() {
+    let subtotal = 0;
+    document.querySelectorAll('#product-table tbody tr').forEach(row => {
+        const select = row.querySelector('select[name*="product"]');
+        const qty    = row.querySelector('input[name*="quantity"]');
+        if (select && select.value && qty && qty.value.trim() !== '') {
+            const product = getProductById(select.value);
+            const quantity = parseFloat(qty.value) || 0;
+            if (product && quantity > 0) {
+                subtotal += (parseFloat(product.price) || 0) * quantity;
+            }
+        }
+    });
+
+    let chargesTotal = 0;
+    document.querySelectorAll('#charges-body tr').forEach(row => {
+        const amt = row.querySelector('.charge-amount');
+        if (amt && amt.value.trim() !== '') {
+            chargesTotal += parseFloat(amt.value) || 0;
+        }
+    });
+
+    const discountInput = document.getElementById('id_discount_amount');
+    const discountValue = discountInput && discountInput.value.trim() !== '' ? parseFloat(discountInput.value) || 0 : 0;
+    const grandTotal = subtotal + chargesTotal - discountValue;
+
+    document.getElementById('subtotalAmount').textContent = formatCurrency(subtotal);
+    document.getElementById('chargesAmount').textContent = formatCurrency(chargesTotal);
+    document.getElementById('discountAmount').textContent = formatCurrency(discountValue);
+    document.getElementById('grandTotalAmount').textContent = formatCurrency(grandTotal >= 0 ? grandTotal : 0);
 }
 
 // ─── Form Validation ──────────────────────────────────────────────────────────
@@ -905,7 +1128,7 @@ if (dueDate) {
     // 6. Discount Amount
     const discount = document.getElementById('id_discount_amount');
     if (discount) {
-        if (discount.value.trim() === '' || isNaN(discount.value) || Number(discount.value) < 0) {
+        if (discount.value.trim() !== '' && (isNaN(discount.value) || Number(discount.value) < 0)) {
             discount.classList.add('is-invalid'); valid = false;
         } else {
             discount.classList.remove('is-invalid'); discount.classList.add('is-valid');
@@ -1009,6 +1232,7 @@ if (dueDate) {
         return;
     }
 
+    calculateInvoiceTotals();
     collectCharges();
 });
 
@@ -1020,6 +1244,11 @@ document.getElementById('invoiceForm').addEventListener('input', function (e) {
             document.getElementById('phoneError').textContent = '';
         }
     }
+});
+
+// ─── Initialize totals on page load ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    calculateInvoiceTotals();
 });
 
 // ─── Handle Editing Mode ──────────────────────────────────────────────────────
@@ -1067,6 +1296,8 @@ if (lastRow) {
     if (amtInput) amtInput.value = '{{ charge.amount|escapejs }}';
 }
 {% endfor %}
+calculateInvoiceTotals();
+updateDatalist();
 {% endif %}
 </script>
 

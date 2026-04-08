@@ -72,20 +72,13 @@ class BaseInvoiceItemFormSet(forms.BaseFormSet):
 
 
 class InvoiceMainForm(forms.ModelForm):
-    discount_amount = forms.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        required=False,
-        initial=0,
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
     next_due_date = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
     ran_kilometer = forms.IntegerField(
         required=False,
-        label='Next Service Kilometer',
+        label='Service Kilometer',
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
     
@@ -103,6 +96,7 @@ class InvoiceMainForm(forms.ModelForm):
             'customer_name': forms.TextInput(attrs={'class': 'form-control'}),
             'customer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'vehicle_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'discount_amount': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
 
@@ -647,6 +641,7 @@ def invoice_create(request):
             invoice = main_form.save(commit=False)
             invoice.invoice_number = next_number
             invoice.created_by = request.user
+            invoice.discount_amount = main_form.cleaned_data.get('discount_amount', 0)
             invoice.save()
 
             # ── Invoice items ────────────────────────────────────────────────
@@ -662,7 +657,8 @@ def invoice_create(request):
 
                 if product.stock < quantity:
                     invoice.delete()
-                    form.add_error('quantity', f'Not enough stock for {product.name}')
+                    available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
+                    form.add_error('quantity', f'Only {available} available for {product.name}')
                     return render(request, 'billing/invoice_form.html', {
                         'formset'  : formset,
                         'main_form': main_form,
@@ -704,7 +700,7 @@ def invoice_create(request):
     return render(request, 'billing/invoice_form.html', {
         'formset'  : formset,
         'main_form': main_form,
-        'products' : Product.objects.filter(stock__gt=0)  # only in-stock for dropdown
+        'products' : Product.objects.all()  # include all products for search
     })
 
 
@@ -768,28 +764,61 @@ def invoice_edit(request, pk):
         # Update main invoice
         main_form.save()
 
-        # Handle invoice items - restore stock for existing items, then recreate
+        # Handle invoice items based on the change delta instead of treating edit like a new invoice.
+        old_quantities = {}
         for item in invoice.items.all():
-            item.product.stock += item.quantity  # Restore stock
-            item.product.save()
-        invoice.items.all().delete()  # Clear existing items
-        
+            old_quantities[item.product_id] = old_quantities.get(item.product_id, Decimal('0')) + item.quantity
+
+        new_items = []
+        new_product_ids = set()
         for form in formset:
             if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
                 product = form.cleaned_data.get('product')
                 quantity = form.cleaned_data.get('quantity')
                 if product and quantity > 0:
-                    if product.stock >= quantity:
-                        InvoiceItem.objects.create(invoice=invoice, product=product, quantity=quantity, price=product.price)
-                        product.stock -= quantity
-                        product.save()
-                    else:
-                        # Restore stock for previously processed items
-                        for prev_item in invoice.items.all():
-                            prev_item.product.stock -= prev_item.quantity
-                            prev_item.product.save()
-                        form.add_error('quantity', f'Not enough stock for {product.name}')
-                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+                    new_items.append((form, product, quantity))
+                    new_product_ids.add(product.pk)
+
+        # Validate stock without changing it yet
+        for form, product, quantity in new_items:
+            old_quantity = old_quantities.get(product.pk, Decimal('0'))
+            delta = Decimal(quantity) - old_quantity
+            if delta > 0 and product.stock < delta:
+                available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
+                form.add_error('quantity', f'Only {available} available for {product.name}')
+                return render(request, 'billing/invoice_form.html', {
+                    'formset': formset,
+                    'main_form': main_form,
+                    'products': Product.objects.all(),
+                    'editing': True,
+                    'invoice': invoice,
+                    'other_charges': other_charges
+                })
+
+        delta_messages = []
+
+        # Restore stock for deleted products or reduced quantities
+        for product_id, old_quantity in old_quantities.items():
+            if product_id not in new_product_ids:
+                product = Product.objects.get(pk=product_id)
+                product.stock += old_quantity
+                product.save()
+                delta_messages.append(f"{product.name} +{old_quantity}")
+
+        invoice.items.all().delete()  # Clear existing items
+
+        # Save updated items and apply only the stock delta
+        for form, product, quantity in new_items:
+            old_quantity = old_quantities.get(product.pk, Decimal('0'))
+            delta = Decimal(quantity) - old_quantity
+            if delta > 0:
+                product.stock -= delta
+                delta_messages.append(f"{product.name} -{delta}")
+            elif delta < 0:
+                product.stock += abs(delta)
+                delta_messages.append(f"{product.name} +{abs(delta)}")
+            product.save()
+            InvoiceItem.objects.create(invoice=invoice, product=product, quantity=quantity, price=product.price)
 
         # Handle other charges - delete existing and recreate
         invoice.other_charges.all().delete()  # Clear existing charges

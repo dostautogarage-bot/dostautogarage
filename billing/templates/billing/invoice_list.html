@@ -249,7 +249,9 @@
 
                         <td>
                             <strong>{{ invoice.customer_name|default:"Walk-in"|upper }}</strong><br>
+                            {% if invoice.customer_phone %}
                             <small class="text-muted">{{ invoice.customer_phone|upper }}</small>
+                            {% endif %}
                         </td>
 
                         <td>
