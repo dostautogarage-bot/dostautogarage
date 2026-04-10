@@ -353,12 +353,26 @@ def expense_list(request):
 
     total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
+    # Pagination logic (like invoice_list)
+    try:
+        per_page = int(request.GET.get('per_page', 100))
+    except (TypeError, ValueError):
+        per_page = 100
+    if per_page not in [100, 200, 300, 500]:
+        per_page = 100
+    page_number = request.GET.get('page')
+    paginator = Paginator(expenses, per_page)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'billing/expense_list.html', {
-        'expenses': expenses,
+        'expenses': page_obj.object_list,
         'form': form,
         'users': users,
         'selected_admin': admin_filter,
         'total_expenses': total_expenses,
+        'paginator': paginator,
+        'page_obj': page_obj,
+        'per_page': per_page,
     })
 
 
@@ -401,7 +415,9 @@ def invoice_list(request):
     creator_id = request.GET.get('creator', '').strip()
     start_date = request.GET.get('start_date', '').strip()
     end_date = request.GET.get('end_date', '').strip()
-    per_page = int(request.GET.get('per_page', 10))
+    per_page = int(request.GET.get('per_page', 100))
+    if per_page not in [100, 200, 300, 500]:
+        per_page = 100
 
     invoices = Invoice.objects.all().order_by('-created_at')
     users = get_user_model().objects.filter(is_active=True).order_by('username')
@@ -896,7 +912,9 @@ def product_list_api(request):
     """
     query    = request.GET.get('q', '').strip()
     page     = max(1, int(request.GET.get('page', 1)))
-    per_page = min(int(request.GET.get('per_page', 10)), 200)  # cap at 200
+    per_page = int(request.GET.get('per_page', 100))
+    if per_page not in [100, 200, 300, 500]:
+        per_page = 100
 
     qs = Product.objects.all().order_by('name')
 
