@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+import hashlib
 
 def signature_upload_path(instance, filename):
     return f'signatures/{filename}'
