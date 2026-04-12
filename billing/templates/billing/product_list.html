@@ -315,8 +315,8 @@
                 <thead class="table-dark">
                     <tr>
                         <th style="width:40px;" class="text-center">#</th>
-                        <th>Name</th>
-                        <th style="width:170px;">Part Number</th>
+                        <th class="sticky-left-1">Name</th>
+                        <th style="width:170px;" class="sticky-left-2">Part Number</th>
                         <th style="width:140px;">Price</th>
                         <th style="width:110px;">Stock</th>
                         <th style="width:120px;" class="text-center">Actions</th>
@@ -458,8 +458,8 @@ function renderTable(products) {
     tbody.innerHTML = products.map((p, i) => `
         <tr>
             <td data-label="#" class="text-center text-muted small">${offset + i + 1}</td>
-            <td data-label="Name">${escHtml(p.name.toUpperCase())}</td>
-            <td data-label="Part Number">${escHtml(p.part_number.toUpperCase())}</td>
+            <td data-label="Name" class="sticky-left-1">${escHtml(p.name.toUpperCase())}</td>
+            <td data-label="Part Number" class="sticky-left-2">${escHtml(p.part_number.toUpperCase())}</td>
             <td data-label="Price">₹ ${escHtml(String(p.price))}</td>
             <td data-label="Stock">${stockBadge(p.stock)}</td>
             <td data-label="Actions" class="text-center">

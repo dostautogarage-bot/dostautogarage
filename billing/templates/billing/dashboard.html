@@ -239,22 +239,24 @@
                 <div class="dashboard-section-card">
                     <h5>INVOICE COUNTS BY ADMIN</h5>
                     {% if user_counts %}
-                        <table class="table table-sm mb-0">
-                            <thead>
-                                <tr>
-                                    <th>USER</th>
-                                    <th class="text-end">INVOICES</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in user_counts %}
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
                                     <tr>
-                                        <td data-label="USER">{% if row.created_by__username %}{{ row.created_by__first_name|default:row.created_by__username|upper }}{% else %}UNKNOWN{% endif %}</td>
-                                        <td data-label="INVOICES" class="text-md-end">{{ row.count }}</td>
+                                        <th>USER</th>
+                                        <th class="text-end">INVOICES</th>
                                     </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {% for row in user_counts %}
+                                        <tr>
+                                            <td data-label="USER">{% if row.created_by__username %}{{ row.created_by__first_name|default:row.created_by__username|upper }}{% else %}UNKNOWN{% endif %}</td>
+                                            <td data-label="INVOICES" class="text-md-end">{{ row.count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     {% else %}
                         <p class="text-muted mb-0">NO INVOICE ACTIVITY IN THIS RANGE.</p>
                     {% endif %}

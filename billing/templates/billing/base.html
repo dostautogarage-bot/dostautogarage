@@ -329,67 +329,86 @@
             min-height: 50vh;
         }
 
-        /* ----- UNIVERSAL RESPONSIVE TABLES (Turn them into Cards on Mobile) ----- */
+        /* ----- MODERN RESPONSIVE TABLES (Sticky & Scroll) ----- */
+        .table-responsive {
+            -webkit-overflow-scrolling: touch;
+            overflow-x: auto;
+            border-radius: var(--border-radius-md);
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        /* Subtle indicator that there is more content to the right */
+        .table-responsive::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0;
+            width: 30px;
+            pointer-events: none;
+            background: linear-gradient(to right, rgba(255,255,255,0), rgba(0,0,0,0.03));
+            z-index: 5;
+        }
+
+        .table {
+            white-space: nowrap;
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table thead th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 16px;
+            border-bottom: 2px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* STICKY COLUMN UTILITIES FOR MOBILE */
         @media (max-width: 768px) {
-            .table-responsive {
-                border: none;
-                margin-bottom: 2rem;
+            .sticky-left-1 {
+                position: sticky !important;
+                left: 0 !important;
+                background-color: #fff !important;
+                z-index: 11 !important;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.02);
+                min-width: 120px;
             }
-            .table {
-                display: block;
-                width: 100%;
-                background: transparent;
+            .sticky-left-2 {
+                position: sticky !important;
+                left: 120px !important; /* Offset by width of sticky-left-1 */
+                background-color: #fff !important;
+                z-index: 11 !important;
+                box-shadow: 4px 0 8px rgba(0,0,0,0.05);
+                min-width: 100px;
+                border-left: 1px solid var(--border-light);
             }
-            .table thead {
-                display: none; /* Hide column headers on mobile */
+
+            /* Header Specifics */
+            thead th.sticky-left-1, thead th.sticky-left-2 {
+                background-color: #f8fafc !important;
+                z-index: 13 !important;
             }
-            .table tbody {
-                display: block;
-                width: 100%;
-            }
-            .table tr {
-                display: flex;
-                flex-direction: column;
-                margin-bottom: 1rem;
-                background: var(--surface);
-                border-radius: var(--border-radius-md);
-                padding: 1rem;
-                box-shadow: var(--shadow-sm);
-                border: 1px solid var(--border-light);
-            }
-            .table td, .table th {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.5rem 0;
-                border: none;
-                border-bottom: 1px solid #f1f5f9;
-                text-align: right; /* Values right aligned */
-                color: var(--text-main);
-                font-size: 0.9rem;
-            }
-            .table td:last-child {
-                border-bottom: none;
-                padding-bottom: 0;
-                justify-content: flex-end; /* actions on the right */
-                gap: 8px; /* For buttons */
-            }
-            .table td::before {
-                /* Since we might not have data-label, we just rely on flex layout,
-                   but if data-label exists, it will use it. */
-                content: attr(data-label);
-                font-weight: 600;
-                color: var(--text-muted);
-                text-align: left;
-                text-transform: uppercase;
-                font-size: 0.75rem;
-                margin-right: 15px;
-            }
-            /* Style buttons inside table cards slightly smaller */
-            .table td .btn {
-                padding: 4px 10px;
-                font-size: 0.8rem;
-            }
+        }
+
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-light);
+            background-color: #fff;
+        }
+
+        .table tbody tr:hover td {
+            background-color: #f1f5f9;
         }
 
         /* ----- NEO DESIGN DROPDOWN (GLOBAL) ----- */
