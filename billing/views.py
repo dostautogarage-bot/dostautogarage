@@ -11,6 +11,8 @@ from django.db.models import Q, Sum, Count
 from datetime import datetime, timedelta
 from decimal import Decimal
 import os
+import hashlib
+from django.utils.crypto import get_random_string
 
 from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expense
 
@@ -947,15 +949,32 @@ def product_list_api(request):
 
 # ── Add to urls.py ─────────────────────────────────────────────────────────────
 # path('api/products/', views.product_list_api, name='product_list_api'),
+def get_invoice_token(invoice_id):
+    """Generate a unique secret token for an invoice based on its ID and SECRET_KEY."""
+    secret = settings.SECRET_KEY
+    return hashlib.sha256(f"{invoice_id}{secret}".encode()).hexdigest()[:16]
+
+
+def public_invoice_pdf(request, pk, token):
+    """View to serve invoice PDF to customers without login using a secure token."""
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if token != get_invoice_token(invoice.pk):
+        return HttpResponse("Invalid Access Token", status=403)
+    
+    # We just call the existing logic (or refactor)
+    return invoice_pdf_logic(request, invoice)
 
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def invoice_pdf(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
+    return invoice_pdf_logic(request, invoice)
 
+
+def invoice_pdf_logic(request, invoice):
+    """Core logic to generate invoice PDF (extracted to be reused by public view)."""
     invoice_number = invoice.formatted_invoice_number
-
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{invoice_number}.pdf"'
 

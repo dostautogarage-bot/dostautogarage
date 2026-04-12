@@ -73,6 +73,52 @@ class Invoice(models.Model):
 
         return f"{prefix}{self.invoice_number:08d}"
 
+    @property
+    def public_token(self):
+        secret = settings.SECRET_KEY
+        return hashlib.sha256(f"{self.pk}{secret}".encode()).hexdigest()[:16]
+
+    @property
+    def whatsapp_message(self):
+        """Generates a detailed text report for WhatsApp sharing."""
+        from django.utils.encoding import smart_str
+        from urllib.parse import quote
+
+        msg = f"*DOST AUTO GARAGE*\n"
+        msg += f"--------------------------\n"
+        msg += f"*Invoice:* #{self.formatted_invoice_number}\n"
+        msg += f"*Date:* {self.created_at.strftime('%d-%m-%Y')}\n"
+        if self.vehicle_number:
+            msg += f"*Vehicle:* {self.vehicle_number.upper()}\n"
+        msg += f"--------------------------\n"
+        
+        msg += f"*ITEMS:*\n"
+        for item in self.items.all():
+            msg += f"- {item.product.name.upper()} ({item.quantity}): Rs.{item.total_price}\n"
+        
+        other_charges = self.other_charges.all()
+        if other_charges:
+            msg += f"\n*OTHER CHARGES:*\n"
+            for oc in other_charges:
+                msg += f"- {oc.name.upper()}: Rs.{oc.amount}\n"
+        
+        msg += f"--------------------------\n"
+        msg += f"*Subtotal:* Rs.{self.total + self.other_charges_total}\n"
+        if self.discount_amount > 0:
+            msg += f"*Discount:* Rs.{self.discount_amount}\n"
+        msg += f"*TOTAL DUE:* *Rs.{self.balance_amount}*\n"
+        msg += f"--------------------------\n"
+        
+        if self.next_due_date:
+            msg += f"*Next Service Due:* {self.next_due_date.strftime('%d-%m-%Y')}\n"
+            if self.ran_kilometer:
+                msg += f"(Before {self.ran_kilometer} KM)\n"
+            msg += f"--------------------------\n"
+            
+        msg += f"\n*View/Download PDF:* \n"
+        # The base URL will be added in the template since models don't easily know the domain
+        return msg
+
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)  # ← changed

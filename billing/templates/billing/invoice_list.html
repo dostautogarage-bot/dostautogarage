@@ -88,7 +88,9 @@
         }
     }
 
-    .form-control, .form-select, .btn {
+    .form-control,
+    .form-select,
+    .btn {
         font-size: 0.8rem;
         padding: 0.4rem 0.6rem;
     }
@@ -99,7 +101,10 @@
     }
 
     @media (min-width: 768px) {
-        .form-control, .form-select, .btn {
+
+        .form-control,
+        .form-select,
+        .btn {
             font-size: 1rem;
             padding: 0.6rem 1rem;
         }
@@ -148,7 +153,8 @@
     }
 
     .table {
-        min-width: 800px; /* Ensure table has enough width to require scrolling on mobile */
+        min-width: 800px;
+        /* Ensure table has enough width to require scrolling on mobile */
     }
 </style>
 {% endblock %}
@@ -157,7 +163,7 @@
 <div class="container mt-4">
 
     <div class="card invoice-list-card p-4">
-        
+
         <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
             <h3>INVOICES</h3>
@@ -171,7 +177,8 @@
                     <form method="get" class="row gx-3 gy-3 align-items-end">
                         <div class="col-12 col-md-6 col-lg-3">
                             <label class="form-label mb-1">SEARCH</label>
-                            <input type="text" name="q" class="form-control" placeholder="ID / CUSTOMER / PHONE" value="{{ query }}">
+                            <input type="text" name="q" class="form-control" placeholder="ID / CUSTOMER / PHONE"
+                                value="{{ query }}">
                         </div>
                         <div class="col-6 col-md-3 col-lg-2">
                             <label class="form-label mb-1">START DATE</label>
@@ -186,19 +193,20 @@
                             <select name="creator" class="form-select">
                                 <option value="">ALL USERS</option>
                                 {% for user in users %}
-                                    <option value="{{ user.pk }}" {% if selected_creator == user.pk|stringformat:"s" %}selected{% endif %}>
-                                        {{ user.get_full_name|default:user.username|upper }}
-                                    </option>
+                                <option value="{{ user.pk }}" {% if selected_creator==user.pk|stringformat:"s"
+                                    %}selected{% endif %}>
+                                    {{ user.get_full_name|default:user.username|upper }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-6 col-md-4 col-lg-2">
                             <label class="form-label mb-1">PER PAGE</label>
                             <select name="per_page" class="form-select">
-                                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                                <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
-                                <option value="300" {% if per_page == 300 %}selected{% endif %}>300</option>
-                                <option value="500" {% if per_page == 500 %}selected{% endif %}>500</option>
+                                <option value="100" {% if per_page==100 %}selected{% endif %}>100</option>
+                                <option value="200" {% if per_page==200 %}selected{% endif %}>200</option>
+                                <option value="300" {% if per_page==300 %}selected{% endif %}>300</option>
+                                <option value="500" {% if per_page==500 %}selected{% endif %}>500</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4 col-lg-1 align-self-end">
@@ -239,9 +247,9 @@
 
                         <td data-label="Created By">
                             {% if invoice.created_by %}
-                                {{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}
+                            {{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}
                             {% else %}
-                                <span class="text-muted">UNKNOWN</span>
+                            <span class="text-muted">UNKNOWN</span>
                             {% endif %}
                         </td>
 
@@ -254,21 +262,25 @@
                         <td data-label="Actions">
                             <div class="d-flex justify-content-end justify-content-md-center">
                                 <div class="dropdown">
-                                    <button class="neo-options-btn dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Options">
+                                    <button class="neo-options-btn dropdown-toggle-no-caret" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false" title="Options">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end neo-dropdown-menu">
                                         <li>
                                             <a class="neo-dropdown-item" href="{% url 'invoice_detail' invoice.pk %}">
-                                                <div class="neo-icon-wrapper" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                                                <div class="neo-icon-wrapper"
+                                                    style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
                                                     <i class="bi bi-eye-fill"></i>
                                                 </div>
                                                 View Details
                                             </a>
                                         </li>
                                         <li>
-                                            <a class="neo-dropdown-item" href="{% url 'invoice_pdf' invoice.pk %}" target="_blank">
-                                                <div class="neo-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                            <a class="neo-dropdown-item" href="{% url 'invoice_pdf' invoice.pk %}"
+                                                target="_blank">
+                                                <div class="neo-icon-wrapper"
+                                                    style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
                                                     <i class="bi bi-file-earmark-pdf-fill"></i>
                                                 </div>
                                                 Download PDF
@@ -276,31 +288,34 @@
                                         </li>
                                         {% if invoice.customer_phone %}
                                         <li>
-                                            <a class="neo-dropdown-item" href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text=Hello%20*{{ invoice.customer_name|urlencode }}*,%0A%0AYour%20vehicle%20service%20invoice%20is%20ready.%20Your%20total%20amount%20due%20is%20*Rs.{{ invoice.total }}*.%0A%0AThank%20you%20for%20choosing%20*DostGarage*!" target="_blank">
-                                                <div class="neo-icon-wrapper" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                                            <a class="neo-dropdown-item" href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank">
+                                                <div class="neo-icon-wrapper" style="background: rgba(34, 197, 114, 0.1); color: #22c55e;">
                                                     <i class="bi bi-whatsapp"></i>
                                                 </div>
                                                 Share to WhatsApp
                                             </a>
                                         </li>
                                         {% endif %}
-                                        <li><div class="my-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;"></div></li>
+                                        <li>
+                                            <div class="my-2 border-top"
+                                                style="border-color: rgba(0,0,0,0.05) !important;"></div>
+                                        </li>
                                         <li>
                                             <a class="neo-dropdown-item" href="{% url 'invoice_edit' invoice.pk %}">
-                                                <div class="neo-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                                <div class="neo-icon-wrapper"
+                                                    style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </div>
                                                 Edit Invoice
                                             </a>
                                         </li>
                                         <li>
-                                            <button type="button" 
-                                                    class="neo-dropdown-item shadow-none"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteModal"
-                                                    data-invoice-id="{{ invoice.pk }}"
-                                                    data-invoice-number="{{ invoice.formatted_invoice_number }}">
-                                                <div class="neo-icon-wrapper" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">
+                                            <button type="button" class="neo-dropdown-item shadow-none"
+                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                data-invoice-id="{{ invoice.pk }}"
+                                                data-invoice-number="{{ invoice.formatted_invoice_number }}">
+                                                <div class="neo-icon-wrapper"
+                                                    style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">
                                                     <i class="bi bi-trash-fill"></i>
                                                 </div>
                                                 Delete
@@ -328,37 +343,43 @@
             <ul class="pagination invoice-pagination justify-content-center flex-wrap gap-2">
 
                 {% if invoices.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">First</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ invoices.previous_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Prev</a>
-                    </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page=1&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ invoices.previous_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Prev</a>
+                </li>
                 {% else %}
-                    <li class="page-item disabled"><span class="page-link">First</span></li>
-                    <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                <li class="page-item disabled"><span class="page-link">First</span></li>
+                <li class="page-item disabled"><span class="page-link">Prev</span></li>
                 {% endif %}
 
                 {% for num in invoices.paginator.page_range %}
-                    {% if invoices.number == num %}
-                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                    {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">{{ num }}</a>
-                        </li>
-                    {% endif %}
+                {% if invoices.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">{{
+                        num }}</a>
+                </li>
+                {% endif %}
                 {% endfor %}
 
                 {% if invoices.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ invoices.next_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Next</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ invoices.paginator.num_pages }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Last</a>
-                    </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ invoices.next_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ invoices.paginator.num_pages }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}">Last</a>
+                </li>
                 {% else %}
-                    <li class="page-item disabled"><span class="page-link">Next</span></li>
-                    <li class="page-item disabled"><span class="page-link">Last</span></li>
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                <li class="page-item disabled"><span class="page-link">Last</span></li>
                 {% endif %}
 
             </ul>
@@ -401,7 +422,7 @@
     const deleteModal = document.getElementById('deleteModal');
     deleteModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
-        const invoiceId     = button.getAttribute('data-invoice-id');
+        const invoiceId = button.getAttribute('data-invoice-id');
         const invoiceNumber = button.getAttribute('data-invoice-number');
 
         document.getElementById('invoiceNumber').textContent = invoiceNumber;

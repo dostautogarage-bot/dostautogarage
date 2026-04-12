@@ -6,14 +6,14 @@
     .card {
         border-radius: 1rem;
         padding: 1rem !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     @media (min-width: 768px) {
         .card {
             border-radius: 1.5rem;
             padding: 2rem !important;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
     }
 
@@ -246,9 +246,9 @@
 
         <!-- Success Message -->
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-success mt-2 mb-3">{{ message }}</div>
-            {% endfor %}
+        {% for message in messages %}
+        <div class="alert alert-success mt-2 mb-3">{{ message }}</div>
+        {% endfor %}
         {% endif %}
 
         <!-- Header -->
@@ -257,21 +257,29 @@
                 <h3 class="mb-0">Invoice #{{ invoice.formatted_invoice_number }}</h3>
                 <small class="text-muted">DATE: {{ invoice.created_at|date:"d M Y" }}</small><br>
                 <small class="text-muted">
-                    CREATED BY: {% if invoice.created_by %}{{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}{% else %}UNKNOWN{% endif %}
+                    CREATED BY: {% if invoice.created_by %}{{
+                    invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}{% else %}UNKNOWN{%
+                    endif %}
                 </small>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 {% if invoice.customer_phone %}
-                <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text=Hello%20*{{ invoice.customer_name|urlencode }}*,%0A%0AYour%20vehicle%20service%20invoice%20is%20ready.%20Your%20total%20amount%20due%20is%20*Rs.{{ invoice.balance_amount }}*.%0A%0AThank%20you%20for%20choosing%20*DostGarage*!" target="_blank" class="btn btn-sm action-btn d-flex align-items-center justify-content-center" style="background-color: #25D366; color: white;" title="Share on WhatsApp">
+                <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank" class="btn btn-sm action-btn d-flex align-items-center justify-content-center" style="background-color: #25D366; color: white;" title="Share on WhatsApp">
                     <i class="bi bi-whatsapp"></i>
                 </a>
                 {% endif %}
-                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="btn btn-sm btn-danger action-btn d-flex align-items-center justify-content-center" title="Download PDF">
+                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank"
+                    class="btn btn-sm btn-danger action-btn d-flex align-items-center justify-content-center"
+                    title="Download PDF">
                     <i class="bi bi-file-earmark-pdf-fill"></i>
                 </a>
-                <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary action-btn d-flex align-items-center justify-content-center" title="Back to invoices">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L6.707 7h6.793a.5.5 0 0 1 0 1H6.707l4.647 4.646a.5.5 0 0 1-.708.708l-5.5-5.5a.5.5 0 0 1 0-.708l5.5-5.5a.5.5 0 0 1 .708 0z"/>
+                <a href="{% url 'invoice_list' %}"
+                    class="btn btn-sm btn-secondary action-btn d-flex align-items-center justify-content-center"
+                    title="Back to invoices">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M11.354 1.646a.5.5 0 0 1 0 .708L6.707 7h6.793a.5.5 0 0 1 0 1H6.707l4.647 4.646a.5.5 0 0 1-.708.708l-5.5-5.5a.5.5 0 0 1 0-.708l5.5-5.5a.5.5 0 0 1 .708 0z" />
                     </svg>
                 </a>
             </div>
@@ -402,7 +410,7 @@
         <div class="alert alert-info mt-4 mb-0">
             NEXT SERVICE DUE ON <strong>{{ invoice.next_due_date|date:"d M Y" }}</strong>
             {% if invoice.ran_kilometer %}
-                AT <strong>{{ invoice.ran_kilometer }} KM</strong>.
+            AT <strong>{{ invoice.ran_kilometer }} KM</strong>.
             {% endif %}
         </div>
         {% endif %}
