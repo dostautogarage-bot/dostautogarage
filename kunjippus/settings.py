@@ -24,9 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "&)z1qen^5tke+l_ucu523gx5m=2+xg_mv!@-0^-$i!pzo#)4f@"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["dostautogarage.com" ,"www.dostautogarage.com", "159.65.151.179","localhost"]
+
+ALLOWED_HOSTS = ["dostautogarage.com" ,"www.dostautogarage.com", "159.65.151.179","localhost", "127.0.0.1"]
 
 
 

@@ -261,13 +261,15 @@
                 </small>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="btn btn-sm btn-success action-btn" title="Download PDF">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M.5 13a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5z"/>
-                        <path d="M8 1.5a.5.5 0 0 1 .5.5v8.793l2.146-2.147a.5.5 0 1 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 .708-.708L7.5 10.793V2a.5.5 0 0 1 .5-.5z"/>
-                    </svg>
+                {% if invoice.customer_phone %}
+                <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text=Hello%20*{{ invoice.customer_name|urlencode }}*,%0A%0AYour%20vehicle%20service%20invoice%20is%20ready.%20Your%20total%20amount%20due%20is%20*Rs.{{ invoice.balance_amount }}*.%0A%0AThank%20you%20for%20choosing%20*DostGarage*!" target="_blank" class="btn btn-sm action-btn d-flex align-items-center justify-content-center" style="background-color: #25D366; color: white;" title="Share on WhatsApp">
+                    <i class="bi bi-whatsapp"></i>
                 </a>
-                <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary action-btn" title="Back to invoices">
+                {% endif %}
+                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="btn btn-sm btn-danger action-btn d-flex align-items-center justify-content-center" title="Download PDF">
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                </a>
+                <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary action-btn d-flex align-items-center justify-content-center" title="Back to invoices">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L6.707 7h6.793a.5.5 0 0 1 0 1H6.707l4.647 4.646a.5.5 0 0 1-.708.708l-5.5-5.5a.5.5 0 0 1 0-.708l5.5-5.5a.5.5 0 0 1 .708 0z"/>
                     </svg>
@@ -314,10 +316,10 @@
                 <tbody>
                     {% for item in invoice.items.all %}
                     <tr>
-                        <td>{{ item.product.name|upper }}</td>
-                        <td>{{ item.quantity }}</td>
-                        <td>₹ {{ item.price }}</td>
-                        <td>₹ {{ item.total_price }}</td>
+                        <td data-label="PRODUCT">{{ item.product.name|upper }}</td>
+                        <td data-label="QUANTITY">{{ item.quantity }}</td>
+                        <td data-label="PRICE">₹ {{ item.price }}</td>
+                        <td data-label="TOTAL">₹ {{ item.total_price }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -344,8 +346,8 @@
                 <tbody>
                     {% for charge in invoice.other_charges.all %}
                     <tr>
-                        <td>{{ charge.name|upper }}</td>
-                        <td>₹ {{ charge.amount }}</td>
+                        <td data-label="CHARGE">{{ charge.name|upper }}</td>
+                        <td data-label="AMOUNT">₹ {{ charge.amount }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

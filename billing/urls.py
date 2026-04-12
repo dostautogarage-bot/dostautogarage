@@ -29,4 +29,8 @@ urlpatterns = [
     path('admins/create/', views.admin_create, name='admin_create'),
     path('admins/<int:pk>/edit/', views.admin_edit, name='admin_edit'),
     path('admins/<int:pk>/delete/', views.admin_delete, name='admin_delete'),
+    
+    # PWA
+    path('manifest.json', views.manifest_json, name='manifest_json'),
+    path('sw.js', views.sw_js, name='sw_js'),
 ]

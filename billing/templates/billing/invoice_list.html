@@ -184,20 +184,20 @@
             <div class="col-12">
                 <div class="invoice-filter-card">
                     <form method="get" class="row gx-3 gy-3 align-items-end">
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label">SEARCH</label>
-                            <input type="text" name="q" class="form-control" placeholder="ID / INVOICE / CUSTOMER / PHONE / USER" value="{{ query }}">
+                        <div class="col-12 col-md-6 col-lg-3">
+                            <label class="form-label mb-1">SEARCH</label>
+                            <input type="text" name="q" class="form-control" placeholder="ID / CUSTOMER / PHONE" value="{{ query }}">
                         </div>
-                        <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label">Start Date</label>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label mb-1">START DATE</label>
                             <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
                         </div>
-                        <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label">End Date</label>
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label mb-1">END DATE</label>
                             <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
                         </div>
-                        <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label">CREATED BY</label>
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="form-label mb-1">CREATED BY</label>
                             <select name="creator" class="form-select">
                                 <option value="">ALL USERS</option>
                                 {% for user in users %}
@@ -207,8 +207,8 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label">Per Page</label>
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="form-label mb-1">PER PAGE</label>
                             <select name="per_page" class="form-select">
                                 <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                                 <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
@@ -216,9 +216,8 @@
                                 <option value="500" {% if per_page == 500 %}selected{% endif %}>500</option>
                             </select>
                         </div>
-                        <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label opacity-0">Search</label>
-                            <button class="btn btn-secondary w-100">Search</button>
+                        <div class="col-12 col-md-4 col-lg-1 align-self-end">
+                            <button class="btn btn-secondary w-100" title="Search"><i class="bi bi-search"></i></button>
                         </div>
                     </form>
                 </div>
@@ -245,16 +244,16 @@
                     {% for invoice in invoices %}
                     <tr>
 
-                        <td><strong>{{ invoice.formatted_invoice_number }}</strong></td>
+                        <td data-label="Invoice No"><strong>{{ invoice.formatted_invoice_number }}</strong></td>
 
-                        <td>
+                        <td data-label="Customer">
                             <strong>{{ invoice.customer_name|default:"Walk-in"|upper }}</strong><br>
                             {% if invoice.customer_phone %}
                             <small class="text-muted">{{ invoice.customer_phone|upper }}</small>
                             {% endif %}
                         </td>
 
-                        <td>
+                        <td data-label="Created By">
                             {% if invoice.created_by %}
                                 {{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}
                             {% else %}
@@ -262,39 +261,70 @@
                             {% endif %}
                         </td>
 
-                        <td>{{ invoice.created_at|date:"d M Y" }}</td>
+                        <td data-label="Date">{{ invoice.created_at|date:"d M Y" }}</td>
 
-                        <td>₹ {{ invoice.total }}</td>
+                        <td data-label="Total">₹ {{ invoice.total }}</td>
 
-                        <td>₹ {{ invoice.discount_amount }}</td>
+                        <td data-label="Discount">₹ {{ invoice.discount_amount }}</td>
 
-                        <td class="text-center">
-                            <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-sm btn-info action-btn" title="View invoice">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M16 8s-3-5.333-8-5.333S0 8 0 8s3 5.333 8 5.333S16 8 16 8z"/>
-                                    <path d="M8 10.667A2.667 2.667 0 1 1 10.667 8 2.667 2.667 0 0 1 8 10.667z"/>
-                                </svg>
-                            </a>
-                            <a href="{% url 'invoice_edit' invoice.pk %}" class="btn btn-sm btn-warning action-btn" title="Edit invoice">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-                                </svg>
-                            </a>
-
-                            <!-- 🔴 Delete button triggers modal -->
-                            <button type="button"
-                                    class="btn btn-sm btn-danger action-btn"
-                                    title="Delete invoice"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#deleteModal"
-                                    data-invoice-id="{{ invoice.pk }}"
-                                    data-invoice-number="{{ invoice.formatted_invoice_number }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
-                                    <path d="M10.5 5.5A.5.5 0 0 1 11 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
-                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1z"/>
-                                </svg>
-                            </button>
+                        <td data-label="Actions">
+                            <div class="d-flex justify-content-end justify-content-md-center">
+                                <div class="dropdown">
+                                    <button class="neo-options-btn dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Options">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end neo-dropdown-menu">
+                                        <li>
+                                            <a class="neo-dropdown-item" href="{% url 'invoice_detail' invoice.pk %}">
+                                                <div class="neo-icon-wrapper" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                                                    <i class="bi bi-eye-fill"></i>
+                                                </div>
+                                                View Details
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="neo-dropdown-item" href="{% url 'invoice_pdf' invoice.pk %}" target="_blank">
+                                                <div class="neo-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                </div>
+                                                Download PDF
+                                            </a>
+                                        </li>
+                                        {% if invoice.customer_phone %}
+                                        <li>
+                                            <a class="neo-dropdown-item" href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text=Hello%20*{{ invoice.customer_name|urlencode }}*,%0A%0AYour%20vehicle%20service%20invoice%20is%20ready.%20Your%20total%20amount%20due%20is%20*Rs.{{ invoice.total }}*.%0A%0AThank%20you%20for%20choosing%20*DostGarage*!" target="_blank">
+                                                <div class="neo-icon-wrapper" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                                                    <i class="bi bi-whatsapp"></i>
+                                                </div>
+                                                Share to WhatsApp
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        <li><div class="my-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;"></div></li>
+                                        <li>
+                                            <a class="neo-dropdown-item" href="{% url 'invoice_edit' invoice.pk %}">
+                                                <div class="neo-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                                    <i class="bi bi-pencil-fill"></i>
+                                                </div>
+                                                Edit Invoice
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <button type="button" 
+                                                    class="neo-dropdown-item shadow-none"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal"
+                                                    data-invoice-id="{{ invoice.pk }}"
+                                                    data-invoice-number="{{ invoice.formatted_invoice_number }}">
+                                                <div class="neo-icon-wrapper" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </div>
+                                                Delete
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </td>
 
                     </tr>

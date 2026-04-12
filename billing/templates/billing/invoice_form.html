@@ -475,7 +475,7 @@
                     <tbody>
                         {% for form in formset %}
                         <tr>
-                            <td style="min-width: 280px;">
+                            <td data-label="PRODUCT" style="min-width: 280px;">
                                 <div style="display:none;">{{ form.product }}</div>
                                 <input type="text" 
                                        list="productList"
@@ -489,14 +489,14 @@
                                 {% endfor %}
                                 <div class="invalid-feedback">PLEASE SELECT A PRODUCT.</div>
                             </td>
-                            <td>
+                            <td data-label="QUANTITY">
                                 {{ form.quantity }}
                                 {% for error in form.quantity.errors %}
                                     <div class="text-danger small">{{ error }}</div>
                                 {% endfor %}
                                 <div class="invalid-feedback">ENTER QUANTITY (MIN 1).</div>
                             </td>
-                            <td class="text-center">
+                            <td data-label="REMOVE" class="text-center">
                                 <button type="button" class="btn btn-sm btn-danger action-btn"
                                         onclick="removeRow(this)">
                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
@@ -937,7 +937,7 @@ function addCharge() {
     const tbody = document.getElementById('charges-body');
     const tr    = document.createElement('tr');
     tr.innerHTML = `
-        <td>
+        <td data-label="CHARGE NAME">
             <select class="form-select charge-select">
                 <option value="" disabled selected >SELECT OR CHOOSE CHARGE</option>
                 <option value="LABOR CHARGE">LABOR CHARGE</option>
@@ -949,12 +949,12 @@ function addCharge() {
             <textarea class="form-control charge-name d-none mt-2" rows="3" placeholder="TYPE OTHER CHARGE DESCRIPTION..." autocomplete="off"></textarea>
             <div class="invalid-feedback name-feedback">Charge description is required.</div>
         </td>
-        <td>
+        <td data-label="AMOUNT (₹)">
             <input type="number" class="form-control charge-amount" style="min-height:3rem;" 
                    min="0" step="0.01" placeholder="0.00">
             <div class="invalid-feedback">Enter a valid amount.</div>
         </td>
-        <td class="text-center">
+        <td data-label="REMOVE" class="text-center">
             <button type="button" class="btn btn-sm btn-danger action-btn" title="Delete charge"
                     onclick="removeChargeRow(this)">
                 <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">

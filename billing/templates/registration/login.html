@@ -3,186 +3,255 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Dostautogarage</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login | Dost Auto Garage</title>
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
     <style>
-        body {
-            background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 45%, #fff9db 100%);
-            color: #1f2937;
-            min-height: 100vh;
-            font-family: 'Poppins', sans-serif;
+        :root {
+            --primary: #FF5A00;
+            --primary-gradient: linear-gradient(135deg, #FF7B00 0%, #FF5A00 100%);
+            --bg-color: #F8FAFC;
+            --surface: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --shadow-md: 0 8px 32px rgba(15, 23, 42, 0.08);
+            --border-radius-lg: 24px;
         }
-        .login-shell {
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(255, 90, 0, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.05) 0px, transparent 50%);
+            color: var(--text-main);
             min-height: 100vh;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
-        }
-        .login-card {
-            width: 100%;
-            max-width: 460px;
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 28px;
-            box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12);
-            padding: 2.5rem;
-            border: 1px solid rgba(15, 23, 42, 0.04);
-        }
-        .login-card h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-        }
-        .login-card p {
-            color: #475569;
-            margin-bottom: 1.75rem;
-            line-height: 1.6;
-        }
-        .brand-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #ffc857 0%, #ffb94a 100%);
-            color: #1f2937;
-            font-weight: 900;
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.1rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-        }
-        .form-control,
-        .login-card input[type="text"],
-        .login-card input[type="password"],
-        .login-card input[type="email"] {
-            width: 100%;
-            border-radius: 1rem;
-            padding: 0.95rem 1rem;
-            border: 1px solid #d1d5db;
-            background: #f8fafc;
-            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
-            font-size: 1rem;
-            color: #0f172a;
+            padding: 20px;
         }
 
-        .form-control:focus,
-        .login-card input[type="text"]:focus,
-        .login-card input[type="password"]:focus,
-        .login-card input[type="email"]:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.18);
-            background: #ffffff;
-            transform: translateY(-1px);
+        .login-card {
+            background: var(--surface);
+            width: 100%;
+            max-width: 420px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--primary-gradient);
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 8px 16px rgba(255, 90, 0, 0.2);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-header h1 {
+            font-weight: 800;
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 0;
         }
 
         .form-label {
-            font-weight: 700;
-            color: #1e293b;
-            letter-spacing: 0.04em;
+            font-weight: 600;
+            font-size: 13px;
             text-transform: uppercase;
-            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
         }
 
-        .form-control::placeholder {
-            color: #94a3b8;
-            opacity: 1;
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid #E2E8F0;
+            background-color: #F8FAFC;
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.2s ease;
         }
 
-        .btn-primary {
-            border-radius: 1rem;
-            padding: 0.95rem 1rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%);
+        .form-control:focus {
+            background-color: #FFFFFF;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 90, 0, 0.1);
+            outline: none;
+        }
+
+        .btn-login {
+            background: var(--primary-gradient);
+            color: white;
             border: none;
-            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.18);
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 700;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 12px;
+            box-shadow: 0 8px 20px rgba(255, 90, 0, 0.25);
+            transition: all 0.3s ease;
         }
 
-        .btn-outline-primary {
-            border-radius: 1rem;
-            padding: 0.95rem 1rem;
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255, 90, 0, 0.35);
+            color: white;
         }
-        .footer-note {
-            font-size: 0.92rem;
-            color: #64748b;
-            margin-top: 1.5rem;
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .alert-danger {
+            background-color: #FFF1F2;
+            border: 1px solid #FECDD3;
+            color: #E11D48;
+            border-radius: 12px;
+            font-size: 14px;
+            padding: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-text {
             text-align: center;
+            margin-top: 32px;
+            font-size: 13px;
+            color: var(--text-muted);
         }
-        .alert {
-            border-radius: 1rem;
+
+        .footer-text span {
+            color: var(--primary);
+            font-weight: 600;
         }
 
-        @media (max-width: 576px) {
-            .login-shell {
-                padding: 1rem;
-            }
-
-            .login-card {
-                padding: 1.5rem;
-                border-radius: 18px;
-            }
-
-            .login-card h1 {
-                font-size: 1.75rem;
-            }
-
-            .brand-badge {
-                font-size: 0.9rem;
-                padding: 0.45rem 0.75rem;
-            }
+        .instagram-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
+
+        .instagram-pill:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+            transform: scale(1.05);
+        }
+
+        .instagram-pill i {
+            color: #E1306C;
+            font-size: 14px;
+        }
+
     </style>
 </head>
 <body>
-    <div class="login-shell">
-        <div class="login-card">
-            <div class="text-center mb-4">
-                <span class="brand-badge">Dostautogarage</span>
-                <h1>Welcome Back</h1>
-                <p>Login to manage invoices, stock, and reports with a smooth dashboard experience.</p>
+
+    <div class="login-card">
+        <div class="brand-logo">
+            <i class="bi bi-shield-lock-fill"></i>
+        </div>
+
+        <div class="login-header">
+            <h1>DOST AUTO GARAGE</h1>
+            <p>Enter your credentials to access the portal</p>
+        </div>
+
+        {% if form.errors or form.non_field_errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span>Invalid username or password.</span>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="id_username" class="form-label">Username</label>
+                <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter username" required autofocus>
             </div>
 
-            <form method="post" novalidate>
-                {% csrf_token %}
-
-                <div class="mb-3">
-                    <label for="id_username" class="form-label">Username</label>
-                    {{ form.username }}
-                </div>
-
-                <div class="mb-3">
-                    <label for="id_password" class="form-label">Password</label>
-                    {{ form.password }}
-                </div>
-
-                {% if next %}
-                    <input type="hidden" name="next" value="{{ next }}">
-                {% endif %}
-
-                {% if form.non_field_errors or form.errors %}
-                    <div class="alert alert-danger">
-                        Invalid username or password. Please try again.
-                    </div>
-                {% endif %}
-
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-            </form>
-
-            <div class="d-grid gap-2 mt-3">
-                <a href="{% url 'login' %}?next={% url 'dashboard' %}" class="btn btn-outline-primary">Login and go to Dashboard</a>
+            <div class="mb-4">
+                <label for="id_password" class="form-label">Password</label>
+                <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter password" required>
             </div>
 
-            <p class="footer-note">Designed for <strong style="font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; text-transform: uppercase;">Dostautogarage</strong></p>
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <button type="submit" class="btn btn-login">
+                LOG IN
+            </button>
+        </form>
+
+        <div class="footer-text">
+            Designed & Developed by<br>
+            <a href="https://www.instagram.com/its_me_fanu_/" target="_blank" class="instagram-pill">
+                <i class="bi bi-instagram"></i> its_me_fanu_
+            </a>
         </div>
     </div>
+
+    <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

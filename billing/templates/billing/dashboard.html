@@ -5,328 +5,71 @@
 
 {% block extra_css %}
 <style>
-    .dashboard-page {
-        background: linear-gradient(135deg, #fdf2f8 0%, #f0f9ff 45%, #ecfccb 100%);
-        min-height: 100vh;
-        padding: 1.5rem 0 2rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-page {
-            padding: 2.5rem 0 4rem;
-        }
-    }
-
     .dashboard-hero {
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        border-radius: 1rem;
+        background: var(--primary-gradient);
+        border-radius: var(--border-radius-lg);
         color: #fff;
-        padding: 1.25rem 1rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 24px 70px rgba(37, 99, 235, 0.16);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-lg);
     }
-
-    @media (min-width: 768px) {
-        .dashboard-hero {
-            border-radius: 1.5rem;
-            padding: 2rem 2.2rem;
-            margin-bottom: 1.5rem;
-        }
-    }
-
-    .dashboard-hero h3 {
-        font-size: 1.4rem;
-        margin-bottom: 0.35rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-hero h3 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-    }
-
-    .dashboard-hero p {
-        color: rgba(255,255,255,0.88);
-        margin-bottom: 0;
-        font-size: 0.8rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-hero p {
-            font-size: 1rem;
-        }
-    }
-
+    
     .dashboard-panel {
-        border-radius: 1rem;
-        padding: 1rem;
-        background: #ffffff;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-panel {
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-        }
-    }
-
-    .dashboard-filter {
-        background: #f8fafc;
-        border-radius: 1rem;
-        padding: 0.75rem;
-        border: 1px solid rgba(15, 23, 42, 0.06);
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-filter {
-            border-radius: 1.25rem;
-            padding: 1.25rem;
-        }
-    }
-
-    .dashboard-filter label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #374151;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-filter label {
-            font-size: 0.85rem;
-        }
-    }
-
-    .dashboard-filter .btn-link {
-        color: #2563eb;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.7rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-filter .btn-link {
-            font-size: 0.9rem;
-        }
-    }
-
-    .dashboard-filter .btn-link:hover {
-        color: #1e40af;
-        text-decoration: underline;
-    }
-
-    .dashboard-filter .form-control-sm,
-    .dashboard-filter .form-select-sm {
-        min-height: 36px;
-        font-size: 0.75rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-filter .form-control-sm,
-        .dashboard-filter .form-select-sm {
-            min-height: 46px;
-            font-size: 1rem;
-        }
+        background: var(--surface);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 1.5rem;
     }
 
     .dashboard-stat-card {
-        border-radius: 1rem;
+        border-radius: var(--border-radius-md);
         color: #fff;
-        padding: 1rem;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-        min-height: 110px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-stat-card {
-            border-radius: 1.5rem;
-            padding: 1.6rem 1.4rem;
-            min-height: 136px;
-            margin-bottom: 0;
-        }
-    }
-
-    .dashboard-stat-card .stat-label {
-        display: block;
-        font-size: 0.7rem;
-        color: rgba(255,255,255,0.85);
-        margin-bottom: 0.4rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-stat-card .stat-label {
-            font-size: 0.95rem;
-            margin-bottom: 0.75rem;
-        }
-    }
-
-    .dashboard-stat-card .stat-value {
-        font-size: clamp(1.25rem, 2.2vw, 1.6rem);
-        font-weight: 800;
-        line-height: 1.1;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        word-break: break-word;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-stat-card .stat-value {
-            font-size: clamp(1.8rem, 2.4vw, 2.4rem);
-        }
-    }
-
-    .dashboard-stat-blue { background: linear-gradient(135deg, #2563eb, #60a5fa); }
-    .dashboard-stat-orange { background: linear-gradient(135deg, #ea580c, #f59e0b); }
-    .dashboard-stat-green { background: linear-gradient(135deg, #16a34a, #4ade80); }
-    .dashboard-stat-purple { background: linear-gradient(135deg, #7c3aed, #c084fc); }
-    .dashboard-stat-pink { background: linear-gradient(135deg, #ec4899, #f472b6); }
-
-    .dashboard-admin-card {
-        background: transparent;
-        border-radius: 1rem;
-        padding: 1rem 0 0;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-admin-card {
-            border-radius: 1.5rem;
-            padding: 1.75rem 0 0;
-        }
-    }
-
-    .dashboard-admin-card h5 {
-        margin-bottom: 0.75rem;
-        color: #111827;
-        font-size: 0.95rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-admin-card h5 {
-            margin-bottom: 1.2rem;
-            font-size: 1.1rem;
-        }
-    }
-
-    .dashboard-admin-stat-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 0.75rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-admin-stat-grid {
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-        }
-    }
-
-    .dashboard-admin-stat-card {
-        border-radius: 1rem;
-        padding: 1rem;
-        color: #fff;
+        padding: 1.25rem;
         min-height: 120px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        justify-content: space-between;
+        box-shadow: var(--shadow-md);
+        transition: transform 0.2s;
+    }
+    .dashboard-stat-card:active {
+        transform: scale(0.98);
     }
 
-    @media (min-width: 768px) {
-        .dashboard-admin-stat-card {
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            min-height: 140px;
-        }
+    .dashboard-stat-card .stat-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    .dashboard-admin-stat-card .admin-stat-label {
-        font-size: 0.7rem;
-        color: rgba(255,255,255,0.85);
-        margin-bottom: 0.4rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-admin-stat-card .admin-stat-label {
-            font-size: 0.95rem;
-            margin-bottom: 0.75rem;
-        }
-    }
-
-    .dashboard-admin-stat-card .admin-stat-value {
-        font-size: 1.5rem;
+    .dashboard-stat-card .stat-value {
+        font-size: 1.75rem;
         font-weight: 800;
-        line-height: 1.1;
+        line-height: 1.2;
     }
 
-    @media (min-width: 768px) {
-        .dashboard-admin-stat-card .admin-stat-value {
-            font-size: 2rem;
-        }
-    }
-
-    .dashboard-admin-stat-blue { background: linear-gradient(135deg, #2563eb, #60a5fa); }
-    .dashboard-admin-stat-orange { background: linear-gradient(135deg, #ea580c, #f59e0b); }
-    .dashboard-admin-stat-green { background: linear-gradient(135deg, #16a34a, #4ade80); }
-    .dashboard-admin-stat-purple { background: linear-gradient(135deg, #7c3aed, #c084fc); }
-    .dashboard-admin-stat-pink { background: linear-gradient(135deg, #ec4899, #f472b6); }
+    /* Modern Gradients for Stats */
+    .dashboard-stat-blue { background: linear-gradient(135deg, #4F46E5, #3B82F6); }
+    .dashboard-stat-orange { background: linear-gradient(135deg, #EA580C, #F59E0B); }
+    .dashboard-stat-green { background: linear-gradient(135deg, #059669, #10B981); }
+    .dashboard-stat-purple { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+    .dashboard-stat-pink { background: linear-gradient(135deg, #E11D48, #FB7185); }
+    .dashboard-stat-dark { background: linear-gradient(135deg, #1E293B, #475569); }
 
     .dashboard-section-card {
-        border-radius: 1rem;
-        background: #ffffff;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
-        padding: 1rem;
-        margin-top: 0.75rem;
+        background: var(--surface);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
     }
-
-    @media (min-width: 768px) {
-        .dashboard-section-card {
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-        }
-    }
-
-    .dashboard-section-card h5 {
-        margin-bottom: 0.75rem;
-        font-size: 0.95rem;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-section-card h5 {
-            margin-bottom: 1.2rem;
-            font-size: 1.1rem;
-        }
-    }
-
-    .dashboard-badge {
-        border-radius: 999px;
-        padding: 0.25rem 0.6rem;
-        font-size: 0.65rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-badge {
-            padding: 0.35rem 0.85rem;
-            font-size: 0.8rem;
-        }
-    }
-
-    .dashboard-badge-soft-blue { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
-    .dashboard-badge-soft-green { background: rgba(16, 185, 129, 0.12); color: #059669; }
-    .dashboard-badge-soft-orange { background: rgba(251, 146, 60, 0.12); color: #c2410c; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-page">
+<div>
     <div class="container mt-4">
         <div class="dashboard-hero">
             <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-start">
@@ -348,11 +91,11 @@
                         <label class="form-label mb-1">END DATE</label>
                         <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}">
                     </div>
-                    <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="col-sm-12 col-md-4 col-lg-3">
                         <label class="form-label mb-1">CHOOSE MONTH</label>
                         <input id="dashboardMonth" type="month" name="month" class="form-control form-control-sm" value="{{ month }}">
                     </div>
-                    <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="col-sm-8 col-md-8 col-lg-3">
                         <label class="form-label mb-1">FILTER BY ADMIN</label>
                         <select name="admin" class="form-select form-select-sm">
                             <option value="">ALL ADMINS</option>
@@ -363,7 +106,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm-12 col-lg-2 align-self-end">
+                    <div class="col-sm-4 col-md-4 col-lg-2 align-self-end">
                         <button type="submit" class="btn btn-primary w-100">Apply</button>
                     </div>
                 </div>
@@ -410,35 +153,43 @@
         </div>
 
         {% if admin_stats %}
-        <div class="row g-3 mb-4">
-            <div class="col-12">
-                <div class="dashboard-admin-card">
-                    <h5 class="mb-3">ADMIN SUMMARY FOR {{ admin_user.get_full_name|default:admin_user.username|upper }}</h5>
-                    <div class="dashboard-admin-stat-grid">
-                        <div class="dashboard-admin-stat-card dashboard-admin-stat-blue text-center h-100">
-                            <span class="admin-stat-label">INVOICES</span>
-                            <span class="admin-stat-value">{{ admin_stats.invoice_count }}</span>
-                        </div>
-                        <div class="dashboard-admin-stat-card dashboard-admin-stat-orange text-center h-100">
-                            <span class="admin-stat-label">PRODUCTS SOLD</span>
-                            <span class="admin-stat-value">{{ admin_stats.products_sold }}</span>
-                        </div>
-                        <div class="dashboard-admin-stat-card dashboard-admin-stat-green text-center h-100">
-                            <span class="admin-stat-label">OTHER CHARGES</span>
-                            <span class="admin-stat-value">₹ {{ admin_stats.other_charges|floatformat:2 }}</span>
-                        </div>
-                        <div class="dashboard-admin-stat-card dashboard-admin-stat-orange text-center h-100">
-                            <span class="admin-stat-label">EXPENSES</span>
-                            <span class="admin-stat-value">₹ {{ admin_stats.expenses|floatformat:2 }}</span>
-                        </div>
-                        <div class="dashboard-admin-stat-card dashboard-admin-stat-purple text-center h-100">
-                            <span class="admin-stat-label">DISCOUNT AMOUNT</span>
-                            <span class="admin-stat-value">₹ {{ admin_stats.total_discount|floatformat:2 }}</span>
-                        </div>
-                        <div class="dashboard-admin-stat-card dashboard-admin-stat-pink text-center h-100">
-                            <span class="admin-stat-label">TOTAL INVOICE AMOUNT</span>
-                            <span class="admin-stat-value">₹ {{ admin_stats.balance_amount|floatformat:2 }}</span>
-                        </div>
+        <div class="dashboard-panel mb-4" style="background: rgba(37, 99, 235, 0.04); border: 1px solid rgba(37, 99, 235, 0.1);">
+            <h5 class="mb-3" style="font-weight: 700;">ADMIN SUMMARY FOR <span class="text-primary">{{ admin_user.get_full_name|default:admin_user.username|upper }}</span></h5>
+            <div class="row g-3">
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="dashboard-stat-card dashboard-stat-blue h-100">
+                        <span class="stat-label">INVOICES</span>
+                        <span class="stat-value">{{ admin_stats.invoice_count }}</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="dashboard-stat-card dashboard-stat-orange h-100">
+                        <span class="stat-label">PRODUCTS SOLD</span>
+                        <span class="stat-value">{{ admin_stats.products_sold }}</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="dashboard-stat-card dashboard-stat-green h-100">
+                        <span class="stat-label">OTHER CHARGES</span>
+                        <span class="stat-value">₹ {{ admin_stats.other_charges|floatformat:2 }}</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="dashboard-stat-card dashboard-stat-purple h-100">
+                        <span class="stat-label">EXPENSES</span>
+                        <span class="stat-value">₹ {{ admin_stats.expenses|floatformat:2 }}</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="dashboard-stat-card dashboard-stat-pink h-100">
+                        <span class="stat-label">DISCOUNTS</span>
+                        <span class="stat-value">₹ {{ admin_stats.total_discount|floatformat:2 }}</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <div class="dashboard-stat-card dashboard-stat-dark h-100">
+                        <span class="stat-label">REVENUE</span>
+                        <span class="stat-value">₹ {{ admin_stats.balance_amount|floatformat:2 }}</span>
                     </div>
                 </div>
             </div>
@@ -498,8 +249,8 @@
                             <tbody>
                                 {% for row in user_counts %}
                                     <tr>
-                                        <td>{% if row.created_by__username %}{{ row.created_by__first_name|default:row.created_by__username|upper }}{% else %}UNKNOWN{% endif %}</td>
-                                        <td class="text-end">{{ row.count }}</td>
+                                        <td data-label="USER">{% if row.created_by__username %}{{ row.created_by__first_name|default:row.created_by__username|upper }}{% else %}UNKNOWN{% endif %}</td>
+                                        <td data-label="INVOICES" class="text-md-end">{{ row.count }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>

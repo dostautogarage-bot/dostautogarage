@@ -962,14 +962,45 @@ def invoice_pdf(request, pk):
     doc = SimpleDocTemplate(
         response,
         pagesize=A4,
-        rightMargin=30,
-        leftMargin=30,
-        topMargin=20,
-        bottomMargin=20
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=40
     )
 
     elements = []
+    
+    # Custom styles
     styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'MainTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=24,
+        textColor=colors.HexColor("#1e293b"),
+        alignment=2 # Right aligned
+    )
+    company_name_style = ParagraphStyle(
+        'CompName',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=16,
+        textColor=colors.HexColor("#2563eb")
+    )
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        textColor=colors.HexColor("#475569")
+    )
+    bold_style = ParagraphStyle(
+        'CustomBold',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        textColor=colors.HexColor("#1e293b")
+    )
 
     total              = invoice.total
     other_charges_total = invoice.other_charges_total
@@ -986,11 +1017,10 @@ def invoice_pdf(request, pk):
         if s.key == 'signature':
             signature_obj = s
     
-    # Also try to get signature directly
     try:
         signature_obj = Settings.objects.get(key='signature')
     except Settings.DoesNotExist:
-        signature_obj = None
+        pass
     
     company_name = settings_dict.get('company_name', 'DOSTAUTOGARAGE')
     company_email = settings_dict.get('company_email', 'dostautogarage@gmail.com')
@@ -999,7 +1029,6 @@ def invoice_pdf(request, pk):
     company_address = settings_dict.get('company_address', '')
     invoice_footer = settings_dict.get('invoice_footer', 'Thank you for your business!')
 
-    # Add phone 2 if it exists
     phone_text = company_phone_1
     if company_phone_2:
         phone_text = f"{company_phone_1}, {company_phone_2}"
@@ -1007,252 +1036,208 @@ def invoice_pdf(request, pk):
     # ---------------- HEADER ----------------
     logo_path = os.path.join(settings.BASE_DIR, 'static/logo.png')
 
-    header_data = []
-    header_text = f"<b><font size=18 color='#FF9A00'>{company_name}</font></b><br/><font size=10>Email: {company_email} | Phone: {phone_text}</font>"
-    if company_address:
-        header_text += f"<br/><font size=9>{company_address}</font>"
+    comp_text = f"{company_address}<br/>Email: {company_email}<br/>Phone: {phone_text}"
+    left_header = [
+        Paragraph(company_name, company_name_style),
+        Spacer(1, 4),
+        Paragraph(comp_text, normal_style)
+    ]
     
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=40*mm, height=20*mm)
-        header_data.append([logo, Paragraph(header_text, styles['Normal'])])
-    else:
-        header_data.append(["", Paragraph(header_text, styles['Normal'])])
+        left_header.insert(0, logo)
+        left_header.insert(1, Spacer(1, 10))
 
-    header_table = Table(header_data, colWidths=[80, 380])
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('LEFTPADDING', (0,0), (0,-1), 0),
-        ('RIGHTPADDING', (0,0), (0,-1), 10),
-        ('ALIGN', (1,0), (1,-1), 'LEFT')
-    ]))
-
-    elements.append(header_table)
-    elements.append(Spacer(1, 15))
-
-    # ---------------- INVOICE TITLE ----------------
-    elements.append(Paragraph("<b><font size=14>INVOICE</font></b>", styles['Title']))
-    elements.append(Spacer(1, 10))
-
-    # ---------------- CUSTOMER INFO ----------------
-    created_by_name = "-"
-    if invoice.created_by:
-        created_by_name = invoice.created_by.get_full_name() or invoice.created_by.username
-
-    info_data = [
-        ["Invoice No:", invoice_number,          "Date:",    invoice.created_at.strftime("%d-%m-%Y")],
-        ["Customer:",  invoice.customer_name.upper() if invoice.customer_name else "",    "Phone:",   invoice.customer_phone],
-        ["Vehicle Number:",   invoice.vehicle_number.upper() if invoice.vehicle_number else "-", "KM:", invoice.ran_kilometer or "-"],
-        ["Prepared by:", created_by_name.upper(), "", ""]
+    right_header = [
+        Paragraph("INVOICE", title_style),
+        Spacer(1, 10),
+        Paragraph(f"<b>Invoice #:</b> {invoice_number}", ParagraphStyle('RightBold', parent=bold_style, alignment=2)),
+        Paragraph(f"<b>Date:</b> {invoice.created_at.strftime('%d %b %Y')}", ParagraphStyle('RightNormal', parent=normal_style, alignment=2))
     ]
 
-    info_table = Table(info_data, colWidths=[90, 150, 70, 120])
-    info_table.setStyle(TableStyle([
-        ('FONTNAME',      (0,0), (-1,-1), 'Helvetica'),
-        ('FONTSIZE',      (0,0), (-1,-1), 10),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    header_table = Table([[left_header, right_header]], colWidths=[250, 250])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
     ]))
-
-    elements.append(info_table)
+    elements.append(header_table)
     elements.append(Spacer(1, 20))
+    
+    # ---------------- CUSTOMER INFO ----------------
+    info_header_style = ParagraphStyle(
+        'InfoHeader',
+        parent=bold_style,
+        fontSize=9,
+        textColor=colors.HexColor("#64748b"),
+        spaceAfter=4,
+        textTransform='uppercase'
+    )
+
+    created_by_name = invoice.created_by.get_full_name() or invoice.created_by.username if invoice.created_by else "System"
+
+    # Make the name big and bold, soften the labels
+    customer_info = f"<font size='11'><b>{invoice.customer_name.upper() if invoice.customer_name else 'N/A'}</b></font><br/>"
+    if invoice.customer_phone:
+        customer_info += f"<font color='#64748b'>Phone:</font> {invoice.customer_phone}"
+    else:
+        customer_info += "<font color='#64748b'>Phone:</font> N/A"
+    
+    vehicle_info = f"<font color='#64748b'>Vehicle #:</font> <b>{invoice.vehicle_number.upper() if invoice.vehicle_number else 'N/A'}</b><br/>"
+    vehicle_info += f"<font color='#64748b'>Prepared by:</font> {created_by_name.title()}"
+
+    info_table = Table([[
+        [Paragraph("BILL TO", info_header_style), Paragraph(customer_info, normal_style)],
+        [Paragraph("SERVICE DETAILS", info_header_style), Paragraph(vehicle_info, normal_style)]
+    ]], colWidths=[240, 260])
+    
+    info_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f8fafc")),
+        ('TOPPADDING', (0,0), (-1,-1), 16),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 16),
+        ('LEFTPADDING', (0,0), (-1,-1), 16),
+        ('RIGHTPADDING', (0,0), (-1,-1), 16),
+        ('LINEABOVE', (0,0), (-1,-1), 1.5, colors.HexColor("#f1f5f9")),
+        ('LINEBELOW', (0,0), (-1,-1), 1.5, colors.HexColor("#e2e8f0")),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 28))
 
     # ---------------- PRODUCT TABLE ----------------
-    data = [["Product / Service", "Qty", "Rate", "Amount"]]
+    data = [["DESCRIPTION", "QTY", "RATE", "AMOUNT"]]
 
     for item in invoice.items.all():
         data.append([
             item.product.name.upper(),
-            item.quantity,
-            f"{currency_symbol} {item.price:.2f}",
-            f"{currency_symbol} {item.total_price:.2f}"
+            str(item.quantity),
+            f"{item.price:.2f}",
+            f"{item.total_price:.2f}"
         ])
 
-    product_table = Table(data, colWidths=[240, 60, 80, 80])
-    product_table.setStyle(TableStyle([
-        ('BACKGROUND',    (0,0), (-1,0), colors.HexColor("#2E86C1")),
+    product_table = Table(data, colWidths=[240, 60, 100, 100])
+    styles_table = [
+        ('BACKGROUND',    (0,0), (-1,0), colors.HexColor("#1e293b")),
         ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
         ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0,0), (-1,0), 10),
         ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
-        ('ALIGN',         (1,0), (-1,-1), 'CENTER'),
-        ('LINEBELOW',     (0,0), (-1,0),  1, colors.black),
-        ('LINEBELOW',     (0,-1), (-1,-1), 1, colors.black),
-        ('BOTTOMPADDING', (0,0), (-1,0),  8),
+        ('FONTSIZE',      (0,1), (-1,-1), 9),
+        ('ALIGN',         (0,0), (0,-1), 'LEFT'),
+        ('ALIGN',         (1,0), (1,-1), 'CENTER'),
+        ('ALIGN',         (2,0), (-1,-1), 'RIGHT'),
+        ('BOTTOMPADDING', (0,0), (-1,0), 8),
+        ('TOPPADDING',    (0,0), (-1,0), 8),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 6),
         ('TOPPADDING',    (0,1), (-1,-1), 6),
-    ]))
-
-    elements.append(product_table)
-    elements.append(Spacer(1, 10))
-
-    # ---------------- SUBTOTAL ROW ----------------
-    subtotal_data = [
-        ["", "", "Products Total", f"{currency_symbol} {total:.2f}"]
+        ('LINEBELOW',     (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
     ]
-    subtotal_table = Table(subtotal_data, colWidths=[240, 60, 80, 80])
-    subtotal_table.setStyle(TableStyle([
-        ('FONTNAME',  (0,0), (-1,-1), 'Helvetica-Bold'),
-        ('ALIGN',     (2,0), (-1,-1), 'CENTER'),
-        ('TEXTCOLOR', (2,0), (-1,-1), colors.HexColor("#2E86C1")),
-    ]))
-    elements.append(subtotal_table)
-    elements.append(Spacer(1, 16))
+    product_table.setStyle(TableStyle(styles_table))
+    elements.append(product_table)
 
     # ---------------- OTHER CHARGES TABLE ----------------
     other_charges = invoice.other_charges.all()
     if other_charges.exists():
-        charges_heading_data = [[Paragraph('<b>Other Charges</b>', styles['Heading4'])]]
-        charges_heading_table = Table(charges_heading_data, colWidths=[460])
-        charges_heading_table.setStyle(TableStyle([
-            ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0,0), (-1,-1), 11),
-            ('LEFTPADDING', (0,0), (-1,-1), 0),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-            ('TOPPADDING', (0,0), (-1,-1), 6),
-        ]))
-        elements.append(charges_heading_table)
-        elements.append(Spacer(1, 6))
-
-        charges_data = [["Charge", "Amount"]]
+        elements.append(Spacer(1, 15))
+        charges_data = [["OTHER CHARGES", "AMOUNT"]]
         for charge in other_charges:
             charges_data.append([
                 charge.name.upper(),
-                f"{currency_symbol} {charge.amount:.2f}"
+                f"{charge.amount:.2f}"
             ])
-        charges_table = Table(charges_data, colWidths=[340, 120])
+        charges_table = Table(charges_data, colWidths=[400, 100])
         charges_table.setStyle(TableStyle([
-            ('BACKGROUND',    (0,0), (-1,0), colors.HexColor("#117A65")),
-            ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
+            ('BACKGROUND',    (0,0), (-1,0), colors.HexColor("#f1f5f9")),
+            ('TEXTCOLOR',     (0,0), (-1,0), colors.HexColor("#475569")),
             ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
-            ('ALIGN',         (1,0), (-1,-1), 'CENTER'),
-            ('LEFTPADDING',   (0,0), (-1,-1), 8),
-            ('RIGHTPADDING',  (0,0), (-1,-1), 8),
-            ('LINEBELOW',     (0,0), (-1,0),  1, colors.black),
-            ('LINEBELOW',     (0,-1), (-1,-1), 1, colors.black),
-            ('BOTTOMPADDING', (0,0), (-1,0),  8),
-            ('TOPPADDING',    (0,1), (-1,-1), 6),
+            ('FONTSIZE',      (0,0), (-1,-1), 9),
+            ('ALIGN',         (0,0), (0,-1), 'LEFT'),
+            ('ALIGN',         (1,0), (-1,-1), 'RIGHT'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING',    (0,0), (-1,-1), 6),
+            ('LINEBELOW',     (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
         ]))
-
         elements.append(charges_table)
-        elements.append(Spacer(1, 10))
-
-        # Charges subtotal
-        charges_subtotal_data = [
-            ["", "Charges Total", f"{currency_symbol} {other_charges_total:.2f}"]
-        ]
-        charges_subtotal_table = Table(charges_subtotal_data, colWidths=[300, 120, 80])
-        charges_subtotal_table.setStyle(TableStyle([
-            ('FONTNAME',  (0,0), (-1,-1), 'Helvetica-Bold'),
-            ('ALIGN',     (1,0), (1,-1), 'LEFT'),
-            ('ALIGN',     (2,0), (-1,-1), 'RIGHT'),
-            ('TEXTCOLOR', (1,0), (-1,-1), colors.HexColor("#117A65")),
-        ]))
-        elements.append(charges_subtotal_table)
-        elements.append(Spacer(1, 16))
+        
+    elements.append(Spacer(1, 20))
 
     # ---------------- TOTALS (RIGHT SIDE) ----------------
     totals_data = [
-        ["Products Total", f"{currency_symbol} {total:.2f}"]
+        ["Subtotal:", f"{currency_symbol} {total:.2f}"]
     ]
 
     if other_charges.exists():
-        totals_data.append(["Other Charges", f"{currency_symbol} {other_charges_total:.2f}"])
+        totals_data.append(["Other Charges:", f"{currency_symbol} {other_charges_total:.2f}"])
 
     totals_data += [
-        ["Grand Total",    f"{currency_symbol} {grand_total:.2f}"],
-        ["Discount",       f"{currency_symbol} {discount:.2f}"],
-        ["Final Total",    f"{currency_symbol} {balance:.2f}"],
+        ["Discount:", f"{currency_symbol} {discount:.2f}"],
+        ["TOTAL DUE:", f"{currency_symbol} {balance:.2f}"]
     ]
 
-    totals_table = Table(totals_data, colWidths=[100, 100], hAlign='RIGHT')
+    totals_table = Table(totals_data, colWidths=[350, 150])
     totals_table.setStyle(TableStyle([
-        ('GRID',       (0,0),  (-1,-1), 0.5, colors.black),
-        ('FONTNAME',   (0,0),  (-1,-1), 'Helvetica-Bold'),
-        ('BACKGROUND', (0,0),  (-1,0),  colors.lightgrey),
-        ('ALIGN',      (1,0),  (-1,-1), 'RIGHT'),
-
-        # Highlight Grand Total row
-        ('BACKGROUND', (0, 2 if other_charges.exists() else 1),
-                       (-1, 2 if other_charges.exists() else 1),
-                       colors.HexColor("#D6EAF8")),
-
-        # Highlight Balance row (last row)
-        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor("#FADBD8")),
-        ('TEXTCOLOR',  (0,-1), (-1,-1), colors.HexColor("#C0392B")),
+        ('FONTNAME',   (0,0),  (-1,-1), 'Helvetica'),
+        ('FONTSIZE',   (0,0),  (-1,-1), 10),
+        ('ALIGN',      (0,0),  (0,-1), 'RIGHT'),
+        ('ALIGN',      (1,0),  (1,-1), 'RIGHT'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        
+        # Total Due Row Bold
+        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,-1), (-1,-1), 12),
+        ('TEXTCOLOR', (0,-1), (-1,-1), colors.HexColor("#2563eb")),
+        ('LINEABOVE', (0,-1), (-1,-1), 1.5, colors.HexColor("#e2e8f0")),
+        ('TOPPADDING', (0,-1), (-1,-1), 10),
     ]))
 
     elements.append(totals_table)
     elements.append(Spacer(1, 30))
 
-    # ---------------- NEXT DUE DATE (CONDITIONAL) ----------------
+    # ---------------- NEXT DUE DATE ----------------
     if invoice.next_due_date:
-        next_due_text = f"NEXT SERVICE DUE: {invoice.next_due_date.strftime('%d-%m-%Y')}"
+        next_due_text = f"Next Service Due: {invoice.next_due_date.strftime('%d %b %Y')}"
         if invoice.ran_kilometer:
-            next_due_text += f" (BEFORE {invoice.ran_kilometer} KM)"
-        
-        next_due_paragraph = Paragraph(
-            f"<b><font size=10 color='#E74C3C'>{next_due_text}</font></b>", 
-            styles['Normal']
-        )
-
-        next_due_table = Table([[next_due_paragraph]], colWidths=[460], hAlign='LEFT')
-        next_due_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#fdecea')),
-            ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#E74C3C')),
-            ('LEFTPADDING', (0,0), (-1,-1), 10),
-            ('RIGHTPADDING', (0,0), (-1,-1), 10),
-            ('TOPPADDING', (0,0), (-1,-1), 6),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ]))
-
-        elements.append(next_due_table)
+            next_due_text += f" (Before {invoice.ran_kilometer} KM)"
+            
+        elements.append(Paragraph(
+            f"<b><font color='#ea580c'>{next_due_text}</font></b>", 
+            normal_style
+        ))
         elements.append(Spacer(1, 15))
 
     # ---------------- FOOTER ----------------
-    # Create a table for proper alignment of footer text and signature
     footer_data = []
     
     # Left side: Thank you message
-    left_content = Paragraph(f"<i>{invoice_footer}</i>", styles['Normal'])
+    left_content = Paragraph(f"<i>{invoice_footer}</i>", normal_style)
     
     # Right side: Signature
     if signature_obj and signature_obj.signature and signature_obj.signature.path:
-        # If signature image exists, include it
         signature_path = signature_obj.signature.path
         if os.path.exists(signature_path):
             try:
-                signature_img = Image(signature_path, width=60*mm, height=25*mm)
-                # Create a small table for signature image and text
-                sig_table_data = [[signature_img], [Paragraph("<font size=8>Authorized Signature</font>", styles['Normal'])]]
-                sig_table = Table(sig_table_data, colWidths=[60*mm])
-                sig_table.setStyle(TableStyle([
-                    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-                    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                ]))
+                signature_img = Image(signature_path, width=40*mm, height=15*mm)
+                sig_table = Table([[signature_img], [Paragraph("Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))]], colWidths=[60*mm])
+                sig_table.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'CENTER')]))
                 right_content = sig_table
-            except Exception as e:
-                # If image loading fails, use text signature
-                right_content = Paragraph("__________________________<br/><font size=8>Authorized Signature</font>", styles['Normal'])
+            except Exception:
+                right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
         else:
-            right_content = Paragraph("__________________________<br/><font size=8>Authorized Signature</font>", styles['Normal'])
+            right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
     else:
-        right_content = Paragraph("__________________________<br/><font size=8>Authorized Signature</font>", styles['Normal'])
+        right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
     
     footer_data.append([left_content, right_content])
     
     footer_table = Table(footer_data, colWidths=[250, 250])
     footer_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('VALIGN', (0,0), (-1,-1), 'BOTTOM'),
         ('ALIGN', (0,0), (0,-1), 'LEFT'),
-        ('ALIGN', (1,0), (1,-1), 'CENTER'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
     ]))
     
     elements.append(footer_table)
 
-    # ---------------- BUILD ----------------
-
-    # ---------------- BUILD ----------------
     doc.build(elements)
-
     return response
 
 
@@ -1421,3 +1406,26 @@ def admin_delete(request, pk):
         return redirect('admin_list')
     
     return render(request, 'billing/admin_confirm_delete.html', {'admin': admin})
+
+# -------------------- PWA SUPPORT --------------------
+def manifest_json(request):
+    manifest = {
+        "name": "Dost Garage Settings",
+        "short_name": "DostGarage",
+        "start_url": "/dashboard/",
+        "display": "standalone",
+        "background_color": "#1e293b",
+        "theme_color": "#1e293b",
+        "icons": [
+            {
+                "src": "/static/logo.png",
+                "sizes": "192x192 512x512",
+                "type": "image/png"
+            }
+        ]
+    }
+    return JsonResponse(manifest)
+
+def sw_js(request):
+    sw_code = "self.addEventListener('fetch', function(event) { });"
+    return HttpResponse(sw_code, content_type='application/javascript')
