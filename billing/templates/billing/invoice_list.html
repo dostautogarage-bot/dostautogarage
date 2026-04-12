@@ -215,8 +215,8 @@
 
                 <thead class="table-dark">
                     <tr>
-                        <th class="sticky-left-1">Invoice No</th>
-                        <th class="sticky-left-2">Customer</th>
+                        <th>Invoice No</th>
+                        <th class="sticky-left-1">Customer</th>
                         <th>Created By</th>
                         <th>Date</th>
                         <th>Total</th>
@@ -229,8 +229,8 @@
                     {% for invoice in invoices %}
                     <tr>
 
-                        <td data-label="Invoice No" class="sticky-left-1"><strong>{{ invoice.formatted_invoice_number }}</strong></td>
-                        <td data-label="Customer" class="sticky-left-2">
+                        <td data-label="Invoice No"><strong>{{ invoice.formatted_invoice_number }}</strong></td>
+                        <td data-label="Customer" class="sticky-left-1">
                             <strong>{{ invoice.customer_name|default:"Walk-in"|upper }}</strong><br>
                             {% if invoice.customer_phone %}
                             <small class="text-muted">{{ invoice.customer_phone|upper }}</small>
