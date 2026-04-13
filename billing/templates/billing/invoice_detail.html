@@ -257,9 +257,7 @@
                 <h3 class="mb-0">Invoice #{{ invoice.formatted_invoice_number }}</h3>
                 <small class="text-muted">DATE: {{ invoice.created_at|date:"d M Y" }}</small><br>
                 <small class="text-muted">
-                    CREATED BY: {% if invoice.created_by %}{{
-                    invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}{% else %}UNKNOWN{%
-                    endif %}
+                    CREATED BY: {% if invoice.created_by %}{{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}{% else %}UNKNOWN{% endif %}
                 </small>
             </div>
             <div class="d-flex flex-wrap gap-2">
@@ -392,7 +390,7 @@
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center">
                     <small class="text-muted d-block">DISCOUNT AMOUNT</small>
-                    <strong class="fs-5">₹ {{ invoice.discount_amount }}</strong>
+                    <strong class="fs-5">₹ {{ invoice.discount_amount|default:0 }}</strong>
                 </div>
             </div>
 

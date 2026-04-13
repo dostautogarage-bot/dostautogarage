@@ -659,7 +659,7 @@ def invoice_create(request):
             invoice = main_form.save(commit=False)
             invoice.invoice_number = next_number
             invoice.created_by = request.user
-            invoice.discount_amount = main_form.cleaned_data.get('discount_amount', 0)
+            invoice.discount_amount = main_form.cleaned_data.get('discount_amount') or 0
             invoice.save()
 
             # ── Invoice items ────────────────────────────────────────────────

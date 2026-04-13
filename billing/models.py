@@ -34,9 +34,9 @@ class Invoice(models.Model):
         blank=True,
         related_name='invoices'
     )
-    vehicle_number = models.CharField(max_length=255, blank=True)
+    vehicle_number = models.CharField(max_length=255, blank=True, null=True)
 
-    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
     next_due_date = models.DateField(null=True, blank=True)
     ran_kilometer = models.PositiveIntegerField(null=True, blank=True)
 
@@ -60,7 +60,8 @@ class Invoice(models.Model):
 
     @property
     def balance_amount(self):
-        return self.grand_total - self.discount_amount  # Subtract discount from grand total
+        discount = self.discount_amount or 0
+        return self.grand_total - discount  # Subtract discount from grand total
 
     @property
     def formatted_invoice_number(self):
@@ -103,10 +104,10 @@ class Invoice(models.Model):
             for oc in other_charges:
                 msg += f"- {oc.name.upper()}: Rs.{oc.amount}\n"
         
-        msg += f"--------------------------\n"
         msg += f"*Subtotal:* Rs.{self.total + self.other_charges_total}\n"
-        if self.discount_amount > 0:
-            msg += f"*Discount:* Rs.{self.discount_amount}\n"
+        discount = self.discount_amount or 0
+        if discount > 0:
+            msg += f"*Discount:* Rs.{discount}\n"
         msg += f"*TOTAL DUE:* *Rs.{self.balance_amount}*\n"
         msg += f"--------------------------\n"
         

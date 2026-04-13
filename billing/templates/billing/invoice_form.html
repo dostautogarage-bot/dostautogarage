@@ -429,7 +429,7 @@
                 <div class="col-md-6">
                     <label class="form-label">VEHICLE NUMBER</label>
                     {{ main_form.vehicle_number }}
-                    <div class="invalid-feedback">Vehicle number is required.</div>
+                    <div class="invalid-feedback">Enter a valid vehicle number (optional).</div>
                 </div>
 
                 <div class="col-md-6">
@@ -468,6 +468,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>PRODUCT</th>
+                            <th style="width:120px;" class="text-center">PRICE</th>
                             <th style="width:160px;">QUANTITY</th>
                             <th style="width:80px;" class="text-center">REMOVE</th>
                         </tr>
@@ -488,6 +489,9 @@
                                     <div class="text-danger small mt-1">{{ error }}</div>
                                 {% endfor %}
                                 <div class="invalid-feedback">PLEASE SELECT A PRODUCT.</div>
+                            </td>
+                            <td data-label="PRICE" class="unit-price text-center" style="font-weight: 600; color: #4b5563;">
+                                ₹ 0.00
                             </td>
                             <td data-label="QUANTITY">
                                 {{ form.quantity }}
@@ -797,9 +801,13 @@ function initProductSearch(row) {
             select.value = selectedProduct.id;
             input.classList.remove('is-invalid');
             input.classList.add('selected-product');
+            const priceCell = row.querySelector('.unit-price');
+            if (priceCell) priceCell.textContent = '₹ ' + parseFloat(selectedProduct.price).toFixed(2);
         } else {
             select.value = '';
             input.classList.remove('selected-product');
+            const priceCell = row.querySelector('.unit-price');
+            if (priceCell) priceCell.textContent = '₹ 0.00';
         }
         calculateInvoiceTotals();
         updateDatalist();
@@ -809,6 +817,8 @@ function initProductSearch(row) {
         if (select.value && input.value !== getProductById(select.value)?.name) {
             select.value = '';
             input.classList.remove('selected-product');
+            const priceCell = row.querySelector('.unit-price');
+            if (priceCell) priceCell.textContent = '₹ 0.00';
         }
         calculateInvoiceTotals();
     });
@@ -886,6 +896,9 @@ function addRow() {
         el.value = '';
         el.classList.remove('is-valid', 'is-invalid', 'selected-product');
     });
+
+    const priceCell = newRow.querySelector('.unit-price');
+    if (priceCell) priceCell.textContent = '₹ 0.00';
 
     // Also clear the visible search input text
     const clonedSearch = newRow.querySelector('.product-search-input');
@@ -1088,12 +1101,14 @@ document.getElementById('invoiceForm').addEventListener('submit', function (e) {
         phoneError.textContent = '';
     }
 
-    // 3. Vehicle Details
+    // 3. Vehicle Details (OPTIONAL ✅)
     const vehicle = document.getElementById('id_vehicle_number');
-    if (vehicle && vehicle.value.trim() === '') {
-        vehicle.classList.add('is-invalid'); valid = false;
-    } else if (vehicle) {
-        vehicle.classList.remove('is-invalid'); vehicle.classList.add('is-valid');
+    if (vehicle) {
+        if (vehicle.value.trim() !== '') {
+            vehicle.classList.remove('is-invalid'); vehicle.classList.add('is-valid');
+        } else {
+            vehicle.classList.remove('is-invalid', 'is-valid');
+        }
     }
 
     // 4. Next Service Kilometer (OPTIONAL ✅)
@@ -1262,6 +1277,8 @@ document.querySelectorAll('#product-table tbody tr').forEach((row, index) => {
         if (product) {
             searchInput.value = product.name;
             searchInput.classList.add('selected-product');
+            const priceCell = row.querySelector('.unit-price');
+            if (priceCell) priceCell.textContent = '₹ ' + parseFloat(product.price).toFixed(2);
         }
     }
 });
