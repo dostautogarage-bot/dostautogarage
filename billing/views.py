@@ -880,7 +880,18 @@ def invoice_edit(request, pk):
         validate_min=True,
         can_delete=True
     )
-    formset = ItemFormSet(request.POST or None, initial=[{'product': item.product.pk, 'quantity': item.quantity} for item in invoice.items.all()])
+    formset = ItemFormSet(
+        request.POST or None,
+        initial=[
+            {
+                'product': item.product.pk if item.product else None,
+                'quantity': item.quantity,
+                'product_name': item.product.name if item.product else f'[DELETED PRODUCT - ID: {item.product_id}]',
+                'price': item.price,
+            }
+            for item in invoice.items.all()
+        ]
+    )
     main_form = InvoiceMainForm(request.POST or None, instance=invoice)
     other_charges = list(invoice.other_charges.all())
 

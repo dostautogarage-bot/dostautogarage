@@ -383,7 +383,7 @@
 <div class="container mt-4">
     <div class="card shadow-sm p-4">
 
-        <h3 class="mb-4">CREATE INVOICE</h3>
+        <h3 class="mb-4">{% if editing %}EDIT INVOICE{% else %}CREATE INVOICE{% endif %}</h3>
 
         <form method="post" id="invoiceForm" novalidate>
             {% csrf_token %}
@@ -479,19 +479,23 @@
                             <td data-label="PRODUCT" style="min-width: 280px;">
                                 <div style="display:none;">{{ form.product }}</div>
                                 <input type="text" 
-                                       list="productList"
+                                       list="productList-{{ forloop.counter0 }}"
                                        class="form-control product-search-input"
                                        placeholder="🔍 TYPE TO SEARCH PRODUCT..."
                                        autocomplete="off"
-                                       spellcheck="false">
-                                <datalist id="productList"></datalist>
+                                       spellcheck="false"
+                                       value="{{ form.initial.product_name|default:''|escape }}">
+                                <datalist class="product-datalist" id="productList-{{ forloop.counter0 }}"></datalist>
                                 {% for error in form.product.errors %}
                                     <div class="text-danger small mt-1">{{ error }}</div>
                                 {% endfor %}
                                 <div class="invalid-feedback">PLEASE SELECT A PRODUCT.</div>
                             </td>
                             <td data-label="PRICE" class="unit-price text-center" style="font-weight: 600; color: #4b5563;">
-                                ₹ 0.00
+                                ₹ {{ form.initial.price|default:'0.00'|floatformat:2 }}
+                                {% if not form.initial.product %}
+                                <br><small class="text-danger">Product deleted</small>
+                                {% endif %}
                             </td>
                             <td data-label="QUANTITY">
                                 {{ form.quantity }}
@@ -535,7 +539,43 @@
                             <th style="width:80px;" class="text-center">REMOVE</th>
                         </tr>
                     </thead>
-                    <tbody id="charges-body"></tbody>
+                    <tbody id="charges-body">
+                        {% if editing %}
+                            {% for charge in other_charges %}
+                            <tr>
+                                <td data-label="CHARGE NAME">
+                                    <select class="form-select charge-select">
+                                        <option value="" disabled {% if not charge.name %}selected{% endif %}>SELECT OR CHOOSE CHARGE</option>
+                                        <option value="LABOR CHARGE" {% if charge.name == 'LABOR CHARGE' or charge.name|slice:":12" == 'LABOR CHARGE:' %}selected{% endif %}>LABOR CHARGE</option>
+                                        <option value="CLEANING CHARGE" {% if charge.name == 'CLEANING CHARGE' %}selected{% endif %}>CLEANING CHARGE</option>
+                                        <option value="TRANSPORT CHARGE" {% if charge.name == 'TRANSPORT CHARGE' %}selected{% endif %}>TRANSPORT CHARGE</option>
+                                        <option value="INDUSTRIAL CHARGE" {% if charge.name == 'INDUSTRIAL CHARGE' %}selected{% endif %}>INDUSTRIAL CHARGE</option>
+                                        <option value="OTHER" {% if charge.name != 'LABOR CHARGE' and charge.name|slice:":12" != 'LABOR CHARGE:' and charge.name != 'CLEANING CHARGE' and charge.name != 'TRANSPORT CHARGE' and charge.name != 'INDUSTRIAL CHARGE' %}selected{% endif %}>OTHER</option>
+                                    </select>
+                                    <textarea class="form-control charge-name mt-2 {% if charge.name == 'LABOR CHARGE' or charge.name == 'CLEANING CHARGE' or charge.name == 'TRANSPORT CHARGE' or charge.name == 'INDUSTRIAL CHARGE' %}d-none{% endif %}"
+                                              rows="3"
+                                              placeholder="{% if charge.name|slice:":12" == 'LABOR CHARGE:' %}TYPE LABOR DETAILS (e.g. Engine Oil Change, Brake Service)...{% else %}TYPE OTHER CHARGE DESCRIPTION...{% endif %}"
+                                              autocomplete="off">{% if charge.name|slice:":12" == 'LABOR CHARGE:' %}{{ charge.name|slice:"12:"|escape }}{% elif charge.name != 'LABOR CHARGE' and charge.name != 'CLEANING CHARGE' and charge.name != 'TRANSPORT CHARGE' and charge.name != 'INDUSTRIAL CHARGE' %}{{ charge.name|escape }}{% endif %}</textarea>
+                                </td>
+                                <td data-label="AMOUNT (₹)">
+                                    <input type="number" class="form-control charge-amount" style="min-height:3rem;" 
+                                           min="0" step="0.01" placeholder="0.00"
+                                           value="{{ charge.amount|floatformat:2 }}">
+                                    <div class="invalid-feedback">Enter a valid amount.</div>
+                                </td>
+                                <td data-label="REMOVE" class="text-center">
+                                    <button type="button" class="btn btn-sm btn-danger action-btn" title="Delete charge"
+                                            onclick="removeChargeRow(this)">
+                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
                 </table>
             </div>
 
@@ -590,7 +630,7 @@
             </div>
 
             <div class="d-flex gap-2 flex-wrap mt-3">
-                <button type="submit" class="btn btn-sm btn-success">CREATE INVOICE</button>
+                <button type="submit" class="btn btn-sm btn-success">{% if editing %}UPDATE INVOICE{% else %}CREATE INVOICE{% endif %}</button>
                 <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary">CANCEL</a>
             </div>
 
@@ -610,7 +650,7 @@ const ALL_PRODUCTS = [
     {% endfor %}
 ];
 
-const CHARGE_PRESETS = ['Labour Charge', 'Cleaning Charge', 'Transport Charge', 'Industrial Charge', 'Other'];
+const predefined_charges = ['LABOR CHARGE', 'CLEANING CHARGE', 'TRANSPORT CHARGE', 'INDUSTRIAL CHARGE'];
 
 const phoneLengths = {
     '+91': 10, '+1': 10, '+44': 10, '+971': 9,
@@ -814,10 +854,17 @@ function initProductSearch(row) {
     });
 
     input.addEventListener('input', function () {
-        if (select.value && input.value !== getProductById(select.value)?.name) {
+        const matchedProduct = ALL_PRODUCTS.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+        const priceCell = row.querySelector('.unit-price');
+
+        if (matchedProduct) {
+            select.value = matchedProduct.id;
+            input.classList.remove('is-invalid');
+            input.classList.add('selected-product');
+            if (priceCell) priceCell.textContent = '₹ ' + parseFloat(matchedProduct.price).toFixed(2);
+        } else if (select.value && input.value !== getProductById(select.value)?.name) {
             select.value = '';
             input.classList.remove('selected-product');
-            const priceCell = row.querySelector('.unit-price');
             if (priceCell) priceCell.textContent = '₹ 0.00';
         }
         calculateInvoiceTotals();
@@ -830,19 +877,20 @@ function initProductSearch(row) {
 
 // ─── Update datalist to exclude selected products ─────────────────────────────
 function updateDatalist() {
-    const datalist = document.getElementById('productList');
-    if (!datalist) return;
+    const datalists = document.querySelectorAll('.product-datalist');
+    if (!datalists.length) return;
 
     const selectedIds = getSelectedProductIds();
-    datalist.innerHTML = '';
-
-    ALL_PRODUCTS.forEach(product => {
-        if (!selectedIds.has(String(product.id))) {
-            const option = document.createElement('option');
-            option.value = product.name;
-            option.textContent = `${product.name.toUpperCase()} (₹${product.price}, STOCK: ${product.stock})`;
-            datalist.appendChild(option);
-        }
+    datalists.forEach(datalist => {
+        datalist.innerHTML = '';
+        ALL_PRODUCTS.forEach(product => {
+            if (!selectedIds.has(String(product.id))) {
+                const option = document.createElement('option');
+                option.value = product.name;
+                option.textContent = `${product.name.toUpperCase()} (₹${product.price}, STOCK: ${product.stock})`;
+                datalist.appendChild(option);
+            }
+        });
     });
 }
 
@@ -893,16 +941,28 @@ function addRow() {
                 );
             }
         });
-        el.value = '';
+        if (el.tagName.toLowerCase() !== 'datalist') {
+            el.value = '';
+        }
         el.classList.remove('is-valid', 'is-invalid', 'selected-product');
     });
 
     const priceCell = newRow.querySelector('.unit-price');
     if (priceCell) priceCell.textContent = '₹ 0.00';
 
-    // Also clear the visible search input text
     const clonedSearch = newRow.querySelector('.product-search-input');
-    if (clonedSearch) clonedSearch.value = '';
+    if (clonedSearch) {
+        clonedSearch.value = '';
+        const newDatalistId = `productList-${formIndex}`;
+        clonedSearch.setAttribute('list', newDatalistId);
+    }
+
+    const clonedDatalist = newRow.querySelector('.product-datalist');
+    if (clonedDatalist) {
+        const newDatalistId = `productList-${formIndex}`;
+        clonedDatalist.id = newDatalistId;
+        clonedDatalist.innerHTML = '';
+    }
 
     tbody.appendChild(newRow);
     totalForms.value = formIndex + 1;
@@ -991,7 +1051,9 @@ function initChargeRow(row) {
     chargeSelect.addEventListener('change', () => {
         if (chargeSelect.value === 'OTHER' || chargeSelect.value === 'LABOR CHARGE') {
             chargeInput.classList.remove('d-none');
-            chargeInput.placeholder = chargeSelect.value === 'LABOR CHARGE' ? "TYPE LABOR DETAILS (e.g. Engine Oil Change, Brake Service)..." : "TYPE OTHER CHARGE DESCRIPTION...";
+            chargeInput.placeholder = chargeSelect.value === 'LABOR CHARGE'
+                ? "TYPE LABOR DETAILS (e.g. Engine Oil Change, Brake Service)..."
+                : "TYPE OTHER CHARGE DESCRIPTION...";
             chargeInput.focus();
         } else {
             chargeInput.classList.add('d-none');
@@ -1016,7 +1078,12 @@ function getChargeName(row) {
     const selectedValue = chargeSelect.value.trim();
     if (selectedValue === 'OTHER' || selectedValue === 'LABOR CHARGE') {
         const desc = chargeInput ? chargeInput.value.trim() : '';
-        return desc ? `${selectedValue}: ${desc}` : selectedValue;
+        if (selectedValue === 'LABOR CHARGE') {
+            return desc ? `${selectedValue}: ${desc}` : selectedValue;
+        }
+        return desc ? desc : 'OTHER';
+    } else if (predefined_charges.includes(selectedValue)) {
+        return selectedValue;
     }
 
     return selectedValue;
@@ -1149,6 +1216,20 @@ if (mechanic) {
     }
 
     // 7. Products
+    // If the user selected a product with the datalist, sync the text input value
+    // to the hidden select before validation so the formset receives the product.
+    document.querySelectorAll('#product-table tbody tr').forEach(row => {
+        const select = row.querySelector('select[name*="product"]');
+        const input  = row.querySelector('.product-search-input');
+        if (select && input && !select.value && input.value.trim()) {
+            const matched = ALL_PRODUCTS.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+            if (matched) {
+                select.value = matched.id;
+                input.classList.add('selected-product');
+            }
+        }
+    });
+
     const rows = document.querySelectorAll('#product-table tbody tr');
     let validProductCount = 0;
     let productDuplicationFound = false;
@@ -1211,12 +1292,12 @@ if (mechanic) {
         const chargeSelect = row.querySelector('.charge-select');
         const nameInput    = row.querySelector('.charge-name');
         const amt          = row.querySelector('.charge-amount');
-        const selected     = chargeSelect ? chargeSelect.value : '';
-        const nameValue    = (selected === 'OTHER' || selected === 'LABOR CHARGE') ? (nameInput ? nameInput.value.trim() : '') : selected;
+        const selected  = chargeSelect ? chargeSelect.value : '';
+        const nameValue = nameInput ? nameInput.value.trim() : '';
 
         if (selected !== '') {
             let rowOk = true;
-            if ((selected === 'OTHER' || selected === 'LABOR CHARGE') && (!nameValue || nameValue === selected)) {
+            if (selected === 'OTHER' && !nameValue) {
                 if (nameInput) nameInput.classList.add('is-invalid');
                 rowOk = false;
             }
@@ -1288,47 +1369,30 @@ document.addEventListener('DOMContentLoaded', function() {
 document.querySelectorAll('#product-table tbody tr').forEach((row, index) => {
     const hiddenSelect = row.querySelector('select[name*="product"]');
     const searchInput  = row.querySelector('.product-search-input');
+    const priceCell    = row.querySelector('.unit-price');
     if (hiddenSelect && hiddenSelect.value) {
         const product = ALL_PRODUCTS.find(p => p.id == hiddenSelect.value);
         if (product) {
             searchInput.value = product.name;
             searchInput.classList.add('selected-product');
-            const priceCell = row.querySelector('.unit-price');
             if (priceCell) priceCell.textContent = '₹ ' + parseFloat(product.price).toFixed(2);
+        } else {
+            // Fallback for invoices where the stored product cannot be resolved by JS
+            if (searchInput && searchInput.value.trim()) {
+                searchInput.classList.add('selected-product');
+            }
+            if (priceCell && priceCell.textContent.trim() === '₹ 0.00') {
+                const fallbackPrice = row.querySelector('td.unit-price')?.textContent?.trim();
+                if (fallbackPrice && fallbackPrice !== '₹ 0.00') {
+                    priceCell.textContent = fallbackPrice;
+                }
+            }
         }
     }
 });
 
-// Populate other charges
-{% for charge in other_charges %}
-addCharge();
-const lastRow = document.querySelector('#charges-body tr:last-child');
-if (lastRow) {
-    const chargeSelect = lastRow.querySelector('.charge-select');
-    const nameInput    = lastRow.querySelector('.charge-name');
-    const amtInput     = lastRow.querySelector('.charge-amount');
-    const storedName   = '{{ charge.name|escapejs }}';
-    const predefined   = ['LABOR CHARGE','PARTS REPLACEMENT','WASHING SERVICE','PAINT WORK','TOWING CHARGE','MISCELLANEOUS'];
-
-    if (chargeSelect) {
-        if (predefined.includes(storedName)) {
-            chargeSelect.value = storedName;
-            if (nameInput) {
-                nameInput.classList.add('d-none');
-                nameInput.value = '';
-            }
-        } else {
-            chargeSelect.value = 'OTHER';
-            if (nameInput) {
-                nameInput.classList.remove('d-none');
-                nameInput.value = storedName;
-            }
-        }
-    }
-
-    if (amtInput) amtInput.value = '{{ charge.amount|escapejs }}';
-}
-{% endfor %}
+// Initialize existing charge rows on edit
+document.querySelectorAll('#charges-body tr').forEach(initChargeRow);
 calculateInvoiceTotals();
 updateDatalist();
 {% endif %}
