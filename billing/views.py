@@ -305,6 +305,108 @@ def product_list(request):
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
+def product_export_pdf(request):
+    products = Product.objects.all().order_by('name')
+
+    font_normal = 'Helvetica'
+    font_bold = 'Helvetica-Bold'
+    try:
+        if os.path.exists('C:/Windows/Fonts/segoeui.ttf'):
+            pdfmetrics.registerFont(TTFont('SegoeUI', 'C:/Windows/Fonts/segoeui.ttf'))
+            pdfmetrics.registerFont(TTFont('SegoeUI-Bold', 'C:/Windows/Fonts/segoeuib.ttf'))
+            font_normal = 'SegoeUI'
+            font_bold = 'SegoeUI-Bold'
+    except Exception:
+        pass
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="products.pdf"'
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=30,
+        leftMargin=30,
+        topMargin=30,
+        bottomMargin=30
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontName=font_bold,
+        fontSize=22,
+        textColor=colors.HexColor('#0f172a'),
+        spaceAfter=8
+    )
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontName=font_normal,
+        fontSize=11,
+        textColor=colors.HexColor('#475569'),
+        spaceAfter=16
+    )
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Heading2'],
+        fontName=font_bold,
+        fontSize=11,
+        textColor=colors.HexColor('#0f172a')
+    )
+    normal_style = ParagraphStyle(
+        'Normal',
+        parent=styles['Normal'],
+        fontName=font_normal,
+        fontSize=10,
+        textColor=colors.HexColor('#334155')
+    )
+
+    elements = []
+    elements.append(Paragraph('Product List', title_style))
+    elements.append(Paragraph(f'Total products: {products.count()}', subtitle_style))
+    elements.append(Spacer(1, 12))
+
+    data = [[
+        Paragraph('#', header_style),
+        Paragraph('Name', header_style),
+        Paragraph('Part Number', header_style),
+        Paragraph('Price', header_style),
+        Paragraph('Stock', header_style),
+    ]]
+
+    for index, product in enumerate(products, start=1):
+        data.append([
+            Paragraph(str(index), normal_style),
+            Paragraph(product.name or '-', normal_style),
+            Paragraph(product.part_number or '-', normal_style),
+            Paragraph(f'₹ {product.price}', normal_style),
+            Paragraph(str(product.stock), normal_style),
+        ])
+
+    table = Table(data, colWidths=[30, 200, 130, 80, 50], repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f1f5f9')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#0f172a')),
+        ('FONTNAME', (0, 0), (-1, 0), font_bold),
+        ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+        ('ALIGN', (3, 1), (4, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ffffff')),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#94a3b8')),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def product_add(request):
     form = ProductForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
