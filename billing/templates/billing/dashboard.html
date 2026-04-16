@@ -283,7 +283,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
 {{ user_chart_labels|json_script:'admin-chart-labels' }}
 {{ user_chart_values|json_script:'admin-chart-values' }}
 <script>

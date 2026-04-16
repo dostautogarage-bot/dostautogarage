@@ -20,7 +20,9 @@ from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expens
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, KeepTogether
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 
 # -------------------- PRODUCT FORMS --------------------
@@ -74,9 +76,10 @@ class BaseInvoiceItemFormSet(forms.BaseFormSet):
 
 
 class InvoiceMainForm(forms.ModelForm):
-    next_due_date = forms.DateField(
+    mechanic_name = forms.CharField(
         required=False,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+        label='Mechanic Name',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Mechanic Name'})
     )
     ran_kilometer = forms.IntegerField(
         required=False,
@@ -90,8 +93,8 @@ class InvoiceMainForm(forms.ModelForm):
             'customer_name',
             'customer_phone',
             'vehicle_number',
+            'mechanic_name',
             'discount_amount',
-            'next_due_date',
             'ran_kilometer'
         ]
         widgets = {
@@ -292,9 +295,11 @@ class AdminEditForm(UserChangeForm):
 def product_list(request):
     products = Product.objects.all()
     total_product_worth = sum(p.price * p.stock for p in products)
+    outofstock_count = Product.objects.filter(stock__lte=0).count()
     return render(request, 'billing/product_list.html', {
         'products': products,
-        'total_product_worth': total_product_worth
+        'total_product_worth': total_product_worth,
+        'outofstock_count': outofstock_count
     })
 
 
@@ -421,7 +426,7 @@ def invoice_list(request):
     if per_page not in [100, 200, 300, 500]:
         per_page = 100
 
-    invoices = Invoice.objects.all().order_by('-created_at')
+    invoices = Invoice.objects.all().order_by('-created_at').select_related('created_by').prefetch_related('items', 'other_charges')
     users = get_user_model().objects.filter(is_active=True).order_by('username')
 
     if creator_id:
@@ -518,7 +523,10 @@ def dashboard(request):
         if end < start:
             start, end = end, start
 
-    invoices = Invoice.objects.filter(created_at__date__gte=start, created_at__date__lte=end)
+    invoices = Invoice.objects.filter(
+        created_at__date__gte=start, 
+        created_at__date__lte=end
+    ).select_related('created_by').prefetch_related('items', 'other_charges')
     users = get_user_model().objects.filter(is_active=True).order_by('username')
 
     admin_user = None
@@ -620,7 +628,7 @@ def invoice_create(request):
         InvoiceItemForm,
         formset=BaseInvoiceItemFormSet,
         extra=1,
-        min_num=1,
+        min_num=0,
         validate_min=True,
         can_delete=False
     )
@@ -629,7 +637,20 @@ def invoice_create(request):
     main_form = InvoiceMainForm(request.POST or None)
 
     if request.method == 'POST':
+        charges_raw = request.POST.get('other_charges', '[]')
+        try:
+            total_charges_posted = len(json.loads(charges_raw))
+        except:
+            total_charges_posted = 0
+
+        # Check if formset is valid AND (either formset has items OR charges exist)
         if formset.is_valid() and main_form.is_valid():
+            total_items_posted = sum(1 for f in formset if f.cleaned_data and f.cleaned_data.get('product'))
+            
+            if total_items_posted == 0 and total_charges_posted == 0:
+                messages.error(request, "Please add at least one product or one charge.")
+                return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all()})
+
             selected_parts = set()
             duplicate_found = False
 
@@ -753,7 +774,7 @@ def invoice_edit(request, pk):
         InvoiceItemForm,
         formset=BaseInvoiceItemFormSet,
         extra=1,
-        min_num=1,
+        min_num=0,
         validate_min=True,
         can_delete=True
     )
@@ -761,7 +782,20 @@ def invoice_edit(request, pk):
     main_form = InvoiceMainForm(request.POST or None, instance=invoice)
     other_charges = list(invoice.other_charges.all())
 
-    if request.method == 'POST' and formset.is_valid() and main_form.is_valid():
+    if request.method == 'POST':
+        charges_raw = request.POST.get('other_charges', '[]')
+        try:
+            total_charges_posted = len(json.loads(charges_raw))
+        except:
+            total_charges_posted = 0
+
+        if formset.is_valid() and main_form.is_valid():
+            total_items_posted = sum(1 for f in formset if f.cleaned_data and not f.cleaned_data.get('DELETE', False) and f.cleaned_data.get('product'))
+
+            if total_items_posted == 0 and total_charges_posted == 0:
+                messages.error(request, "Please add at least one product or one charge.")
+                return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+
         selected_parts = set()
         duplicate_found = False
 
@@ -908,17 +942,19 @@ from .models import Product  # adjust import path
 @require_GET
 def product_list_api(request):
     """
-    GET /api/products/?q=oil&page=1&per_page=25
-    Used only by the product list page for live search + pagination.
-    Delete and Add Stock still use normal form POST — no changes needed there.
+    GET /api/products/?q=oil&page=1&per_page=25&stock_filter=zero
     """
-    query    = request.GET.get('q', '').strip()
-    page     = max(1, int(request.GET.get('page', 1)))
-    per_page = int(request.GET.get('per_page', 100))
+    query        = request.GET.get('q', '').strip()
+    stock_filter = request.GET.get('stock_filter', '').strip()
+    page         = max(1, int(request.GET.get('page', 1)))
+    per_page     = int(request.GET.get('per_page', 100))
     if per_page not in [100, 200, 300, 500]:
         per_page = 100
 
     qs = Product.objects.all().order_by('name')
+
+    if stock_filter == 'zero':
+        qs = qs.filter(stock__lte=0)
 
     if query:
         qs = qs.filter(
@@ -974,6 +1010,19 @@ def invoice_pdf(request, pk):
 
 def invoice_pdf_logic(request, invoice):
     """Core logic to generate invoice PDF (extracted to be reused by public view)."""
+    # Register Professional Font (Segoe UI)
+    font_normal = 'Helvetica'
+    font_bold   = 'Helvetica-Bold'
+    
+    try:
+        if os.path.exists('C:/Windows/Fonts/segoeui.ttf'):
+            pdfmetrics.registerFont(TTFont('SegoeUI', 'C:/Windows/Fonts/segoeui.ttf'))
+            pdfmetrics.registerFont(TTFont('SegoeUI-Bold', 'C:/Windows/Fonts/segoeuib.ttf'))
+            font_normal = 'SegoeUI'
+            font_bold   = 'SegoeUI-Bold'
+    except:
+        pass
+
     invoice_number = invoice.formatted_invoice_number
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{invoice_number}.pdf"'
@@ -994,29 +1043,35 @@ def invoice_pdf_logic(request, invoice):
     title_style = ParagraphStyle(
         'MainTitle',
         parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=24,
         textColor=colors.HexColor("#1e293b"),
-        alignment=2 # Right aligned
+        alignment=0 # Left aligned
     )
     company_name_style = ParagraphStyle(
         'CompName',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=16,
-        textColor=colors.HexColor("#2563eb")
+        fontName=font_bold,
+        fontSize=22,
+        textColor=colors.HexColor("#2563eb"),
+        alignment=2 # Right aligned
     )
     normal_style = ParagraphStyle(
         'CustomNormal',
         parent=styles['Normal'],
-        fontName='Helvetica',
+        fontName=font_normal,
         fontSize=10,
         textColor=colors.HexColor("#475569")
+    )
+    company_address_style = ParagraphStyle(
+        'CompAddr',
+        parent=normal_style,
+        alignment=2 # Right aligned
     )
     bold_style = ParagraphStyle(
         'CustomBold',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=10,
         textColor=colors.HexColor("#1e293b")
     )
@@ -1056,23 +1111,26 @@ def invoice_pdf_logic(request, invoice):
     logo_path = os.path.join(settings.BASE_DIR, 'static/logo.png')
 
     comp_text = f"{company_address}<br/>Email: {company_email}<br/>Phone: {phone_text}"
+    
+    # Left Header: Invoice Details
     left_header = [
+        Paragraph("INVOICE", title_style),
+        Spacer(1, 10),
+        Paragraph(f"<b>Invoice #:</b> {invoice_number}", bold_style),
+        Paragraph(f"<b>Date:</b> {invoice.created_at.strftime('%d %b %Y')}", normal_style)
+    ]
+    
+    # Right Header: Company Details
+    right_header = [
         Paragraph(company_name, company_name_style),
         Spacer(1, 4),
-        Paragraph(comp_text, normal_style)
+        Paragraph(comp_text, company_address_style)
     ]
     
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=40*mm, height=20*mm)
-        left_header.insert(0, logo)
-        left_header.insert(1, Spacer(1, 10))
-
-    right_header = [
-        Paragraph("INVOICE", title_style),
-        Spacer(1, 10),
-        Paragraph(f"<b>Invoice #:</b> {invoice_number}", ParagraphStyle('RightBold', parent=bold_style, alignment=2)),
-        Paragraph(f"<b>Date:</b> {invoice.created_at.strftime('%d %b %Y')}", ParagraphStyle('RightNormal', parent=normal_style, alignment=2))
-    ]
+        right_header.insert(0, logo)
+        right_header.insert(1, Spacer(1, 10))
 
     header_table = Table([[left_header, right_header]], colWidths=[250, 250])
     header_table.setStyle(TableStyle([
@@ -1102,6 +1160,10 @@ def invoice_pdf_logic(request, invoice):
         customer_info += "<font color='#64748b'>Phone:</font> N/A"
     
     vehicle_info = f"<font color='#64748b'>Vehicle #:</font> <b>{invoice.vehicle_number.upper() if invoice.vehicle_number else 'N/A'}</b><br/>"
+    if invoice.mechanic_name:
+        vehicle_info += f"<font color='#64748b'>Mechanic:</font> <b>{invoice.mechanic_name.upper()}</b><br/>"
+    if invoice.ran_kilometer:
+        vehicle_info += f"<font color='#64748b'>Service at:</font> <b>{invoice.ran_kilometer} KM</b><br/>"
     vehicle_info += f"<font color='#64748b'>Prepared by:</font> {created_by_name.title()}"
 
     info_table = Table([[
@@ -1211,17 +1273,6 @@ def invoice_pdf_logic(request, invoice):
     elements.append(totals_table)
     elements.append(Spacer(1, 30))
 
-    # ---------------- NEXT DUE DATE ----------------
-    if invoice.next_due_date:
-        next_due_text = f"Next Service Due: {invoice.next_due_date.strftime('%d %b %Y')}"
-        if invoice.ran_kilometer:
-            next_due_text += f" (Before {invoice.ran_kilometer} KM)"
-            
-        elements.append(Paragraph(
-            f"<b><font color='#ea580c'>{next_due_text}</font></b>", 
-            normal_style
-        ))
-        elements.append(Spacer(1, 15))
 
     # ---------------- FOOTER ----------------
     footer_data = []

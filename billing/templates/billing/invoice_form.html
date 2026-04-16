@@ -439,9 +439,9 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">{{ main_form.next_due_date.label }}</label>
-                    {{ main_form.next_due_date }}
-                    <div class="invalid-feedback">Please select a valid future date.</div>
+                    <label class="form-label">{{ main_form.mechanic_name.label }}</label>
+                    {{ main_form.mechanic_name }}
+                    <div class="invalid-feedback">Mechanic name is optional.</div>
                 </div>
 
             </div>
@@ -989,8 +989,9 @@ function initChargeRow(row) {
     if (!chargeSelect || !chargeInput) return;
 
     chargeSelect.addEventListener('change', () => {
-        if (chargeSelect.value === 'OTHER') {
+        if (chargeSelect.value === 'OTHER' || chargeSelect.value === 'LABOR CHARGE') {
             chargeInput.classList.remove('d-none');
+            chargeInput.placeholder = chargeSelect.value === 'LABOR CHARGE' ? "TYPE LABOR DETAILS (e.g. Engine Oil Change, Brake Service)..." : "TYPE OTHER CHARGE DESCRIPTION...";
             chargeInput.focus();
         } else {
             chargeInput.classList.add('d-none');
@@ -1012,11 +1013,13 @@ function getChargeName(row) {
 
     if (!chargeSelect) return '';
 
-    if (chargeSelect.value === 'OTHER') {
-        return chargeInput ? chargeInput.value.trim() : '';
+    const selectedValue = chargeSelect.value.trim();
+    if (selectedValue === 'OTHER' || selectedValue === 'LABOR CHARGE') {
+        const desc = chargeInput ? chargeInput.value.trim() : '';
+        return desc ? `${selectedValue}: ${desc}` : selectedValue;
     }
 
-    return chargeSelect.value.trim();
+    return selectedValue;
 }
 
 // ─── Collect charges into hidden field ───────────────────────────────────────
@@ -1125,18 +1128,13 @@ if (km) {
     }
 }
 
-// 5. Next Due Date (OPTIONAL ✅)
-const dueDate = document.getElementById('id_next_due_date');
-if (dueDate) {
-    if (dueDate.value !== '') {
-        const today = new Date().toISOString().split('T')[0];
-        if (dueDate.value < today) {
-            dueDate.classList.add('is-invalid'); valid = false;
-        } else {
-            dueDate.classList.remove('is-invalid'); dueDate.classList.add('is-valid');
-        }
+// 5. Mechanic Name (OPTIONAL ✅)
+const mechanic = document.getElementById('id_mechanic_name');
+if (mechanic) {
+    if (mechanic.value.trim() !== '') {
+        mechanic.classList.remove('is-invalid'); mechanic.classList.add('is-valid');
     } else {
-        dueDate.classList.remove('is-invalid', 'is-valid');
+        mechanic.classList.remove('is-invalid', 'is-valid');
     }
 }
 
@@ -1152,83 +1150,91 @@ if (dueDate) {
 
     // 7. Products
     const rows = document.querySelectorAll('#product-table tbody tr');
-    let productValid = false;
+    let validProductCount = 0;
+    let productDuplicationFound = false;
 
     const selectedParts = new Set();
     rows.forEach(row => {
         const hiddenSelect = row.querySelector('select[name*="product"]');
         const searchInput  = row.querySelector('.product-search-input');
         const qtyInput     = row.querySelector('input[name*="quantity"]');
-        let rowOk = true;
+        
+        const hasProduct = hiddenSelect && hiddenSelect.value !== '';
+        const hasQty     = qtyInput && qtyInput.value.trim() !== '' && Number(qtyInput.value) > 0;
 
-        if (!hiddenSelect || hiddenSelect.value === '') {
-            if (searchInput) searchInput.classList.add('is-invalid');
-            rowOk = false;
-        } else {
-            if (searchInput) searchInput.classList.remove('is-invalid');
-            const prod = getProductById(hiddenSelect.value);
-            if (prod && prod.part_number) {
-                const partKey = prod.part_number.trim().toUpperCase();
-                if (selectedParts.has(partKey)) {
-                    if (searchInput) searchInput.classList.add('is-invalid');
-                    rowOk = false;
-                    productValid = false;
-                    alert('Duplicate product not allowed: the same part number has already been selected.');
-                } else {
-                    selectedParts.add(partKey);
+        // Reset states
+        if (searchInput) searchInput.classList.remove('is-invalid');
+        if (qtyInput) qtyInput.classList.remove('is-invalid');
+
+        if (hasProduct || hasQty) {
+            // If they started filling the row, both must be valid
+            let rowOk = true;
+            if (!hasProduct) {
+                if (searchInput) searchInput.classList.add('is-invalid');
+                rowOk = false;
+            } else {
+                const prod = getProductById(hiddenSelect.value);
+                if (prod && prod.part_number) {
+                    const partKey = prod.part_number.trim().toUpperCase();
+                    if (selectedParts.has(partKey)) {
+                        if (searchInput) searchInput.classList.add('is-invalid');
+                        rowOk = false;
+                        productDuplicationFound = true;
+                    } else {
+                        selectedParts.add(partKey);
+                    }
                 }
             }
-        }
+            if (!hasQty) {
+                if (qtyInput) qtyInput.classList.add('is-invalid');
+                rowOk = false;
+            }
 
-        if (qtyInput) {
-            if (qtyInput.value.trim() === '' || Number(qtyInput.value) < 1) {
-                qtyInput.classList.add('is-invalid'); rowOk = false;
+            if (rowOk) {
+                validProductCount++;
+                if (qtyInput) qtyInput.classList.add('is-valid');
             } else {
-                qtyInput.classList.remove('is-invalid'); qtyInput.classList.add('is-valid');
+                valid = false;
             }
         }
-
-        if (rowOk) productValid = true;
     });
 
-    if (!productValid) {
-        document.getElementById('productError').classList.remove('d-none');
-        valid = false;
-    } else {
-        document.getElementById('productError').classList.add('d-none');
+    if (productDuplicationFound) {
+        alert('Duplicate product not allowed: the same part number has already been selected.');
     }
 
     // 8. Other Charges
     let chargesOk = true;
+    let validChargeCount = 0;
+    
     document.querySelectorAll('#charges-body tr').forEach(row => {
         const chargeSelect = row.querySelector('.charge-select');
         const nameInput    = row.querySelector('.charge-name');
         const amt          = row.querySelector('.charge-amount');
         const selected     = chargeSelect ? chargeSelect.value : '';
-        const nameValue    = selected === 'OTHER' ? (nameInput ? nameInput.value.trim() : '') : selected;
+        const nameValue    = (selected === 'OTHER' || selected === 'LABOR CHARGE') ? (nameInput ? nameInput.value.trim() : '') : selected;
 
-        if (!selected) {
-            if (chargeSelect) chargeSelect.classList.add('is-invalid');
-            chargesOk = false;
-        } else {
-            if (chargeSelect) chargeSelect.classList.remove('is-invalid');
-        }
-
-        if (selected === 'OTHER') {
-            if (!nameValue) {
+        if (selected !== '') {
+            let rowOk = true;
+            if ((selected === 'OTHER' || selected === 'LABOR CHARGE') && (!nameValue || nameValue === selected)) {
                 if (nameInput) nameInput.classList.add('is-invalid');
-                chargesOk = false;
+                rowOk = false;
+            }
+            if (amt.value.trim() === '' || Number(amt.value) < 0) {
+                amt.classList.add('is-invalid');
+                rowOk = false;
             } else {
-                if (nameInput) nameInput.classList.remove('is-invalid');
+                amt.classList.remove('is-invalid');
+            }
+            
+            if (rowOk) {
+                validChargeCount++;
+            } else {
+                chargesOk = false;
             }
         } else {
             if (nameInput) nameInput.classList.remove('is-invalid');
-        }
-
-        if (amt.value.trim() === '' || Number(amt.value) < 0) {
-            amt.classList.add('is-invalid'); chargesOk = false;
-        } else {
-            amt.classList.remove('is-invalid');
+            if (amt) amt.classList.remove('is-invalid');
         }
     });
 
@@ -1237,6 +1243,16 @@ if (dueDate) {
         valid = false;
     } else {
         document.getElementById('chargesError').classList.add('d-none');
+    }
+
+    // FINAL CHECK: AT LEAST ONE PRODUCT OR ONE CHARGE
+    if (validProductCount === 0 && validChargeCount === 0) {
+        const productError = document.getElementById('productError');
+        productError.textContent = "PLEASE ADD AT LEAST ONE PRODUCT OR ONE CHARGE.";
+        productError.classList.remove('d-none');
+        valid = false;
+    } else {
+        document.getElementById('productError').classList.add('d-none');
     }
 
     if (!valid) {

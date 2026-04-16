@@ -298,8 +298,12 @@
                         {% if invoice.customer_phone %}
                         <p class="mb-1"><strong>PHONE:</strong> {{ invoice.customer_phone|upper }}</p>
                         {% endif %}
-                        {% if invoice.vehicle_number %}
                         <p class="mb-0"><strong>VEHICLE NUMBER:</strong> {{ invoice.vehicle_number|upper }}</p>
+                        {% if invoice.mechanic_name %}
+                        <p class="mb-0 mt-1"><strong>MECHANIC:</strong> {{ invoice.mechanic_name|upper }}</p>
+                        {% endif %}
+                        {% if invoice.ran_kilometer %}
+                        <p class="mb-0 mt-1"><strong>SERVICE AT:</strong> {{ invoice.ran_kilometer }} KM</p>
                         {% endif %}
                     </div>
                 </div>
@@ -403,15 +407,6 @@
 
         </div>
 
-        <!-- Next Service Info -->
-        {% if invoice.next_due_date %}
-        <div class="alert alert-info mt-4 mb-0">
-            NEXT SERVICE DUE ON <strong>{{ invoice.next_due_date|date:"d M Y" }}</strong>
-            {% if invoice.ran_kilometer %}
-            AT <strong>{{ invoice.ran_kilometer }} KM</strong>.
-            {% endif %}
-        </div>
-        {% endif %}
 
     </div>
 </div>

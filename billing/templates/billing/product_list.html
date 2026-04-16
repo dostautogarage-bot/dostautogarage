@@ -151,9 +151,10 @@
         }
     }
 
-    .stock-ok   { background:#d1fae5; color:#065f46; }
-    .stock-low  { background:#fef3c7; color:#92400e; }
-    .stock-zero { background:#fee2e2; color:#991b1b; }
+    .stock-high   { background:#065f46; color:#ffffff; } /* Dark Green > 10 */
+    .stock-med    { background:#84cc16; color:#ffffff; } /* Light Green/Yellowish 5-10 */
+    .stock-low    { background:#f59e0b; color:#ffffff; } /* Orange 1-5 */
+    .stock-zero   { background:#dc2626; color:#ffffff; } /* Red 0 */
 
     #paginationWrapper .page-link {
         cursor: pointer;
@@ -264,6 +265,30 @@
         border-radius: 4px;
         z-index: 10;
     }
+    /* Out of Stock Alert Card Styling */
+    #outOfStockAlert {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    #outOfStockAlert:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(220, 38, 38, 0.25);
+    }
+
+    #outOfStockAlert:active {
+        transform: scale(0.96);
+    }
+
+    @media (max-width: 767px) {
+        #outOfStockAlert .h3 {
+            font-size: 1.25rem;
+        }
+        #outOfStockAlert .small {
+            font-size: 0.65rem;
+        }
+    }
 </style>
 
 <div class="container mt-4">
@@ -276,9 +301,25 @@
         </div>
 
         <!-- Total Product Worth Banner -->
-        <div class="product-worth-banner">
-            <h5>Total Stock Value</h5>
-            <div class="worth-value">₹ {{ total_product_worth|floatformat:2 }}</div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-{% if outofstock_count > 0 %}8{% else %}12{% endif %}">
+                <div class="product-worth-banner h-100">
+                    <h5>Total Stock Value</h5>
+                    <div class="worth-value">₹ {{ total_product_worth|floatformat:2 }}</div>
+                </div>
+            </div>
+            {% if outofstock_count > 0 %}
+            <div class="col-md-4">
+                <div class="card bg-danger text-white h-100 d-flex flex-column justify-content-center align-items-center shadow-sm border-0" 
+                     id="outOfStockAlert" style="cursor: pointer; border-radius: 1rem; transition: transform 0.2s;">
+                    <div class="text-center py-2">
+                        <div class="h3 fw-bold mb-0">{{ outofstock_count }}</div>
+                        <div class="small fw-semibold text-uppercase" style="letter-spacing: 0.05em;">Out of Stock</div>
+                    </div>
+                    <i class="bi bi-arrow-right-circle fs-4 position-absolute" style="bottom: 10px; right: 15px; opacity: 0.6;"></i>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Search -->
@@ -295,6 +336,9 @@
             </div>
 
             <div class="d-flex align-items-center gap-2">
+                <div id="filterBadge" class="badge bg-danger rounded-pill px-3 py-2 d-none" style="cursor: pointer;">
+                    OUT OF STOCK <i class="bi bi-x-lg ms-1"></i>
+                </div>
                 <label class="form-label mb-0 text-muted small">Show</label>
                 <select id="perPageSelect" class="form-select form-select-sm" style="width:120px;">
                     <option value="100">100</option>
@@ -410,7 +454,7 @@ function loadProducts() {
     document.getElementById('productTableWrapper').classList.add('table-loading');
     document.getElementById('searchSpinner').style.display = 'block';
 
-    const url = `${LIST_URL}?q=${encodeURIComponent(state.query)}&page=${state.page}&per_page=${state.perPage}`;
+    const url = `${LIST_URL}?q=${encodeURIComponent(state.query)}&page=${state.page}&per_page=${state.perPage}&stock_filter=${state.stockFilter}`;
     const xhr = new XMLHttpRequest();
     activeXHR  = xhr;
 
@@ -507,9 +551,10 @@ function renderTable(products) {
 }
 
 function stockBadge(stock) {
-    if (stock === 0) return `<span class="stock-badge stock-zero">0</span>`;
-    if (stock <= 5)  return `<span class="stock-badge stock-low">${stock}</span>`;
-    return                  `<span class="stock-badge stock-ok">${stock}</span>`;
+    if (stock <= 0)  return `<span class="stock-badge stock-zero">0</span>`;
+    if (stock < 5)   return `<span class="stock-badge stock-low">${stock}</span>`;
+    if (stock <= 10) return `<span class="stock-badge stock-med">${stock}</span>`;
+    return                  `<span class="stock-badge stock-high">${stock}</span>`;
 }
 
 // ── Pagination ─────────────────────────────────────────────────────────────────
@@ -620,6 +665,32 @@ document.getElementById('deleteModal').addEventListener('show.bs.modal', functio
     document.getElementById('deleteForm').action =
         `/products/${btn.getAttribute('data-product-id')}/delete/`;
 });
+
+// ── Stock filtering ───────────────────────────────────────────────────────────
+const outOfStockAlert = document.getElementById('outOfStockAlert');
+const filterBadge     = document.getElementById('filterBadge');
+
+if (outOfStockAlert) {
+    outOfStockAlert.addEventListener('click', function() {
+        state.stockFilter = 'zero';
+        state.page = 1;
+        filterBadge.classList.remove('d-none');
+        loadProducts();
+        
+        // Visual feedback
+        outOfStockAlert.style.transform = 'scale(0.95)';
+        setTimeout(() => outOfStockAlert.style.transform = '', 150);
+    });
+}
+
+if (filterBadge) {
+    filterBadge.addEventListener('click', function() {
+        state.stockFilter = '';
+        state.page = 1;
+        filterBadge.classList.add('d-none');
+        loadProducts();
+    });
+}
 
 // ── Initial load ───────────────────────────────────────────────────────────────
 loadProducts();

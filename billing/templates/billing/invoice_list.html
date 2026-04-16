@@ -240,7 +240,10 @@
                         <td data-label="Customer" class="sticky-left-1">
                             <strong>{{ invoice.customer_name|default:"Walk-in"|upper }}</strong><br>
                             {% if invoice.customer_phone %}
-                            <small class="text-muted">{{ invoice.customer_phone|upper }}</small>
+                            <small class="text-muted d-block">{{ invoice.customer_phone|upper }}</small>
+                            {% endif %}
+                            {% if invoice.mechanic_name %}
+                            <small class="text-info d-block" style="font-size: 0.65rem;">MECH: {{ invoice.mechanic_name|upper }}</small>
                             {% endif %}
                         </td>
 

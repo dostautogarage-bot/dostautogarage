@@ -15,8 +15,8 @@ class Settings(models.Model):
 
 
 class Product(models.Model):
-	name = models.CharField(max_length=100)
-	part_number = models.CharField(max_length=100, unique=True, default='')
+	name = models.CharField(max_length=100, db_index=True)
+	part_number = models.CharField(max_length=100, unique=True, default='', db_index=True)
 	price = models.DecimalField(max_digits=10, decimal_places=2)
 	stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
@@ -25,7 +25,7 @@ class Product(models.Model):
 
 
 class Invoice(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     invoice_number = models.PositiveIntegerField(unique=True, editable=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -34,14 +34,14 @@ class Invoice(models.Model):
         blank=True,
         related_name='invoices'
     )
-    vehicle_number = models.CharField(max_length=255, blank=True, null=True)
+    vehicle_number = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    mechanic_name = models.CharField(max_length=255, blank=True, null=True)
 
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
-    next_due_date = models.DateField(null=True, blank=True)
     ran_kilometer = models.PositiveIntegerField(null=True, blank=True)
 
-    customer_name = models.CharField(max_length=100, null=True, blank=True)
-    customer_phone = models.CharField(max_length=15, null=True, blank=True)
+    customer_name = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+    customer_phone = models.CharField(max_length=15, null=True, blank=True, db_index=True)
 
     def __str__(self):
         return f"Invoice #{self.invoice_number}"
@@ -92,6 +92,10 @@ class Invoice(models.Model):
         msg += f"*Date:* {self.created_at.strftime('%d-%m-%Y')}\n"
         if self.vehicle_number:
             msg += f"*Vehicle:* {self.vehicle_number.upper()}\n"
+        if self.mechanic_name:
+            msg += f"*Mechanic:* {self.mechanic_name.upper()}\n"
+        if self.ran_kilometer:
+            msg += f"*Service KM:* {self.ran_kilometer} KM\n"
         msg += f"--------------------------\n"
         
         msg += f"*ITEMS:*\n"
@@ -111,12 +115,6 @@ class Invoice(models.Model):
         msg += f"*TOTAL DUE:* *Rs.{self.balance_amount}*\n"
         msg += f"--------------------------\n"
         
-        if self.next_due_date:
-            msg += f"*Next Service Due:* {self.next_due_date.strftime('%d-%m-%Y')}\n"
-            if self.ran_kilometer:
-                msg += f"(Before {self.ran_kilometer} KM)\n"
-            msg += f"--------------------------\n"
-            
         msg += f"\n*View/Download PDF:* \n"
         # The base URL will be added in the template since models don't easily know the domain
         return msg
