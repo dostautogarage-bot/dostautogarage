@@ -507,6 +507,61 @@
             justify-content: center;
             margin-right: 10px;
             font-size: 0.9rem;
+            background: rgba(234, 88, 12, 0.1) !important;
+            color: #ea580c !important;
+        }
+
+        /* ----- PREMIUM ICON BUTTONS ----- */
+        .premium-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-size: 1.3rem;
+        }
+        
+        .premium-icon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(234, 88, 12, 0.3);
+        }
+
+        .premium-icon-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(234, 88, 12, 0.2);
+        }
+
+        /* Unified Orange Gradient for all icon buttons */
+        .premium-icon-primary,
+        .premium-icon-success,
+        .premium-icon-danger,
+        .premium-icon-warning,
+        .premium-icon-secondary {
+            background: linear-gradient(135deg, #ea580c, #f59e0b);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.2);
+        }
+
+        .premium-icon-primary:hover,
+        .premium-icon-success:hover,
+        .premium-icon-danger:hover,
+        .premium-icon-warning:hover,
+        .premium-icon-secondary:hover {
+            background: linear-gradient(135deg, #c2410c, #d97706);
+            color: #ffffff;
+        }
+
+        /* Unified Orange Gradient Table Headers */
+        .neo-table-header th {
+            background: linear-gradient(135deg, #ea580c, #f59e0b) !important;
+            color: #ffffff !important;
+            border-bottom: none !important;
+            text-transform: uppercase;
         }
     </style>
     {% block extra_css %}{% endblock %}

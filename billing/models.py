@@ -43,6 +43,13 @@ class Invoice(models.Model):
     customer_name = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     customer_phone = models.CharField(max_length=15, null=True, blank=True, db_index=True)
 
+    STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),
+        ('COMPLETED', 'Completed'),
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='COMPLETED', db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f"Invoice #{self.invoice_number}"
 

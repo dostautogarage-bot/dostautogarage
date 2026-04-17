@@ -254,23 +254,35 @@
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
             <div>
-                <h3 class="mb-0">Invoice #{{ invoice.formatted_invoice_number }}</h3>
+                <h3 class="mb-0">Invoice #{{ invoice.formatted_invoice_number }}
+                    {% if invoice.status == 'DRAFT' %}
+                    <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">DRAFT</span>
+                    {% endif %}
+                </h3>
                 <small class="text-muted">DATE: {{ invoice.created_at|date:"d M Y" }}</small><br>
                 <small class="text-muted">
                     CREATED BY: {% if invoice.created_by %}{{ invoice.created_by.get_full_name|default:invoice.created_by.username|upper }}{% else %}UNKNOWN{% endif %}
                 </small>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                {% if invoice.customer_phone %}
-                <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank" class="btn btn-sm action-btn d-flex align-items-center justify-content-center" style="background-color: #25D366; color: white;" title="Share on WhatsApp">
-                    <i class="bi bi-whatsapp"></i>
-                </a>
+                {% if invoice.status != 'DRAFT' %}
+                    {% if invoice.customer_phone %}
+                    <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank" class="btn btn-sm action-btn d-flex align-items-center justify-content-center" style="background-color: #25D366; color: white;" title="Share on WhatsApp">
+                        <i class="bi bi-whatsapp"></i>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank"
+                        class="btn btn-sm btn-danger action-btn d-flex align-items-center justify-content-center"
+                        title="Download PDF">
+                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                    </a>
+                {% else %}
+                    <a href="{% url 'invoice_edit' invoice.pk %}"
+                        class="btn btn-sm btn-success action-btn d-flex align-items-center justify-content-center px-3"
+                        title="Resume Draft">
+                        <i class="bi bi-pencil-fill me-2"></i> RESUME DRAFT
+                    </a>
                 {% endif %}
-                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank"
-                    class="btn btn-sm btn-danger action-btn d-flex align-items-center justify-content-center"
-                    title="Download PDF">
-                    <i class="bi bi-file-earmark-pdf-fill"></i>
-                </a>
                 <a href="{% url 'invoice_list' %}"
                     class="btn btn-sm btn-secondary action-btn d-flex align-items-center justify-content-center"
                     title="Back to invoices">

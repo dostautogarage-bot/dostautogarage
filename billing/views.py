@@ -528,7 +528,12 @@ def invoice_list(request):
     if per_page not in [100, 200, 300, 500]:
         per_page = 100
 
-    invoices = Invoice.objects.all().order_by('-created_at').select_related('created_by').prefetch_related('items', 'other_charges')
+    show_drafts = request.GET.get('drafts') == '1'
+
+    if show_drafts:
+        invoices = Invoice.objects.filter(status='DRAFT').order_by('-created_at').select_related('created_by').prefetch_related('items', 'other_charges')
+    else:
+        invoices = Invoice.objects.filter(status='COMPLETED').order_by('-created_at').select_related('created_by').prefetch_related('items', 'other_charges')
     users = get_user_model().objects.filter(is_active=True).order_by('username')
 
     if creator_id:
@@ -581,6 +586,8 @@ def invoice_list(request):
     paginator = Paginator(invoices, per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    
+    draft_count = Invoice.objects.filter(status='DRAFT').count()
 
     return render(request, 'billing/invoice_list.html', {
         'invoices': page_obj,
@@ -590,6 +597,8 @@ def invoice_list(request):
         'selected_creator': creator_id,
         'start_date': start_date,
         'end_date': end_date,
+        'show_drafts': show_drafts,
+        'draft_count': draft_count,
     })
 
 
@@ -627,7 +636,8 @@ def dashboard(request):
 
     invoices = Invoice.objects.filter(
         created_at__date__gte=start, 
-        created_at__date__lte=end
+        created_at__date__lte=end,
+        status='COMPLETED'
     ).select_related('created_by').prefetch_related('items', 'other_charges')
     users = get_user_model().objects.filter(is_active=True).order_by('username')
 
@@ -779,10 +789,13 @@ def invoice_create(request):
             last_invoice = Invoice.objects.order_by('-invoice_number').first()
             next_number  = (last_invoice.invoice_number if last_invoice else 0) + 1
 
+            is_draft = 'save_draft' in request.POST
+
             invoice = main_form.save(commit=False)
             invoice.invoice_number = next_number
             invoice.created_by = request.user
             invoice.discount_amount = main_form.cleaned_data.get('discount_amount') or 0
+            invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
             invoice.save()
 
             # ── Invoice items ────────────────────────────────────────────────
@@ -796,7 +809,7 @@ def invoice_create(request):
                 if not product or not quantity:
                     continue
 
-                if product.stock < quantity:
+                if not is_draft and product.stock < quantity:
                     invoice.delete()
                     available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
                     form.add_error('quantity', f'Only {available} available for {product.name}')
@@ -813,8 +826,9 @@ def invoice_create(request):
                     price    = product.price
                 )
 
-                product.stock -= quantity
-                product.save()
+                if not is_draft:
+                    product.stock -= quantity
+                    product.save()
 
             # ── Other charges ────────────────────────────────────────────────
             charges_raw = request.POST.get('other_charges', '[]')
@@ -926,63 +940,60 @@ def invoice_edit(request, pk):
         if duplicate_found:
             return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
 
-        # Update main invoice
-        main_form.save()
+        is_draft = 'save_draft' in request.POST
+        was_draft = invoice.status == 'DRAFT'
 
-        # Handle invoice items based on the change delta instead of treating edit like a new invoice.
+        # Update main invoice
+        invoice = main_form.save(commit=False)
+        invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
+        invoice.save()
+
+        # Gather old quantities
         old_quantities = {}
-        for item in invoice.items.all():
-            old_quantities[item.product_id] = old_quantities.get(item.product_id, Decimal('0')) + item.quantity
+        if not was_draft:
+            for item in invoice.items.all():
+                old_quantities[item.product_id] = old_quantities.get(item.product_id, Decimal('0')) + item.quantity
 
         new_items = []
-        new_product_ids = set()
         for form in formset:
             if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
                 product = form.cleaned_data.get('product')
                 quantity = form.cleaned_data.get('quantity')
                 if product and quantity > 0:
                     new_items.append((form, product, quantity))
-                    new_product_ids.add(product.pk)
 
         # Validate stock without changing it yet
-        for form, product, quantity in new_items:
-            old_quantity = old_quantities.get(product.pk, Decimal('0'))
-            delta = Decimal(quantity) - old_quantity
-            if delta > 0 and product.stock < delta:
-                available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
-                form.add_error('quantity', f'Only {available} available for {product.name}')
-                return render(request, 'billing/invoice_form.html', {
-                    'formset': formset,
-                    'main_form': main_form,
-                    'products': Product.objects.all(),
-                    'editing': True,
-                    'invoice': invoice,
-                    'other_charges': other_charges
-                })
+        if not is_draft:
+            for form, product, quantity in new_items:
+                old_quantity = old_quantities.get(product.pk, Decimal('0'))
+                delta = Decimal(quantity) - old_quantity
+                if delta > 0 and product.stock < delta:
+                    available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
+                    invoice.status = 'DRAFT' if was_draft else 'COMPLETED'
+                    invoice.save()
+                    form.add_error('quantity', f'Only {available} available for {product.name}')
+                    return render(request, 'billing/invoice_form.html', {
+                        'formset': formset,
+                        'main_form': main_form,
+                        'products': Product.objects.all(),
+                        'editing': True,
+                        'invoice': invoice,
+                        'other_charges': other_charges
+                    })
 
-        delta_messages = []
-
-        # Restore stock for deleted products or reduced quantities
+        # Apply stock changes: First refund old quantities
         for product_id, old_quantity in old_quantities.items():
-            if product_id not in new_product_ids:
-                product = Product.objects.get(pk=product_id)
-                product.stock += old_quantity
-                product.save()
-                delta_messages.append(f"{product.name} +{old_quantity}")
+            product = Product.objects.get(pk=product_id)
+            product.stock += old_quantity
+            product.save()
 
         invoice.items.all().delete()  # Clear existing items
 
-        # Save updated items and apply only the stock delta
+        # Save updated items and apply new stock deductions if not a draft
         for form, product, quantity in new_items:
-            old_quantity = old_quantities.get(product.pk, Decimal('0'))
-            delta = Decimal(quantity) - old_quantity
-            if delta > 0:
-                product.stock -= delta
-                delta_messages.append(f"{product.name} -{delta}")
-            elif delta < 0:
-                product.stock += abs(delta)
-                delta_messages.append(f"{product.name} +{abs(delta)}")
-            product.save()
+            if not is_draft:
+                product.stock -= Decimal(quantity)
+                product.save()
             InvoiceItem.objects.create(invoice=invoice, product=product, quantity=quantity, price=product.price)
 
         # Handle other charges - delete existing and recreate

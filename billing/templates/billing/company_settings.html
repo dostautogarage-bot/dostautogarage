@@ -4,7 +4,6 @@
 {% block extra_css %}
 <style>
     .settings-page {
-        background: linear-gradient(135deg, #fdf2f8 0%, #f0f9ff 45%, #ecfccb 100%);
         min-height: 100vh;
         padding: 1.5rem 0 2rem;
     }
@@ -16,12 +15,12 @@
     }
 
     .settings-hero {
-        background: linear-gradient(135deg, #059669, #10b981);
+        background: var(--primary-gradient);
         border-radius: 1rem;
         color: #fff;
         padding: 1.25rem 1rem;
         margin-bottom: 1rem;
-        box-shadow: 0 24px 70px rgba(5, 150, 105, 0.16);
+        box-shadow: 0 24px 70px rgba(234, 88, 12, 0.16);
     }
 
     @media (min-width: 768px) {
@@ -150,8 +149,8 @@
     .form-control:focus,
     .form-textarea:focus {
         outline: none;
-        border-color: #10b981;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
     }
 
     .form-textarea {
@@ -180,7 +179,7 @@
     }
 
     .btn-save {
-        background: linear-gradient(135deg, #059669, #10b981);
+        background: var(--primary-gradient);
         color: #fff;
         padding: 0.5rem 1rem;
         border: none;
@@ -203,7 +202,7 @@
 
     .btn-save:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 24px rgba(5, 150, 105, 0.3);
+        box-shadow: 0 12px 24px rgba(234, 88, 12, 0.3);
     }
 
     .alert {
@@ -224,9 +223,9 @@
     }
 
     .alert-success {
-        background: rgba(16, 185, 129, 0.1);
-        border-color: rgba(16, 185, 129, 0.3);
-        color: #059669;
+        background: rgba(234, 88, 12, 0.05);
+        border-color: rgba(234, 88, 12, 0.2);
+        color: var(--primary);
     }
 
     .divider {
@@ -242,8 +241,8 @@
     }
 
     .settings-info {
-        background: rgba(16, 185, 129, 0.05);
-        border-left: 4px solid #10b981;
+        background: rgba(234, 88, 12, 0.05);
+        border-left: 4px solid var(--primary);
         padding: 0.75rem;
         border-radius: 0.5rem;
         margin-top: 1rem;
@@ -394,9 +393,9 @@
                 </div>
 
                 <!-- Submit Button -->
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="submit" class="btn-save">SAVE SETTINGS</button>
-                    <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none;">CANCEL</a>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+                    <button type="submit" class="premium-icon-btn premium-icon-success" title="Save Settings"><i class="bi bi-check-lg"></i></button>
+                    <a href="{% url 'dashboard' %}" class="premium-icon-btn premium-icon-secondary" title="Cancel"><i class="bi bi-x-lg"></i></a>
                 </div>
             </form>
 

@@ -128,8 +128,8 @@
                 {% for error in field.errors %}<div class="errorlist text-danger">{{ error }}</div>{% endfor %}
               </div>
             {% endfor %}
-            <button class="btn btn-primary" type="button" id="confirmSaveBtn">SAVE</button>
-            <a class="btn btn-secondary" href="{% url 'expense_list' %}">CANCEL</a>
+            <button class="btn btn-primary" type="button" id="confirmSaveBtn" title="Save"><i class="bi bi-check-lg"></i></button>
+            <a class="btn btn-secondary" href="{% url 'expense_list' %}" title="Cancel"><i class="bi bi-x-lg"></i></a>
         </form>
     </div>
 </div>
@@ -146,8 +146,8 @@
                 <p class="mt-2"><small class="text-muted">THIS WILL {{ title|upper }} THE EXPENSE IN THE SYSTEM.</small></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CANCEL</button>
-                <button type="button" class="btn btn-primary" id="confirmSaveModalBtn">YES, SAVE</button>
+                <button type="button" class="premium-icon-btn premium-icon-success" id="confirmSaveModalBtn" title="Confirm Save"><i class="bi bi-check-lg"></i></button>
+                <button type="button" class="premium-icon-btn premium-icon-secondary" data-bs-dismiss="modal" title="Cancel"><i class="bi bi-x-lg"></i></button>
             </div>
         </div>
     </div>

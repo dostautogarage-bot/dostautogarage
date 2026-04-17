@@ -191,8 +191,8 @@
         overflow: hidden;
         border-radius: 1.1rem;
         padding: 1.25rem;
-        box-shadow: 0 18px 40px rgba(37, 99, 235, 0.18);
-        background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+        box-shadow: 0 18px 40px rgba(234, 88, 12, 0.18);
+        background: var(--primary-gradient);
         color: #ffffff;
     }
 
@@ -465,7 +465,7 @@
 
             <div class="table-responsive">
                 <table class="table table-bordered align-middle" id="product-table">
-                    <thead class="table-dark">
+                    <thead class="neo-table-header">
                         <tr>
                             <th>PRODUCT</th>
                             <th style="width:120px;" class="text-center">PRICE</th>
@@ -519,8 +519,8 @@
                 </table>
             </div>
 
-            <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addRow()">
-                + ADD PRODUCT
+            <button type="button" class="premium-icon-btn premium-icon-primary mb-3" title="Add Product" onclick="addRow()">
+                <i class="bi bi-plus-circle"></i>
             </button>
 
             <!-- OTHER CHARGES -->
@@ -532,7 +532,7 @@
 
             <div class="table-responsive">
                 <table class="table table-bordered align-middle" id="charges-table" style="min-width: 400px;">
-                    <thead class="table-dark">
+                    <thead class="neo-table-header">
                         <tr>
                             <th>CHARGE NAME</th>
                             <th style="width:200px;">AMOUNT (₹)</th>
@@ -580,8 +580,8 @@
             </div>
 
             <div class="mb-2 text-muted" style="font-size:0.85rem;">Choose a predefined charge, or select OTHER to type a custom description.</div>
-            <button type="button" class="btn btn-outline-secondary btn-sm mb-4" onclick="addCharge()">
-                + ADD CHARGE
+            <button type="button" class="premium-icon-btn premium-icon-secondary mb-4" title="Add Charge" onclick="addCharge()">
+                <i class="bi bi-plus-square"></i>
             </button>
 
             <div class="card p-3 mb-4" style="background:#f8fafc; border:1px solid #d1d5db;">
@@ -629,9 +629,10 @@
                 </div>
             </div>
 
-            <div class="d-flex gap-2 flex-wrap mt-3">
-                <button type="submit" class="btn btn-sm btn-success">{% if editing %}UPDATE INVOICE{% else %}CREATE INVOICE{% endif %}</button>
-                <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-secondary">CANCEL</a>
+            <div class="d-flex gap-3 flex-wrap mt-3">
+                <button type="submit" name="complete_invoice" value="1" class="premium-icon-btn premium-icon-success" title="{% if editing %}Update Invoice{% else %}Create Invoice{% endif %}"><i class="bi bi-check-lg"></i></button>
+                <button type="submit" name="save_draft" value="1" class="premium-icon-btn premium-icon-primary" title="Save As Draft"><i class="bi bi-save"></i></button>
+                <a href="{% url 'invoice_list' %}" class="premium-icon-btn premium-icon-secondary" title="Cancel"><i class="bi bi-x-lg"></i></a>
             </div>
 
         </form>

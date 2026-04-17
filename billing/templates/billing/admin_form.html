@@ -281,12 +281,12 @@
                 {% endif %}
 
                 <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-action">
-                        ✓ {{ submit_text }}
+                <div class="form-actions d-flex gap-2">
+                    <button type="submit" class="premium-icon-btn premium-icon-success" title="{{ submit_text }}">
+                        <i class="bi bi-check-lg"></i>
                     </button>
-                    <a href="{% url 'admin_list' %}" class="btn btn-secondary btn-action">
-                        ✕ Cancel
+                    <a href="{% url 'admin_list' %}" class="premium-icon-btn premium-icon-secondary" title="Cancel">
+                        <i class="bi bi-x-lg"></i>
                     </a>
                 </div>
 
