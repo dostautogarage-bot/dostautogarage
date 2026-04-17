@@ -128,8 +128,8 @@
                 {% for error in field.errors %}<div class="errorlist text-danger">{{ error }}</div>{% endfor %}
               </div>
             {% endfor %}
-            <button class="btn btn-primary" type="button" id="confirmSaveBtn" title="Save"><i class="bi bi-check-lg"></i></button>
-            <a class="btn btn-secondary" href="{% url 'expense_list' %}" title="Cancel"><i class="bi bi-x-lg"></i></a>
+            <button class="premium-icon-btn premium-icon-primary" type="button" id="confirmSaveBtn" title="Save"><i class="bi bi-check-lg"></i></button>
+            <a class="premium-icon-btn premium-icon-secondary" href="{% url 'expense_list' %}" title="Cancel"><i class="bi bi-x-lg"></i></a>
         </form>
     </div>
 </div>

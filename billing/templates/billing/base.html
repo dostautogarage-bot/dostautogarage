@@ -57,6 +57,28 @@
             padding-top: 70px;
             /* Space for top bar */
             -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: pan-y;
+        }
+
+        /* Minimal native scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 90, 0, 0.4);
+            border-radius: 10px;
+        }
+
+        /* Prevent text selection on UI elements */
+        .bottom-nav, .top-app-bar, .sidebar, .btn, .premium-icon-btn, .nav-link, .bottom-nav-item {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
         }
 
         @media (min-width: 992px) {
@@ -556,12 +578,13 @@
             color: #ffffff;
         }
 
-        /* Unified Orange Gradient Table Headers */
+        /* Clean Premium Table Headers */
         .neo-table-header th {
-            background: linear-gradient(135deg, #ea580c, #f59e0b) !important;
-            color: #ffffff !important;
-            border-bottom: none !important;
+            background: #f8fafc !important;
+            color: #334155 !important;
+            border-bottom: 2px solid rgba(234, 88, 12, 0.3) !important;
             text-transform: uppercase;
+            font-weight: 700;
         }
     </style>
     {% block extra_css %}{% endblock %}

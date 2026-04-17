@@ -98,8 +98,6 @@
 
     .table thead th {
         padding: 0.4rem 0.25rem;
-        background: #1f2937;
-        color: white;
     }
 
     @media (min-width: 768px) {
@@ -173,7 +171,7 @@
     }
 
     .border-primary {
-        border: 1px solid #2563eb !important;
+        border: 1px solid var(--primary) !important;
     }
 
     .card-header {
@@ -267,30 +265,20 @@
             <div class="d-flex flex-wrap gap-2">
                 {% if invoice.status != 'DRAFT' %}
                     {% if invoice.customer_phone %}
-                    <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank" class="btn btn-sm action-btn d-flex align-items-center justify-content-center" style="background-color: #25D366; color: white;" title="Share on WhatsApp">
+                    <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank" class="premium-icon-btn premium-icon-success" title="Share on WhatsApp">
                         <i class="bi bi-whatsapp"></i>
                     </a>
                     {% endif %}
-                    <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank"
-                        class="btn btn-sm btn-danger action-btn d-flex align-items-center justify-content-center"
-                        title="Download PDF">
+                    <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="premium-icon-btn premium-icon-warning" title="Download PDF" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
                         <i class="bi bi-file-earmark-pdf-fill"></i>
                     </a>
                 {% else %}
-                    <a href="{% url 'invoice_edit' invoice.pk %}"
-                        class="btn btn-sm btn-success action-btn d-flex align-items-center justify-content-center px-3"
-                        title="Resume Draft">
-                        <i class="bi bi-pencil-fill me-2"></i> RESUME DRAFT
+                    <a href="{% url 'invoice_edit' invoice.pk %}" class="premium-icon-btn premium-icon-primary" title="Resume Draft">
+                        <i class="bi bi-pencil-fill"></i>
                     </a>
                 {% endif %}
-                <a href="{% url 'invoice_list' %}"
-                    class="btn btn-sm btn-secondary action-btn d-flex align-items-center justify-content-center"
-                    title="Back to invoices">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                        viewBox="0 0 16 16">
-                        <path fill-rule="evenodd"
-                            d="M11.354 1.646a.5.5 0 0 1 0 .708L6.707 7h6.793a.5.5 0 0 1 0 1H6.707l4.647 4.646a.5.5 0 0 1-.708.708l-5.5-5.5a.5.5 0 0 1 0-.708l5.5-5.5a.5.5 0 0 1 .708 0z" />
-                    </svg>
+                <a href="{% url 'invoice_list' %}" class="premium-icon-btn premium-icon-secondary" title="Back to invoices">
+                    <i class="bi bi-arrow-left"></i>
                 </a>
             </div>
         </div>
@@ -300,7 +288,7 @@
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card border-primary">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header text-white" style="background: var(--primary-gradient);">
                         <h6 class="mb-0">CUSTOMER INFORMATION</h6>
                     </div>
                     <div class="card-body">
@@ -327,7 +315,7 @@
         <h5 class="mb-3">PRODUCTS / SERVICES</h5>
         <div class="table-responsive">
             <table class="table table-bordered align-middle">
-                <thead class="table-dark">
+                <thead class="neo-table-header">
                     <tr>
                         <th>PRODUCT</th>
                         <th style="width:120px;">QUANTITY</th>
@@ -359,7 +347,7 @@
         <h5 class="mt-4 mb-3">OTHER CHARGES</h5>
         <div class="table-responsive">
             <table class="table table-bordered align-middle">
-                <thead class="table-dark">
+                <thead class="neo-table-header">
                     <tr>
                         <th>CHARGE</th>
                         <th style="width:150px;">AMOUNT</th>
