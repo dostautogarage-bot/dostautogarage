@@ -61,6 +61,41 @@
         background: #f8fafc;
     }
 
+    /* TABLET OPTIMIZATION (iPad Air 5th Gen: 820px) */
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .admin-list-card {
+            padding: 1.25rem !important;
+            border-radius: 1.25rem;
+        }
+
+        .admin-filter-card {
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+        }
+
+        .admin-table thead th {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .admin-table tbody td {
+            padding: 0.65rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            min-height: 40px;
+        }
+
+        .btn {
+            min-height: 40px;
+            font-size: 0.85rem;
+        }
+    }
+
     .admin-badge {
         display: inline-block;
         padding: 0.2rem 0.4rem;
@@ -74,6 +109,14 @@
             padding: 0.35rem 0.65rem;
             border-radius: 0.5rem;
             font-size: 0.75rem;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .admin-badge {
+            padding: 0.3rem 0.55rem;
+            border-radius: 0.4rem;
+            font-size: 0.65rem;
         }
     }
 
@@ -96,6 +139,12 @@
     @media (min-width: 768px) {
         .admin-actions {
             gap: 0.5rem;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .admin-actions {
+            gap: 0.35rem;
         }
     }
 

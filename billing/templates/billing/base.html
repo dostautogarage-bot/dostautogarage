@@ -112,6 +112,28 @@
             }
         }
 
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .top-app-bar {
+                height: 65px;
+                padding: 0 18px;
+            }
+
+            .brand-logo {
+                font-size: 1.15rem;
+                gap: 6px;
+            }
+
+            .brand-logo i {
+                font-size: 1.3rem;
+            }
+
+            .user-avatar-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 0.9rem;
+            }
+        }
+
         .brand-logo {
             font-size: 1.25rem;
             font-weight: 800;
@@ -241,6 +263,30 @@
             }
         }
 
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .bottom-nav {
+                padding: 10px 8px;
+                padding-bottom: calc(10px + env(safe-area-inset-bottom));
+                height: 80px;
+            }
+
+            .bottom-nav-item {
+                font-size: 0.7rem;
+                gap: 3px;
+            }
+
+            .bottom-nav-item i {
+                font-size: 1.25rem;
+            }
+
+            .bottom-nav-fab {
+                width: 50px;
+                height: 50px;
+                transform: translateY(-12px);
+                border-width: 3px;
+            }
+        }
+
         .bottom-nav-item {
             display: flex;
             flex-direction: column;
@@ -359,6 +405,109 @@
             }
         }
 
+        /* TABLET OPTIMIZATION (iPad Air 5th gen: 820px landscape / 592px portrait) */
+        @media (min-width: 769px) and (max-width: 1023px) {
+            body {
+                padding-bottom: 0;
+                padding-left: 0;
+                padding-top: 0;
+            }
+
+            .top-app-bar {
+                display: flex;
+            }
+
+            .bottom-nav {
+                display: flex;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .container {
+                padding: 18px;
+                max-width: 100%;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                font-weight: 800;
+                letter-spacing: -0.3px;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+                margin-bottom: 1.25rem;
+            }
+
+            /* Tablet-optimized font sizes */
+            body {
+                font-size: 0.95rem;
+            }
+
+            /* Optimized card padding for tablets */
+            .card {
+                padding: 1.25rem !important;
+            }
+
+            /* Tablet form controls */
+            .form-control,
+            .form-select {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+                min-height: 44px;
+            }
+
+            .form-label {
+                font-size: 0.8rem;
+                font-weight: 600;
+                margin-bottom: 0.4rem;
+            }
+
+            /* Tablet button sizing */
+            .btn, .premium-icon-btn {
+                min-height: 44px;
+                min-width: 44px;
+                font-size: 0.9rem;
+            }
+
+            .btn-primary {
+                padding: 0.7rem 1.2rem;
+            }
+
+            /* Tablet dropdown */
+            .neo-dropdown-menu {
+                min-width: 200px;
+            }
+
+            .neo-dropdown-item {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            /* Improve input/select spacing for touch */
+            input[type="text"],
+            input[type="email"],
+            input[type="number"],
+            input[type="date"],
+            input[type="time"],
+            textarea,
+            select {
+                min-height: 44px;
+            }
+
+            /* Better table spacing for tablets */
+            .table thead th {
+                padding: 0.85rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            .table tbody td {
+                padding: 0.7rem 0.6rem;
+                font-size: 0.85rem;
+            }
+        }
+
         /* Settings Offcanvas / Modal for Mobile */
         .offcanvas-bottom {
             border-radius: 24px 24px 0 0;
@@ -368,7 +517,9 @@
         /* ----- MODERN RESPONSIVE TABLES (Sticky & Scroll) ----- */
         .table-responsive {
             -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
             overflow-x: auto;
+            overflow-y: visible;
             border-radius: var(--border-radius-md);
             background: var(--surface);
             box-shadow: var(--shadow-sm);
@@ -394,6 +545,14 @@
             margin-bottom: 0;
             border-collapse: separate;
             border-spacing: 0;
+            min-width: 650px;
+        }
+
+        @media (min-width: 1024px) {
+            .table {
+                white-space: normal;
+                min-width: auto;
+            }
         }
 
         .table thead th {
@@ -408,10 +567,49 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            white-space: nowrap;
         }
 
-        /* STICKY COLUMN UTILITIES FOR MOBILE */
         @media (max-width: 768px) {
+            .table thead th {
+                padding: 0.6rem 0.4rem;
+                font-size: 0.65rem;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .table thead th {
+                padding: 0.8rem 0.6rem;
+                font-size: 0.78rem;
+            }
+        }
+
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-light);
+            background-color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .table tbody td {
+                padding: 0.5rem 0.4rem;
+                font-size: 0.65rem;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .table tbody td {
+                padding: 0.7rem 0.6rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        .table tbody tr:hover td {
+            background-color: #f1f5f9;
+        }
+        @media (max-width: 1023px) {
             .sticky-left-1 {
                 position: sticky !important;
                 left: 0 !important;
@@ -437,6 +635,28 @@
             thead th.sticky-left-2 {
                 background-color: #f8fafc !important;
                 z-index: 13 !important;
+            }
+
+            /* Tablet striped row styling for sticky columns */
+            .table-striped tbody tr:nth-child(odd) .sticky-left-1 {
+                background-color: #f8fafc !important;
+            }
+
+            .table-striped tbody tr:nth-child(odd) .sticky-left-2 {
+                background-color: #f8fafc !important;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .sticky-left-1,
+            .sticky-left-2 {
+                position: static !important;
+                left: auto !important;
+                background-color: transparent !important;
+                z-index: auto !important;
+                box-shadow: none !important;
+                min-width: auto !important;
+                border-left: none !important;
             }
         }
 
@@ -474,6 +694,15 @@
             transition: all 0.2s ease;
         }
 
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .neo-options-btn {
+                width: 42px;
+                height: 42px;
+                min-width: 42px;
+                min-height: 42px;
+            }
+        }
+
         .neo-options-btn:active,
         .neo-options-btn.show {
             box-shadow:
@@ -496,6 +725,12 @@
             margin-top: 8px !important;
         }
 
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .neo-dropdown-menu {
+                min-width: 190px;
+            }
+        }
+
         .neo-dropdown-item {
             border-radius: 2rem;
             padding: 0.5rem 1rem;
@@ -509,6 +744,13 @@
             background: transparent;
             width: 100%;
             text-align: left;
+        }
+
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .neo-dropdown-item {
+                padding: 0.55rem 0.8rem;
+                font-size: 0.8rem;
+            }
         }
 
         .neo-dropdown-item:last-child {

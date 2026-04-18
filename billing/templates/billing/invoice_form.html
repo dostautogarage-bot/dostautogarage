@@ -18,6 +18,14 @@
         }
     }
 
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .card {
+            border-radius: 1.25rem;
+            padding: 1.5rem !important;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+        }
+    }
+
     h3 {
         font-size: 1.3rem;
         margin-bottom: 1rem;
@@ -27,6 +35,13 @@
         h3 {
             font-size: 1.75rem;
             margin-bottom: 1.5rem;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1023px) {
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
         }
     }
 
@@ -42,6 +57,13 @@
         }
     }
 
+    @media (min-width: 769px) and (max-width: 1023px) {
+        h5 {
+            font-size: 1rem;
+            margin-bottom: 0.85rem;
+        }
+    }
+
     .form-label {
         font-size: 0.75rem;
         font-weight: 600;
@@ -54,11 +76,18 @@
         }
     }
 
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .form-label {
+            font-size: 0.8rem;
+        }
+    }
+
     .form-control, .form-select {
         font-size: 0.75rem;
         padding: 0.4rem 0.6rem;
         border-radius: 0.4rem;
         text-transform: uppercase;
+        min-height: 40px;
     }
 
     @media (min-width: 768px) {
@@ -66,6 +95,14 @@
             font-size: 1rem;
             padding: 0.6rem 0.9rem;
             border-radius: 0.5rem;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .form-control, .form-select {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.45rem;
         }
     }
 
@@ -83,15 +120,31 @@
         }
     }
 
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .btn {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            min-height: 40px;
+        }
+    }
+
     .action-btn {
         padding: 4px 7px;
         line-height: 1;
         font-size: 0.7rem;
+        min-height: 40px;
     }
 
     @media (min-width: 768px) {
         .action-btn {
             font-size: 0.9rem;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1023px) {
+        .action-btn {
+            font-size: 0.8rem;
+            padding: 5px 8px;
         }
     }
 
