@@ -166,7 +166,8 @@
 
     .stock-high   { background:#065f46; color:#ffffff; } /* Dark Green > 10 */
     .stock-med    { background:#84cc16; color:#ffffff; } /* Light Green/Yellowish 5-10 */
-    .stock-low    { background:#f59e0b; color:#ffffff; } /* Orange 1-5 */
+    .stock-low    { background:#eab308; color:#ffffff; } /* Yellow 3-4 */
+    .stock-critical { background:#d97706; color:#ffffff; } /* Orange-Red 1-2 */
     .stock-zero   { background:#dc2626; color:#ffffff; } /* Red 0 */
 
     #paginationWrapper .page-link {
@@ -690,6 +691,7 @@ function renderTable(products) {
 
 function stockBadge(stock) {
     if (stock <= 0)  return `<span class="stock-badge stock-zero">0</span>`;
+    if (stock <= 2)   return `<span class="stock-badge stock-critical">${stock}</span>`;
     if (stock < 5)   return `<span class="stock-badge stock-low">${stock}</span>`;
     if (stock <= 10) return `<span class="stock-badge stock-med">${stock}</span>`;
     return                  `<span class="stock-badge stock-high">${stock}</span>`;
