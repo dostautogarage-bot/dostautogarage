@@ -371,10 +371,19 @@
             <div class="d-flex flex-wrap gap-2">
                 {% if invoice.status != 'DRAFT' %}
                     {% if invoice.customer_phone %}
-                    <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}" target="_blank" class="premium-icon-btn premium-icon-success" title="Share on WhatsApp">
+                    <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}" target="_blank" class="premium-icon-btn premium-icon-success" title="Share Text to WhatsApp">
                         <i class="bi bi-whatsapp"></i>
                     </a>
                     {% endif %}
+                    
+                    <!-- Share PDF (Web Share API) -->
+                    <button type="button" 
+                            onclick="shareInvoice('{% url 'invoice_pdf' invoice.pk %}', '{{ invoice.formatted_invoice_number }}.pdf')"
+                            class="premium-icon-btn premium-icon-primary share-pdf-btn d-none" 
+                            title="Share PDF">
+                        <i class="bi bi-share-fill"></i>
+                    </button>
+
                     <a href="{% url 'invoice_pdf' invoice.pk %}" download="{{ invoice.formatted_invoice_number }}.pdf" class="premium-icon-btn premium-icon-warning" title="Download PDF" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
                         <i class="bi bi-file-earmark-pdf-fill"></i>
                     </a>
@@ -514,7 +523,6 @@
         </div>
 
 
-    </div>
 </div>
 
 {% endblock %}

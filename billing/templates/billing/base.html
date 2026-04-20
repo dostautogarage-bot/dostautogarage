@@ -1045,6 +1045,60 @@
         }
     </script>
     {% block extra_js %}{% endblock %}
+
+<script>
+/**
+ * Native Sharing for PDFs
+ * This prevents the browser from automatically appending the page URL
+ * when sharing a downloaded file on mobile.
+ */
+async function shareInvoice(url, filename) {
+    // Try to find a share button or parent with loading state
+    const btns = document.querySelectorAll(`[onclick*="${url}"]`);
+    let originalContents = [];
+    btns.forEach(b => {
+        originalContents.push(b.innerHTML);
+        b.innerHTML = '<span class="spinner-border spinner-border-sm" style="width: 1rem; height: 1rem;" role="status" aria-hidden="true"></span>';
+        b.disabled = true;
+    });
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const blob = await response.blob();
+        const file = new File([blob], filename, { type: 'application/pdf' });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Invoice ' + filename.split('.')[0]
+            });
+        } else {
+            // Fallback to manual download if sharing is not supported
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    } catch (error) {
+        console.error('Sharing failed', error);
+        window.location.href = url;
+    } finally {
+        btns.forEach((b, i) => {
+            b.innerHTML = originalContents[i];
+            b.disabled = false;
+        });
+    }
+}
+
+// Global check for sharing support to show/hide share buttons
+document.addEventListener('DOMContentLoaded', () => {
+    if (navigator.share && navigator.canShare) {
+        document.querySelectorAll('.share-pdf-btn').forEach(el => el.classList.remove('d-none'));
+        document.querySelectorAll('.share-pdf-menu-item').forEach(el => el.classList.remove('d-none'));
+    }
+});
+</script>
 </body>
 
 </html>
