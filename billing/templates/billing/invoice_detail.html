@@ -375,7 +375,7 @@
                         <i class="bi bi-whatsapp"></i>
                     </a>
                     {% endif %}
-                    <a href="{% url 'invoice_pdf' invoice.pk %}" download="{{ invoice.formatted_invoice_number }}.pdf" target="_blank" class="premium-icon-btn premium-icon-warning" title="Download PDF" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                    <a href="{% url 'invoice_pdf' invoice.pk %}" download="{{ invoice.formatted_invoice_number }}.pdf" class="premium-icon-btn premium-icon-warning" title="Download PDF" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
                         <i class="bi bi-file-earmark-pdf-fill"></i>
                     </a>
                 {% else %}
