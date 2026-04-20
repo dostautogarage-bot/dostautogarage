@@ -306,7 +306,7 @@
                                         </li>
                                         <li>
                                             <a class="neo-dropdown-item" href="{% url 'invoice_pdf' invoice.pk %}"
-                                                target="_blank">
+                                                download="{{ invoice.formatted_invoice_number }}.pdf" target="_blank">
                                                 <div class="neo-icon-wrapper"
                                                     style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
                                                     <i class="bi bi-file-earmark-pdf-fill"></i>
@@ -316,7 +316,7 @@
                                         </li>
                                         {% if invoice.customer_phone %}
                                         <li>
-                                            <a class="neo-dropdown-item" href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank">
+                                            <a class="neo-dropdown-item" href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}" target="_blank">
                                                 <div class="neo-icon-wrapper" style="background: rgba(34, 197, 114, 0.1); color: #22c55e;">
                                                     <i class="bi bi-whatsapp"></i>
                                                 </div>

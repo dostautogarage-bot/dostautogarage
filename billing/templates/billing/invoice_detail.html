@@ -371,11 +371,11 @@
             <div class="d-flex flex-wrap gap-2">
                 {% if invoice.status != 'DRAFT' %}
                     {% if invoice.customer_phone %}
-                    <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}{{ request.scheme|urlencode }}%3A%2F%2F{{ request.get_host|urlencode }}{% url 'public_invoice_pdf' invoice.pk invoice.public_token as pdf_url %}{{ pdf_url|urlencode }}" target="_blank" class="premium-icon-btn premium-icon-success" title="Share on WhatsApp">
+                    <a href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}" target="_blank" class="premium-icon-btn premium-icon-success" title="Share on WhatsApp">
                         <i class="bi bi-whatsapp"></i>
                     </a>
                     {% endif %}
-                    <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="premium-icon-btn premium-icon-warning" title="Download PDF" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                    <a href="{% url 'invoice_pdf' invoice.pk %}" download="{{ invoice.formatted_invoice_number }}.pdf" target="_blank" class="premium-icon-btn premium-icon-warning" title="Download PDF" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
                         <i class="bi bi-file-earmark-pdf-fill"></i>
                     </a>
                 {% else %}

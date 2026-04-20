@@ -536,8 +536,7 @@
                                        list="productList-{{ forloop.counter0 }}"
                                        class="form-control product-search-input"
                                        placeholder="🔍 TYPE TO SEARCH PRODUCT..."
-                                       autocomplete="off"
-                                       spellcheck="false"
+                                       autocomplete="on"
                                        value="{{ form.initial.product_name|default:''|escape }}">
                                 <datalist class="product-datalist" id="productList-{{ forloop.counter0 }}"></datalist>
                                 {% for error in form.product.errors %}
@@ -597,16 +596,17 @@
                                 <td data-label="CHARGE NAME">
                                     <select class="form-select charge-select">
                                         <option value="" disabled {% if not charge.name %}selected{% endif %}>SELECT OR CHOOSE CHARGE</option>
-                                        <option value="LABOR CHARGE" {% if charge.name == 'LABOR CHARGE' or charge.name|slice:":12" == 'LABOR CHARGE:' %}selected{% endif %}>LABOR CHARGE</option>
+                                        <option value="LABOUR CHARGE" {% if charge.name == 'LABOUR CHARGE' or charge.name == 'LABOR CHARGE' or charge.name|slice:":13" == 'LABOUR CHARGE:' or charge.name|slice:":12" == 'LABOR CHARGE:' %}selected{% endif %}>LABOUR CHARGE</option>
                                         <option value="CLEANING CHARGE" {% if charge.name == 'CLEANING CHARGE' %}selected{% endif %}>CLEANING CHARGE</option>
                                         <option value="TRANSPORT CHARGE" {% if charge.name == 'TRANSPORT CHARGE' %}selected{% endif %}>TRANSPORT CHARGE</option>
                                         <option value="INDUSTRIAL CHARGE" {% if charge.name == 'INDUSTRIAL CHARGE' %}selected{% endif %}>INDUSTRIAL CHARGE</option>
-                                        <option value="OTHER" {% if charge.name != 'LABOR CHARGE' and charge.name|slice:":12" != 'LABOR CHARGE:' and charge.name != 'CLEANING CHARGE' and charge.name != 'TRANSPORT CHARGE' and charge.name != 'INDUSTRIAL CHARGE' %}selected{% endif %}>OTHER</option>
+                                        <option value="OTHER" {% if charge.name != 'LABOUR CHARGE' and charge.name != 'LABOR CHARGE' and charge.name|slice:":13" != 'LABOUR CHARGE:' and charge.name|slice:":12" != 'LABOR CHARGE:' and charge.name != 'CLEANING CHARGE' and charge.name != 'TRANSPORT CHARGE' and charge.name != 'INDUSTRIAL CHARGE' %}selected{% endif %}>OTHER</option>
                                     </select>
-                                    <textarea class="form-control charge-name mt-2 {% if charge.name == 'LABOR CHARGE' or charge.name == 'CLEANING CHARGE' or charge.name == 'TRANSPORT CHARGE' or charge.name == 'INDUSTRIAL CHARGE' %}d-none{% endif %}"
+                                    <textarea class="form-control charge-name mt-2 {% if charge.name == 'LABOUR CHARGE' or charge.name == 'LABOR CHARGE' or charge.name == 'CLEANING CHARGE' or charge.name == 'TRANSPORT CHARGE' or charge.name == 'INDUSTRIAL CHARGE' %}d-none{% endif %}"
                                               rows="3"
-                                              placeholder="{% if charge.name|slice:":12" == 'LABOR CHARGE:' %}TYPE LABOR DETAILS (e.g. Engine Oil Change, Brake Service)...{% else %}TYPE OTHER CHARGE DESCRIPTION...{% endif %}"
-                                              autocomplete="off">{% if charge.name|slice:":12" == 'LABOR CHARGE:' %}{{ charge.name|slice:"12:"|escape }}{% elif charge.name != 'LABOR CHARGE' and charge.name != 'CLEANING CHARGE' and charge.name != 'TRANSPORT CHARGE' and charge.name != 'INDUSTRIAL CHARGE' %}{{ charge.name|escape }}{% endif %}</textarea>
+                                              placeholder="{% if charge.name|slice:":13" == 'LABOUR CHARGE:' or charge.name|slice:":12" == 'LABOR CHARGE:' %}TYPE LABOUR DETAILS (e.g. Engine Oil Change, Brake Service)...{% else %}TYPE OTHER CHARGE DESCRIPTION...{% endif %}"
+                                              autocomplete="on"
+                                              spellcheck="true">{% if charge.name|slice:":13" == 'LABOUR CHARGE:' or charge.name|slice:":12" == 'LABOR CHARGE:' %}{{ charge.name|slice:"13:"|escape }}{% elif charge.name != 'LABOUR CHARGE' and charge.name != 'LABOR CHARGE' and charge.name != 'CLEANING CHARGE' and charge.name != 'TRANSPORT CHARGE' and charge.name != 'INDUSTRIAL CHARGE' %}{{ charge.name|escape }}{% endif %}</textarea>
                                 </td>
                                 <td data-label="AMOUNT (₹)">
                                     <input type="number" class="form-control charge-amount" style="min-height:3rem;" 
@@ -699,7 +699,7 @@ const ALL_PRODUCTS = [
     {% endfor %}
 ];
 
-const predefined_charges = ['LABOR CHARGE', 'CLEANING CHARGE', 'TRANSPORT CHARGE', 'INDUSTRIAL CHARGE'];
+const predefined_charges = ['LABOUR CHARGE', 'CLEANING CHARGE', 'TRANSPORT CHARGE', 'INDUSTRIAL CHARGE'];
 
 const phoneLengths = {
     '+91': 10, '+1': 10, '+44': 10, '+971': 9,
@@ -1062,13 +1062,13 @@ function addCharge() {
         <td data-label="CHARGE NAME">
             <select class="form-select charge-select">
                 <option value="" disabled selected >SELECT OR CHOOSE CHARGE</option>
-                <option value="LABOR CHARGE">LABOR CHARGE</option>
+                <option value="LABOUR CHARGE">LABOUR CHARGE</option>
                 <option value="CLEANING CHARGE">CLEANING CHARGE</option>
                 <option value="TRANSPORT CHARGE">TRANSPORT CHARGE</option>
                 <option value="INDUSTRIAL CHARGE">INDUSTRIAL CHARGE</option>
                 <option value="OTHER">OTHER</option>
             </select>
-            <textarea class="form-control charge-name d-none mt-2" rows="3" placeholder="TYPE OTHER CHARGE DESCRIPTION..." autocomplete="off"></textarea>
+            <textarea class="form-control charge-name d-none mt-2" rows="3" placeholder="TYPE OTHER CHARGE DESCRIPTION..." autocomplete="on" spellcheck="true"></textarea>
             <div class="invalid-feedback name-feedback">Charge description is required.</div>
         </td>
         <td data-label="AMOUNT (₹)">
@@ -1095,10 +1095,10 @@ function initChargeRow(row) {
     if (!chargeSelect || !chargeInput) return;
 
     chargeSelect.addEventListener('change', () => {
-        if (chargeSelect.value === 'OTHER' || chargeSelect.value === 'LABOR CHARGE') {
+        if (chargeSelect.value === 'OTHER' || chargeSelect.value === 'LABOUR CHARGE') {
             chargeInput.classList.remove('d-none');
-            chargeInput.placeholder = chargeSelect.value === 'LABOR CHARGE'
-                ? "TYPE LABOR DETAILS (e.g. Engine Oil Change, Brake Service)..."
+            chargeInput.placeholder = chargeSelect.value === 'LABOUR CHARGE'
+                ? "TYPE LABOUR DETAILS (e.g. Engine Oil Change, Brake Service)..."
                 : "TYPE OTHER CHARGE DESCRIPTION...";
             chargeInput.focus();
         } else {
@@ -1122,9 +1122,9 @@ function getChargeName(row) {
     if (!chargeSelect) return '';
 
     const selectedValue = chargeSelect.value.trim();
-    if (selectedValue === 'OTHER' || selectedValue === 'LABOR CHARGE') {
+    if (selectedValue === 'OTHER' || selectedValue === 'LABOUR CHARGE' || selectedValue === 'LABOR CHARGE') {
         const desc = chargeInput ? chargeInput.value.trim() : '';
-        if (selectedValue === 'LABOR CHARGE') {
+        if (selectedValue === 'LABOUR CHARGE' || selectedValue === 'LABOR CHARGE') {
             return desc ? `${selectedValue}: ${desc}` : selectedValue;
         }
         return desc ? desc : 'OTHER';

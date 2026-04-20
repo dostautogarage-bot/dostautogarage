@@ -13,6 +13,7 @@ from decimal import Decimal
 import os
 import hashlib
 from django.utils.crypto import get_random_string
+import re
 
 from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expense
 
@@ -1115,6 +1116,7 @@ def get_invoice_token(invoice_id):
     return hashlib.sha256(f"{invoice_id}{secret}".encode()).hexdigest()[:16]
 
 
+@login_required
 def public_invoice_pdf(request, pk, token):
     """View to serve invoice PDF to customers without login using a secure token."""
     invoice = get_object_or_404(Invoice, pk=pk)
@@ -1401,8 +1403,9 @@ def invoice_pdf_logic(request, invoice):
     # ---------------- FOOTER ----------------
     footer_data = []
     
-    # Left side: Thank you message
-    left_content = Paragraph(f"<i>{invoice_footer}</i>", normal_style)
+    # Left side: Thank you message (strip any links to prevent sharing)
+    clean_footer = re.sub(r'<a[^>]*>.*?</a>', '', invoice_footer, flags=re.IGNORECASE | re.DOTALL)
+    left_content = Paragraph(f"<i>{clean_footer}</i>", normal_style)
     
     # Right side: Signature
     if signature_obj and signature_obj.signature and signature_obj.signature.path:
