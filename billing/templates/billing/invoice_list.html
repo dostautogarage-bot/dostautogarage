@@ -347,7 +347,7 @@
                                                 Edit Invoice
                                             </a>
                                         </li>
-                                        <li>
+                                        <!-- <li>
                                             <button type="button" class="neo-dropdown-item shadow-none"
                                                 data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 data-invoice-id="{{ invoice.pk }}"
@@ -358,7 +358,7 @@
                                                 </div>
                                                 Delete
                                             </button>
-                                        </li>
+                                        </li> -->
                                     </ul>
                                 </div>
                             </div>
@@ -428,7 +428,7 @@
 </div>
 
 <!-- ✅ Single Confirmation Modal (shared for all invoices) -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
+<!-- <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
@@ -453,10 +453,10 @@
 
         </div>
     </div>
-</div>
+</div> -->
 
 <!-- ✅ JS: dynamically set invoice number and delete URL -->
-<script>
+<!-- <script>
     const deleteModal = document.getElementById('deleteModal');
     deleteModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
@@ -466,6 +466,6 @@
         document.getElementById('invoiceNumber').textContent = invoiceNumber;
         document.getElementById('deleteForm').action = `/invoices/${invoiceId}/delete/`;
     });
-</script>
+</script> -->
 
 {% endblock %}
