@@ -1251,20 +1251,23 @@ def invoice_pdf_logic(request, invoice):
     )
 
     # ─── Resolve Settings & Context ──────────────────
-    context = invoice_context()
-    company_name    = context.get('company_name', 'DOST AUTO GARAGE')
-    company_address = context.get('company_address', 'Address not set')
-    company_email   = context.get('company_email', '')
-    company_phone_1 = context.get('company_phone_1', '')
-    company_phone_2 = context.get('company_phone_2', '')
-    invoice_footer  = context.get('invoice_footer', 'Thank you for your business!')
-    currency_symbol = context.get('currency_symbol', 'INR')
+    from .models import Settings
+    settings_dict = {}
+    for s in Settings.objects.all():
+        settings_dict[s.key] = s.value
+
+    company_name    = settings_dict.get('company_name', 'DOST AUTO GARAGE')
+    company_address = settings_dict.get('company_address', 'Address not set')
+    company_email   = settings_dict.get('company_email', '')
+    company_phone_1 = settings_dict.get('company_phone_1', '')
+    company_phone_2 = settings_dict.get('company_phone_2', '')
+    invoice_footer  = settings_dict.get('invoice_footer', 'Thank you for your business!')
+    currency_symbol = settings_dict.get('currency_symbol', 'INR')
 
     phone_text = company_phone_1
     if company_phone_2:
         phone_text = f"{company_phone_1}, {company_phone_2}"
 
-    from .models import Settings
     logo_obj = Settings.objects.filter(key='company_logo').first()
     signature_obj = Settings.objects.filter(key='signature').first()
 
