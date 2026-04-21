@@ -1231,7 +1231,7 @@ def invoice_pdf_logic(request, invoice):
         'CompName',
         parent=styles['Normal'],
         fontName=font_bold,
-        fontSize=10,
+        fontSize=16,
         textColor=colors.HexColor("#2563eb"),
         alignment=2
     )
@@ -1387,8 +1387,11 @@ def invoice_pdf_logic(request, invoice):
 
     # ──────────────── OTHER CHARGES ────────────────
     if invoice.other_charges.exists():
-        elements.append(Paragraph("<b>OTHER CHARGES</b>", normal_style))
-        elements.append(Spacer(1, 1))
+        # Wrap heading in a table to ensure margin alignment matches other tables (500 width)
+        heading_table = Table([[Paragraph("<b>OTHER CHARGES</b>", normal_style)]], colWidths=[500])
+        heading_table.setStyle(TableStyle([('LEFTPADDING', (0,0), (-1,-1), 0), ('BOTTOMPADDING', (0,0), (-1,-1), 2)]))
+        elements.append(heading_table)
+        
         other_data = [["CHARGE", "AMOUNT"]]
         for charge in invoice.other_charges.all():
             other_data.append([charge.name.upper(), f"{charge.amount:.2f}"])
