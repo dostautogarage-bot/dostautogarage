@@ -24,6 +24,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from django.http import JsonResponse
+import json
 
 
 # -------------------- PRODUCT FORMS --------------------
@@ -731,6 +733,22 @@ def product_add_stock(request, pk):
 
 from django.contrib import messages
 
+# ─── Utility for Form Errors ─────────────────────────────────────────────
+def get_form_errors(form, formset=None):
+    errors = {}
+    if form:
+        for field, error_list in form.errors.items():
+            errors[field] = error_list[0] if error_list else ""
+    if formset:
+        formset_errors = []
+        for f in formset:
+            f_errors = {}
+            for field, error_list in f.errors.items():
+                f_errors[field] = error_list[0] if error_list else ""
+            formset_errors.append(f_errors)
+        errors['formset'] = formset_errors
+    return errors
+
 # -------------------- CREATE INVOICE --------------------
 import json
 
@@ -761,7 +779,10 @@ def invoice_create(request):
             total_items_posted = sum(1 for f in formset if f.cleaned_data and f.cleaned_data.get('product'))
             
             if total_items_posted == 0 and total_charges_posted == 0:
-                messages.error(request, "Please add at least one product or one charge.")
+                msg = "Please add at least one product or one charge."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': msg}, status=400)
+                messages.error(request, msg)
                 return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all()})
 
             selected_parts = set()
@@ -780,6 +801,8 @@ def invoice_create(request):
                         selected_parts.add(part_key)
 
             if duplicate_found:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
                 return render(request, 'billing/invoice_form.html', {
                     'formset'  : formset,
                     'main_form': main_form,
@@ -813,7 +836,12 @@ def invoice_create(request):
                 if not is_draft and product.stock < quantity:
                     invoice.delete()
                     available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
-                    form.add_error('quantity', f'Only {available} available for {product.name}')
+                    err_msg = f'Only {available} available for {product.name}'
+                    form.add_error('quantity', err_msg)
+                    
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
+                    
                     return render(request, 'billing/invoice_form.html', {
                         'formset'  : formset,
                         'main_form': main_form,
@@ -851,7 +879,14 @@ def invoice_create(request):
                 request,
                 f'Invoice #{invoice.formatted_invoice_number} created successfully.'
             )
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success', 'redirect': f"/invoices/{invoice.pk}/"})
             return redirect('invoice_detail', pk=invoice.pk)
+
+    # If forms were invalid (non-AJAX)
+    if request.method == 'POST':
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
 
     return render(request, 'billing/invoice_form.html', {
         'formset'  : formset,
@@ -921,7 +956,10 @@ def invoice_edit(request, pk):
             total_items_posted = sum(1 for f in formset if f.cleaned_data and not f.cleaned_data.get('DELETE', False) and f.cleaned_data.get('product'))
 
             if total_items_posted == 0 and total_charges_posted == 0:
-                messages.error(request, "Please add at least one product or one charge.")
+                msg = "Please add at least one product or one charge."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': msg}, status=400)
+                messages.error(request, msg)
                 return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
 
         selected_parts = set()
@@ -939,6 +977,8 @@ def invoice_edit(request, pk):
                         selected_parts.add(part_key)
 
         if duplicate_found:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
             return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
 
         is_draft = 'save_draft' in request.POST
@@ -972,7 +1012,12 @@ def invoice_edit(request, pk):
                     available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
                     invoice.status = 'DRAFT' if was_draft else 'COMPLETED'
                     invoice.save()
-                    form.add_error('quantity', f'Only {available} available for {product.name}')
+                    err_msg = f'Only {available} available for {product.name}'
+                    form.add_error('quantity', err_msg)
+                    
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
+                    
                     return render(request, 'billing/invoice_form.html', {
                         'formset': formset,
                         'main_form': main_form,
@@ -1011,7 +1056,14 @@ def invoice_edit(request, pk):
             pass
 
         messages.success(request, f'Invoice #{invoice.formatted_invoice_number} updated successfully.')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'redirect': f"/invoices/{invoice.pk}/"})
         return redirect('invoice_detail', pk=invoice.pk)
+
+    # If forms were invalid (non-AJAX)
+    if request.method == 'POST':
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
 
     return render(request, 'billing/invoice_form.html', {
         'formset': formset, 
@@ -1156,10 +1208,10 @@ def invoice_pdf_logic(request, invoice):
     doc = SimpleDocTemplate(
         response,
         pagesize=A4,
-        rightMargin=40,
-        leftMargin=40,
-        topMargin=40,
-        bottomMargin=40
+        rightMargin=25,
+        leftMargin=25,
+        topMargin=25,
+        bottomMargin=25
     )
 
     elements = []
@@ -1170,7 +1222,7 @@ def invoice_pdf_logic(request, invoice):
         'MainTitle',
         parent=styles['Heading1'],
         fontName=font_bold,
-        fontSize=24,
+        fontSize=20,
         textColor=colors.HexColor("#1e293b"),
         alignment=0 # Left aligned
     )
@@ -1178,7 +1230,7 @@ def invoice_pdf_logic(request, invoice):
         'CompName',
         parent=styles['Normal'],
         fontName=font_bold,
-        fontSize=22,
+        fontSize=18,
         textColor=colors.HexColor("#2563eb"),
         alignment=2 # Right aligned
     )
@@ -1186,7 +1238,7 @@ def invoice_pdf_logic(request, invoice):
         'CustomNormal',
         parent=styles['Normal'],
         fontName=font_normal,
-        fontSize=10,
+        fontSize=9,
         textColor=colors.HexColor("#475569")
     )
     company_address_style = ParagraphStyle(
@@ -1198,7 +1250,7 @@ def invoice_pdf_logic(request, invoice):
         'CustomBold',
         parent=styles['Normal'],
         fontName=font_bold,
-        fontSize=10,
+        fontSize=9,
         textColor=colors.HexColor("#1e293b")
     )
 
@@ -1264,7 +1316,7 @@ def invoice_pdf_logic(request, invoice):
         ('ALIGN', (1,0), (1,-1), 'RIGHT'),
     ]))
     elements.append(header_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 10))
     
     # ---------------- CUSTOMER INFO ----------------
     info_header_style = ParagraphStyle(
@@ -1279,7 +1331,7 @@ def invoice_pdf_logic(request, invoice):
     created_by_name = invoice.created_by.get_full_name() or invoice.created_by.username if invoice.created_by else "System"
 
     # Make the name big and bold, soften the labels
-    customer_info = f"<font size='11'><b>{invoice.customer_name.upper() if invoice.customer_name else 'N/A'}</b></font><br/>"
+    customer_info = f"<font size='10'><b>{invoice.customer_name.upper() if invoice.customer_name else 'N/A'}</b></font><br/>"
     if invoice.customer_phone:
         customer_info += f"<font color='#64748b'>Phone:</font> {invoice.customer_phone}"
     else:
@@ -1300,15 +1352,15 @@ def invoice_pdf_logic(request, invoice):
     info_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f8fafc")),
-        ('TOPPADDING', (0,0), (-1,-1), 16),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 16),
-        ('LEFTPADDING', (0,0), (-1,-1), 16),
-        ('RIGHTPADDING', (0,0), (-1,-1), 16),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('LEFTPADDING', (0,0), (-1,-1), 12),
+        ('RIGHTPADDING', (0,0), (-1,-1), 12),
         ('LINEABOVE', (0,0), (-1,-1), 1.5, colors.HexColor("#f1f5f9")),
         ('LINEBELOW', (0,0), (-1,-1), 1.5, colors.HexColor("#e2e8f0")),
     ]))
     elements.append(info_table)
-    elements.append(Spacer(1, 28))
+    elements.append(Spacer(1, 15))
 
     # ---------------- PRODUCT TABLE ----------------
     data = [["DESCRIPTION", "QTY", "RATE", "AMOUNT"]]
@@ -1326,16 +1378,16 @@ def invoice_pdf_logic(request, invoice):
         ('BACKGROUND',    (0,0), (-1,0), colors.HexColor("#1e293b")),
         ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
         ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE',      (0,0), (-1,0), 10),
+        ('FONTSIZE',      (0,0), (-1,0), 9),
         ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
-        ('FONTSIZE',      (0,1), (-1,-1), 9),
+        ('FONTSIZE',      (0,1), (-1,-1), 8.5),
         ('ALIGN',         (0,0), (0,-1), 'LEFT'),
         ('ALIGN',         (1,0), (1,-1), 'CENTER'),
         ('ALIGN',         (2,0), (-1,-1), 'RIGHT'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 8),
-        ('TOPPADDING',    (0,0), (-1,0), 8),
-        ('BOTTOMPADDING', (0,1), (-1,-1), 6),
-        ('TOPPADDING',    (0,1), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,0), 5),
+        ('TOPPADDING',    (0,0), (-1,0), 5),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 4),
+        ('TOPPADDING',    (0,1), (-1,-1), 4),
         ('LINEBELOW',     (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
     ]
     product_table.setStyle(TableStyle(styles_table))
@@ -1365,7 +1417,7 @@ def invoice_pdf_logic(request, invoice):
         ]))
         elements.append(charges_table)
         
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 10))
 
     # ---------------- TOTALS (RIGHT SIDE) ----------------
     totals_data = [
@@ -1383,21 +1435,21 @@ def invoice_pdf_logic(request, invoice):
     totals_table = Table(totals_data, colWidths=[350, 150])
     totals_table.setStyle(TableStyle([
         ('FONTNAME',   (0,0),  (-1,-1), 'Helvetica'),
-        ('FONTSIZE',   (0,0),  (-1,-1), 10),
+        ('FONTSIZE',   (0,0),  (-1,-1), 9),
         ('ALIGN',      (0,0),  (0,-1), 'RIGHT'),
         ('ALIGN',      (1,0),  (1,-1), 'RIGHT'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
         
         # Total Due Row Bold
         ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,-1), (-1,-1), 12),
+        ('FONTSIZE', (0,-1), (-1,-1), 11),
         ('TEXTCOLOR', (0,-1), (-1,-1), colors.HexColor("#2563eb")),
         ('LINEABOVE', (0,-1), (-1,-1), 1.5, colors.HexColor("#e2e8f0")),
-        ('TOPPADDING', (0,-1), (-1,-1), 10),
+        ('TOPPADDING', (0,-1), (-1,-1), 6),
     ]))
 
     elements.append(totals_table)
-    elements.append(Spacer(1, 30))
+    elements.append(Spacer(1, 15))
 
 
     # ---------------- FOOTER ----------------

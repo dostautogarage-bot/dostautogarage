@@ -442,21 +442,8 @@
         <form method="post" id="invoiceForm" novalidate>
             {% csrf_token %}
 
-            <!-- Server-side Errors -->
-            {% if main_form.errors %}
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    {% for field in main_form %}
-                        {% for error in field.errors %}
-                            <li><strong>{{ field.label }}</strong>: {{ error }}</li>
-                        {% endfor %}
-                    {% endfor %}
-                    {% for error in main_form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
+            <!-- Server-side Errors (Now handled by modal) -->
+
 
             <!-- CUSTOMER DETAILS -->
             <h5 class="mb-3">CUSTOMER DETAILS</h5>
@@ -503,19 +490,9 @@
             <!-- PRODUCTS SECTION -->
             <h5 class="mb-3">PRODUCTS / SERVICES</h5>
 
+            <!-- formset errors (Now handled by modal) -->
             {{ formset.management_form }}
 
-            {% if formset.non_form_errors %}
-            <div class="alert alert-danger">
-                {% for error in formset.non_form_errors %}
-                    <div>{{ error }}</div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <div id="productError" class="alert alert-danger d-none">
-                Please add at least one product with a valid quantity.
-            </div>
 
             <div class="table-responsive">
                 <table class="table table-bordered align-middle" id="product-table">
@@ -576,9 +553,8 @@
             <!-- OTHER CHARGES -->
             <h5 class="mb-3 mt-2">OTHER CHARGES</h5>
 
-            <div id="chargesError" class="alert alert-danger d-none">
-                Please fill in all charge names and valid amounts.
-            </div>
+            <!-- Charges errors (Now handled by modal) -->
+
 
             <div class="table-responsive">
                 <table class="table table-bordered align-middle" id="charges-table" style="min-width: 400px;">
@@ -686,6 +662,34 @@
         </form>
     </div>
 </div>
+
+<!-- ✅ Validation Errors Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Check Invoice Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="text-muted mb-3">Please correct the following issues before submitting:</p>
+                <ul id="errorList" class="list-group list-group-flush" style="font-size: 0.9rem;">
+                    <!-- Errors populated via JS -->
+                </ul>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="premium-icon-btn premium-icon-secondary" data-bs-dismiss="modal" title="Got it">
+                    <i class="bi bi-check-lg"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 
 <!--
     PORTAL DIV: removed, using datalist instead
@@ -1366,33 +1370,180 @@ if (mechanic) {
     });
 
     if (!chargesOk) {
-        document.getElementById('chargesError').classList.remove('d-none');
         valid = false;
-    } else {
-        document.getElementById('chargesError').classList.add('d-none');
     }
 
     // FINAL CHECK: AT LEAST ONE PRODUCT OR ONE CHARGE
     if (validProductCount === 0 && validChargeCount === 0) {
-        const productError = document.getElementById('productError');
-        productError.textContent = "PLEASE ADD AT LEAST ONE PRODUCT OR ONE CHARGE.";
-        productError.classList.remove('d-none');
         valid = false;
-    } else {
-        document.getElementById('productError').classList.add('d-none');
     }
+
 
     if (!valid) {
         e.preventDefault();
-        e.stopPropagation();
+        
+        // Populate modal with local validation errors
+        const errorList = document.getElementById('errorList');
+        if (errorList) {
+            errorList.innerHTML = '';
+            let errorMessages = [];
+            
+            // Collect messages from all .is-invalid fields
+            document.querySelectorAll('.is-invalid').forEach(el => {
+                const label = el.previousElementSibling?.classList.contains('form-label') 
+                    ? el.previousElementSibling.textContent.trim() 
+                    : (el.getAttribute('placeholder') || 'Field');
+                
+                // Avoid duplicates for row-based inputs
+                if (!errorMessages.includes(label)) {
+                    errorMessages.push(label);
+                }
+            });
+
+            if (validProductCount === 0 && validChargeCount === 0) {
+                errorMessages.push("MUST ADD AT LEAST ONE PRODUCT OR CHARGE");
+            }
+
+            errorMessages.forEach(msg => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex gap-2 border-0 px-0 bg-transparent';
+                li.innerHTML = `<i class="bi bi-x-circle-fill text-danger mt-1"></i> <div>${msg}</div>`;
+                errorList.appendChild(li);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+            modal.show();
+        }
+
         const firstInvalid = document.querySelector('.is-invalid');
         if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
+    // AJAX SUBMISSION
+    e.preventDefault();
     calculateInvoiceTotals();
     collectCharges();
+
+    // Determine which button was clicked
+    const submitter = e.submitter;
+    const formData = new FormData(this);
+    if (submitter) {
+        formData.append(submitter.name, submitter.value);
+    }
+
+    // Show loading state
+    const originalBtnContent = submitter ? submitter.innerHTML : '';
+    if (submitter) {
+        submitter.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> SAVING...';
+        submitter.disabled = true;
+    }
+
+    // Clear previous dynamic error messages
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    document.querySelectorAll('.server-error').forEach(el => el.remove());
+
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        if (response.ok && data.status === 'success') {
+            window.location.href = data.redirect;
+        } else {
+            handleServerErrors(data);
+        }
+    })
+    .catch(error => {
+        console.error('Submission error:', error);
+        alert('An unexpected error occurred. Please try again.');
+    })
+    .finally(() => {
+        if (submitter) {
+            submitter.innerHTML = originalBtnContent;
+            submitter.disabled = false;
+        }
+    });
 });
+
+function handleServerErrors(data) {
+    const errorList = document.getElementById('errorList');
+    if (!errorList) return;
+    errorList.innerHTML = '';
+    
+    let errorMessages = [];
+
+    if (data.message) {
+        errorMessages.push(data.message);
+    }
+
+    if (data.errors) {
+        const errors = data.errors;
+
+        // Main form errors
+        for (const [field, msg] of Object.entries(errors)) {
+            if (field === 'formset') continue;
+            
+            // Map field name to human readable label if possible
+            const label = document.querySelector(`label[for="id_${field}"]`)?.textContent || field.replace(/_/g, ' ').toUpperCase();
+            errorMessages.push(`<strong>${label}:</strong> ${msg}`);
+
+            const input = document.getElementById(`id_${field}`);
+            if (input) {
+                input.classList.add('is-invalid');
+                let feedback = input.nextElementSibling;
+                if (!feedback || !feedback.classList.contains('invalid-feedback')) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback server-error';
+                    input.after(feedback);
+                }
+                feedback.textContent = msg;
+            }
+        }
+
+        // Formset errors
+        if (errors.formset) {
+            const rows = document.querySelectorAll('#product-table tbody tr');
+            errors.formset.forEach((entry, idx) => {
+                const row = rows[idx];
+                if (row) {
+                    for (const [field, msg] of Object.entries(entry)) {
+                        const input = row.querySelector(`[name*="form-${idx}-${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            
+                            // Human readable reference for the row
+                            const productName = row.querySelector('.product-search-input')?.value || `Item ${idx + 1}`;
+                            errorMessages.push(`<strong>${productName}:</strong> ${msg}`);
+
+                            const errDiv = document.createElement('div');
+                            errDiv.className = 'text-danger small mt-1 server-error';
+                            errDiv.textContent = msg;
+                            input.after(errDiv);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    if (errorMessages.length > 0) {
+        errorMessages.forEach(msg => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex gap-2 border-0 px-0 bg-transparent';
+            li.innerHTML = `<i class="bi bi-x-circle-fill text-danger mt-1"></i> <div>${msg}</div>`;
+            errorList.appendChild(li);
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+        modal.show();
+    }
+}
 
 // ─── Live clear validation state on input ────────────────────────────────────
 document.getElementById('invoiceForm').addEventListener('input', function (e) {
@@ -1409,39 +1560,34 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateInvoiceTotals();
 });
 
-// ─── Handle Editing Mode ──────────────────────────────────────────────────────
-{% if editing %}
-// Populate product search inputs with selected product names
-document.querySelectorAll('#product-table tbody tr').forEach((row, index) => {
-    const hiddenSelect = row.querySelector('select[name*="product"]');
-    const searchInput  = row.querySelector('.product-search-input');
-    const priceCell    = row.querySelector('.unit-price');
-    if (hiddenSelect && hiddenSelect.value) {
-        const product = ALL_PRODUCTS.find(p => p.id == hiddenSelect.value);
-        if (product) {
-            searchInput.value = product.name;
-            searchInput.classList.add('selected-product');
-            if (priceCell) priceCell.textContent = '₹ ' + parseFloat(product.price).toFixed(2);
-        } else {
-            // Fallback for invoices where the stored product cannot be resolved by JS
-            if (searchInput && searchInput.value.trim()) {
+// Populate product search inputs with selected product names (Runs always on load)
+function populateSearchInputs() {
+    document.querySelectorAll('#product-table tbody tr').forEach((row, index) => {
+        const hiddenSelect = row.querySelector('select[name*="product"]');
+        const searchInput  = row.querySelector('.product-search-input');
+        const priceCell    = row.querySelector('.unit-price');
+        if (hiddenSelect && hiddenSelect.value) {
+            const product = ALL_PRODUCTS.find(p => p.id == hiddenSelect.value);
+            if (product) {
+                searchInput.value = product.name;
                 searchInput.classList.add('selected-product');
-            }
-            if (priceCell && priceCell.textContent.trim() === '₹ 0.00') {
-                const fallbackPrice = row.querySelector('td.unit-price')?.textContent?.trim();
-                if (fallbackPrice && fallbackPrice !== '₹ 0.00') {
-                    priceCell.textContent = fallbackPrice;
+                if (priceCell) priceCell.textContent = '₹ ' + parseFloat(product.price).toFixed(2);
+            } else {
+                // Fallback for invoices where the stored product cannot be resolved by JS
+                if (searchInput && searchInput.value.trim()) {
+                    searchInput.classList.add('selected-product');
                 }
             }
         }
-    }
-});
+    });
+}
+populateSearchInputs();
 
 // Initialize existing charge rows on edit
 document.querySelectorAll('#charges-body tr').forEach(initChargeRow);
 calculateInvoiceTotals();
 updateDatalist();
-{% endif %}
+
 </script>
 
 {% endblock %}

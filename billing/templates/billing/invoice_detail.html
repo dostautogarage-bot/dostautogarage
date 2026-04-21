@@ -348,11 +348,17 @@
 <div class="container mt-4">
     <div class="card shadow-sm p-4">
 
-        <!-- Success Message -->
+        <!-- Messages -->
         {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-success mt-2 mb-3">{{ message }}</div>
-        {% endfor %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} mt-2 mb-3 shadow-sm border-0" 
+                 style="border-radius: 12px; font-weight: 500;">
+                <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
         {% endif %}
 
         <!-- Header -->
