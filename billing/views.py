@@ -1296,15 +1296,22 @@ def invoice_pdf_logic(request, invoice):
     
     # Right Header: Company Branding & Contact
     right_header = []
-    logo_path = logo_obj.value if logo_obj and logo_obj.value else None
-    if logo_path and os.path.exists(logo_path):
+    # Check both signature field path and value field for logo
+    logo_path = None
+    if logo_obj:
+        if logo_obj.signature and os.path.exists(logo_obj.signature.path):
+            logo_path = logo_obj.signature.path
+        elif logo_obj.value and os.path.exists(logo_obj.value):
+            logo_path = logo_obj.value
+
+    if logo_path:
         try:
             logo = Image(logo_path, width=22*mm, height=10*mm)
             logo.hAlign = 'RIGHT'
             right_header.append(logo)
             right_header.append(Spacer(1, 2))
-        except:
-            pass
+        except Exception as e:
+            print(f"Logo error: {e}")
             
     right_header.append(Paragraph(f"<b>{company_name}</b>", company_name_style))
     right_header.append(Paragraph(company_address, ParagraphStyle('comp_addr', parent=normal_style, alignment=2)))
@@ -1426,16 +1433,24 @@ def invoice_pdf_logic(request, invoice):
     elements.append(totals_table)
     elements.append(Spacer(1, 6))
 
-    # ---------------- FOOTER ----------------
+    # ──────────────── FOOTER ────────────────
     clean_footer = re.sub(r'<a[^>]*>.*?</a>', '', invoice_footer, flags=re.IGNORECASE | re.DOTALL)
     left_content = Paragraph(f"<i>{clean_footer}</i>", normal_style)
     
-    sig_path = signature_obj.value if signature_obj and signature_obj.value else None
-    if sig_path and os.path.exists(sig_path):
+    sig_path = None
+    if signature_obj:
+        if signature_obj.signature and os.path.exists(signature_obj.signature.path):
+            sig_path = signature_obj.signature.path
+        elif signature_obj.value and os.path.exists(signature_obj.value):
+            sig_path = signature_obj.value
+
+    if sig_path:
         try:
             signature_img = Image(sig_path, width=30*mm, height=10*mm)
             right_content = Table([[signature_img], [Paragraph("Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))]], colWidths=[40*mm])
-        except:
+            right_content.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'CENTER')]))
+        except Exception as e:
+            print(f"Signature error: {e}")
             right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
     else:
         right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
