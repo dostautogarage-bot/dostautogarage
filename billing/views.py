@@ -1250,53 +1250,26 @@ def invoice_pdf_logic(request, invoice):
         textColor=colors.HexColor("#1e293b")
     )
 
-    total              = invoice.total
-    other_charges_total = invoice.other_charges_total
-    grand_total        = invoice.grand_total
-    discount           = invoice.discount_amount
-    balance            = invoice.balance_amount
-    currency_symbol    = 'Rs.'
-
-    # ---- Get company settings from database ----
-    settings_dict = {}
-    signature_obj = None
-    for s in Settings.objects.all():
-        settings_dict[s.key] = s.value
-        if s.key == 'signature':
-            signature_obj = s
-    
-    try:
-        signature_obj = Settings.objects.get(key='signature')
-    except Settings.DoesNotExist:
-        pass
-    
-    company_name = settings_dict.get('company_name', 'DOSTAUTOGARAGE')
-    company_email = settings_dict.get('company_email', 'dostautogarage@gmail.com')
-    company_phone_1 = settings_dict.get('company_phone_1', '9746519367')
-    company_phone_2 = settings_dict.get('company_phone_2', '9745582281')
-    company_address = settings_dict.get('company_address', '')
-    invoice_footer = settings_dict.get('invoice_footer', 'Thank you for your business!')
+    # ─── Resolve Settings & Context ──────────────────
+    context = invoice_context()
+    company_name    = context.get('company_name', 'DOST AUTO GARAGE')
+    company_address = context.get('company_address', 'Address not set')
+    company_email   = context.get('company_email', '')
+    company_phone_1 = context.get('company_phone_1', '')
+    company_phone_2 = context.get('company_phone_2', '')
+    invoice_footer  = context.get('invoice_footer', 'Thank you for your business!')
+    currency_symbol = context.get('currency_symbol', 'INR')
 
     phone_text = company_phone_1
     if company_phone_2:
         phone_text = f"{company_phone_1}, {company_phone_2}"
 
-    # ─── Resolve Settings (Logo & Signature) ──────────
+    from .models import Settings
     logo_obj = Settings.objects.filter(key='company_logo').first()
     signature_obj = Settings.objects.filter(key='signature').first()
 
     # ──────────────── HEADER ────────────────
-    # Left Header: Invoice Main Info
-    left_header = [
-        Paragraph("INVOICE", title_style),
-        Spacer(1, 2),
-        Paragraph(f"<b>Invoice #:</b> {invoice_number}", bold_style),
-        Paragraph(f"<b>Date:</b> {invoice.created_at.strftime('%d %b %Y')}", normal_style)
-    ]
-    
-    # Right Header: Company Branding & Contact
-    right_header = []
-    # Check both signature field path and value field for logo
+    # Fetch Logo if available
     logo_path = None
     if logo_obj:
         if logo_obj.signature and os.path.exists(logo_obj.signature.path):
@@ -1304,26 +1277,31 @@ def invoice_pdf_logic(request, invoice):
         elif logo_obj.value and os.path.exists(logo_obj.value):
             logo_path = logo_obj.value
 
+    logo_img = None
     if logo_path:
         try:
-            logo = Image(logo_path, width=22*mm, height=10*mm)
-            logo.hAlign = 'RIGHT'
-            right_header.append(logo)
-            right_header.append(Spacer(1, 2))
-        except Exception as e:
-            print(f"Logo error: {e}")
-            
-    right_header.append(Paragraph(f"<b>{company_name}</b>", company_name_style))
-    right_header.append(Paragraph(company_address, ParagraphStyle('comp_addr', parent=normal_style, alignment=2)))
-    if company_email:
-        right_header.append(Paragraph(f"Email: {company_email}", ParagraphStyle('comp_email', parent=normal_style, alignment=2)))
-    right_header.append(Paragraph(f"Phone: {phone_text}", ParagraphStyle('comp_phone', parent=normal_style, alignment=2)))
+            logo_img = Image(logo_path, width=22*mm, height=10*mm)
+            logo_img.hAlign = 'RIGHT'
+        except:
+            pass
 
-    header_table = Table([[left_header, right_header]], colWidths=[200, 300])
+    # Right-aligned normal style for header contact
+    normal_right_style = ParagraphStyle('HeaderRight', parent=normal_style, alignment=2)
+
+    # Build Header Table for perfect row alignment
+    header_data = [
+        [Paragraph("INVOICE", title_style), [logo_img, Paragraph(company_name, company_name_style)] if logo_img else Paragraph(company_name, company_name_style)],
+        [Paragraph(f"<b>Invoice #:</b> {invoice_number}", bold_style), Paragraph(company_address, normal_right_style)],
+        [Paragraph(f"<b>Date:</b> {invoice.created_at.strftime('%d %b %Y')}", normal_style), Paragraph(f"Email: {company_email}" if company_email else "", normal_right_style)],
+        ["", Paragraph(f"Phone: {phone_text}", normal_right_style)]
+    ]
+    
+    header_table = Table(header_data, colWidths=[200, 300])
     header_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('ALIGN', (1,0), (1,-1), 'RIGHT'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 1),
+        ('TOPPADDING', (0,0), (-1,-1), 1),
     ]))
     elements.append(header_table)
 
