@@ -1282,7 +1282,6 @@ def invoice_pdf_logic(request, invoice):
         phone_text = f"{company_phone_1}, {company_phone_2}"
 
     # ─── Resolve Settings (Logo & Signature) ──────────
-    from .models import Settings
     logo_obj = Settings.objects.filter(key='company_logo').first()
     signature_obj = Settings.objects.filter(key='signature').first()
 
