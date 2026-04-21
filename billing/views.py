@@ -1232,6 +1232,7 @@ def invoice_pdf_logic(request, invoice):
         parent=styles['Normal'],
         fontName=font_bold,
         fontSize=16,
+        leading=20,
         textColor=colors.HexColor("#2563eb"),
         alignment=2
     )
@@ -1240,6 +1241,7 @@ def invoice_pdf_logic(request, invoice):
         parent=styles['Normal'],
         fontName=font_normal,
         fontSize=7.5,
+        leading=10,
         textColor=colors.HexColor("#475569")
     )
     bold_style = ParagraphStyle(
@@ -1300,7 +1302,7 @@ def invoice_pdf_logic(request, invoice):
             pass
 
     right_header.append(Paragraph(f"<b>{company_name}</b>", company_name_style))
-    right_header.append(Spacer(1, 2)) # Match gap in left_header
+    right_header.append(Spacer(1, 8)) # Significant space to prevent overlap
     right_header.append(Paragraph(company_address, ParagraphStyle('comp_addr', parent=normal_style, alignment=2)))
     if company_email:
         right_header.append(Paragraph(f"Email: {company_email}", ParagraphStyle('comp_email', parent=normal_style, alignment=2)))
