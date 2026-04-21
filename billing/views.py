@@ -1205,13 +1205,14 @@ def invoice_pdf_logic(request, invoice):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{invoice_number}.pdf"'
 
+    # Aggressive margin reduction to fit more content
     doc = SimpleDocTemplate(
-        response,
-        pagesize=A4,
-        rightMargin=25,
-        leftMargin=25,
-        topMargin=25,
-        bottomMargin=25
+        response, 
+        pagesize=A4, 
+        rightMargin=20, 
+        leftMargin=20, 
+        topMargin=18, 
+        bottomMargin=18
     )
 
     elements = []
@@ -1222,35 +1223,30 @@ def invoice_pdf_logic(request, invoice):
         'MainTitle',
         parent=styles['Heading1'],
         fontName=font_bold,
-        fontSize=20,
+        fontSize=16,
         textColor=colors.HexColor("#1e293b"),
-        alignment=0 # Left aligned
+        alignment=0
     )
     company_name_style = ParagraphStyle(
         'CompName',
         parent=styles['Normal'],
         fontName=font_bold,
-        fontSize=18,
+        fontSize=10,
         textColor=colors.HexColor("#2563eb"),
-        alignment=2 # Right aligned
+        alignment=2
     )
     normal_style = ParagraphStyle(
         'CustomNormal',
         parent=styles['Normal'],
         fontName=font_normal,
-        fontSize=9,
+        fontSize=7.5,
         textColor=colors.HexColor("#475569")
-    )
-    company_address_style = ParagraphStyle(
-        'CompAddr',
-        parent=normal_style,
-        alignment=2 # Right aligned
     )
     bold_style = ParagraphStyle(
         'CustomBold',
         parent=styles['Normal'],
         fontName=font_bold,
-        fontSize=9,
+        fontSize=7.5,
         textColor=colors.HexColor("#1e293b")
     )
 
@@ -1286,85 +1282,41 @@ def invoice_pdf_logic(request, invoice):
         phone_text = f"{company_phone_1}, {company_phone_2}"
 
     # ---------------- HEADER ----------------
-    logo_path = os.path.join(settings.BASE_DIR, 'static/logo.png')
-
-    comp_text = f"{company_address}<br/>Email: {company_email}<br/>Phone: {phone_text}"
+    title_para = Paragraph("INVOICE", title_style)
+    company_details = f"<b>{company_name}</b><br/>{company_address}<br/>Phone: {phone_text}"
+    comp_para = Paragraph(company_details, company_name_style)
     
-    # Left Header: Invoice Details
-    left_header = [
-        Paragraph("INVOICE", title_style),
-        Spacer(1, 10),
-        Paragraph(f"<b>Invoice #:</b> {invoice_number}", bold_style),
-        Paragraph(f"<b>Date:</b> {invoice.created_at.strftime('%d %b %Y')}", normal_style)
-    ]
-    
-    # Right Header: Company Details
-    right_header = [
-        Paragraph(company_name, company_name_style),
-        Spacer(1, 4),
-        Paragraph(comp_text, company_address_style)
-    ]
-    
-    if os.path.exists(logo_path):
-        logo = Image(logo_path, width=40*mm, height=20*mm)
-        right_header.insert(0, logo)
-        right_header.insert(1, Spacer(1, 10))
-
-    header_table = Table([[left_header, right_header]], colWidths=[250, 250])
+    header_data = [[title_para, comp_para]]
+    header_table = Table(header_data, colWidths=[200, 300])
     header_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('ALIGN', (0,0), (0,0), 'LEFT'),
+        ('ALIGN', (1,0), (1,0), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
     elements.append(header_table)
-    elements.append(Spacer(1, 10))
+
+    from reportlab.platypus import HRFlowable
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#e2e8f0"), spaceBefore=2, spaceAfter=2))
     
     # ---------------- CUSTOMER INFO ----------------
-    info_header_style = ParagraphStyle(
-        'InfoHeader',
-        parent=bold_style,
-        fontSize=9,
-        textColor=colors.HexColor("#64748b"),
-        spaceAfter=4,
-        textTransform='uppercase'
-    )
-
     created_by_name = invoice.created_by.get_full_name() or invoice.created_by.username if invoice.created_by else "System"
+    customer_info = f"<b>BILL TO:</b> {invoice.customer_name.upper() if invoice.customer_name else 'N/A'}<br/>Phone: {invoice.customer_phone or 'N/A'}"
+    vehicle_info = f"<b>VEHICLE:</b> {invoice.vehicle_number.upper() if invoice.vehicle_number else 'N/A'}<br/>Prepared by: {created_by_name.title()}"
 
-    # Make the name big and bold, soften the labels
-    customer_info = f"<font size='10'><b>{invoice.customer_name.upper() if invoice.customer_name else 'N/A'}</b></font><br/>"
-    if invoice.customer_phone:
-        customer_info += f"<font color='#64748b'>Phone:</font> {invoice.customer_phone}"
-    else:
-        customer_info += "<font color='#64748b'>Phone:</font> N/A"
-    
-    vehicle_info = f"<font color='#64748b'>Vehicle #:</font> <b>{invoice.vehicle_number.upper() if invoice.vehicle_number else 'N/A'}</b><br/>"
-    if invoice.mechanic_name:
-        vehicle_info += f"<font color='#64748b'>Mechanic:</font> <b>{invoice.mechanic_name.upper()}</b><br/>"
-    if invoice.ran_kilometer:
-        vehicle_info += f"<font color='#64748b'>Service at:</font> <b>{invoice.ran_kilometer} KM</b><br/>"
-    vehicle_info += f"<font color='#64748b'>Prepared by:</font> {created_by_name.title()}"
-
-    info_table = Table([[
-        [Paragraph("BILL TO", info_header_style), Paragraph(customer_info, normal_style)],
-        [Paragraph("SERVICE DETAILS", info_header_style), Paragraph(vehicle_info, normal_style)]
-    ]], colWidths=[240, 260])
-    
-    info_table.setStyle(TableStyle([
+    cust_veh_data = [[Paragraph(customer_info, normal_style), Paragraph(vehicle_info, normal_style)]]
+    cv_table = Table(cust_veh_data, colWidths=[250, 250])
+    cv_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (0,0), 'LEFT'),
+        ('ALIGN', (1,0), (1,0), 'RIGHT'),
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f8fafc")),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-        ('LEFTPADDING', (0,0), (-1,-1), 12),
-        ('RIGHTPADDING', (0,0), (-1,-1), 12),
-        ('LINEABOVE', (0,0), (-1,-1), 1.5, colors.HexColor("#f1f5f9")),
-        ('LINEBELOW', (0,0), (-1,-1), 1.5, colors.HexColor("#e2e8f0")),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
-    elements.append(info_table)
-    elements.append(Spacer(1, 15))
+    elements.append(cv_table)
+    elements.append(Spacer(1, 4))
 
     # ---------------- PRODUCT TABLE ----------------
     data = [["DESCRIPTION", "QTY", "RATE", "AMOUNT"]]
-
     for item in invoice.items.all():
         data.append([
             item.product.name.upper(),
@@ -1374,109 +1326,71 @@ def invoice_pdf_logic(request, invoice):
         ])
 
     product_table = Table(data, colWidths=[240, 60, 100, 100])
-    styles_table = [
+    product_table.setStyle(TableStyle([
         ('BACKGROUND',    (0,0), (-1,0), colors.HexColor("#1e293b")),
         ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
         ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE',      (0,0), (-1,0), 9),
+        ('FONTSIZE',      (0,0), (-1,0), 8),
         ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
-        ('FONTSIZE',      (0,1), (-1,-1), 8.5),
-        ('ALIGN',         (0,0), (0,-1), 'LEFT'),
-        ('ALIGN',         (1,0), (1,-1), 'CENTER'),
-        ('ALIGN',         (2,0), (-1,-1), 'RIGHT'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 5),
-        ('TOPPADDING',    (0,0), (-1,0), 5),
-        ('BOTTOMPADDING', (0,1), (-1,-1), 4),
-        ('TOPPADDING',    (0,1), (-1,-1), 4),
+        ('FONTSIZE',      (0,1), (-1,-1), 7.5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+        ('TOPPADDING',    (0,0), (-1,-1), 2),
+        ('ALIGN',         (1,0), (-1,-1), 'CENTER'),
+        ('ALIGN',         (3,0), (-1,-1), 'RIGHT'),
         ('LINEBELOW',     (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
-    ]
-    product_table.setStyle(TableStyle(styles_table))
+    ]))
     elements.append(product_table)
+    elements.append(Spacer(1, 5))
 
-    # ---------------- OTHER CHARGES TABLE ----------------
-    other_charges = invoice.other_charges.all()
-    if other_charges.exists():
-        elements.append(Spacer(1, 15))
-        charges_data = [["OTHER CHARGES", "AMOUNT"]]
-        for charge in other_charges:
-            charges_data.append([
-                charge.name.upper(),
-                f"{charge.amount:.2f}"
-            ])
-        charges_table = Table(charges_data, colWidths=[400, 100])
-        charges_table.setStyle(TableStyle([
-            ('BACKGROUND',    (0,0), (-1,0), colors.HexColor("#f1f5f9")),
-            ('TEXTCOLOR',     (0,0), (-1,0), colors.HexColor("#475569")),
-            ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE',      (0,0), (-1,-1), 9),
-            ('ALIGN',         (0,0), (0,-1), 'LEFT'),
-            ('ALIGN',         (1,0), (-1,-1), 'RIGHT'),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-            ('TOPPADDING',    (0,0), (-1,-1), 6),
-            ('LINEBELOW',     (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
-        ]))
-        elements.append(charges_table)
+    # ---------------- OTHER CHARGES ----------------
+    if invoice.other_charges.exists():
+        other_data = [["CHARGE", "AMOUNT"]]
+        for charge in invoice.other_charges.all():
+            other_data.append([charge.name.upper(), f"{charge.amount:.2f}"])
         
-    elements.append(Spacer(1, 10))
+        other_table = Table(other_data, colWidths=[400, 100])
+        other_table.setStyle(TableStyle([
+            ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE',      (0,0), (-1,0), 8),
+            ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE',      (0,1), (-1,-1), 7.5),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 1.5),
+            ('TOPPADDING',    (0,0), (-1,-1), 1.5),
+            ('ALIGN',         (1,0), (-1,-1), 'RIGHT'),
+            ('GRID',          (0,0), (-1,-1), 0.5, colors.HexColor("#f1f5f9")),
+        ]))
+        elements.append(other_table)
+        elements.append(Spacer(1, 5))
 
-    # ---------------- TOTALS (RIGHT SIDE) ----------------
+    # ---------------- TOTALS ----------------
     totals_data = [
-        ["Subtotal:", f"{currency_symbol} {total:.2f}"]
-    ]
-
-    if other_charges.exists():
-        totals_data.append(["Other Charges:", f"{currency_symbol} {other_charges_total:.2f}"])
-
-    totals_data += [
+        ["Subtotal:", f"{currency_symbol} {total:.2f}"],
         ["Discount:", f"{currency_symbol} {discount:.2f}"],
         ["TOTAL DUE:", f"{currency_symbol} {balance:.2f}"]
     ]
-
     totals_table = Table(totals_data, colWidths=[350, 150])
     totals_table.setStyle(TableStyle([
         ('FONTNAME',   (0,0),  (-1,-1), 'Helvetica'),
-        ('FONTSIZE',   (0,0),  (-1,-1), 9),
-        ('ALIGN',      (0,0),  (0,-1), 'RIGHT'),
+        ('FONTSIZE',   (0,0),  (-1,-1), 8),
         ('ALIGN',      (1,0),  (1,-1), 'RIGHT'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-        
-        # Total Due Row Bold
-        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,-1), (-1,-1), 11),
-        ('TEXTCOLOR', (0,-1), (-1,-1), colors.HexColor("#2563eb")),
-        ('LINEABOVE', (0,-1), (-1,-1), 1.5, colors.HexColor("#e2e8f0")),
-        ('TOPPADDING', (0,-1), (-1,-1), 6),
+        ('FONTNAME',   (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('FONTSIZE',   (0,-1), (-1,-1), 9),
     ]))
-
     elements.append(totals_table)
-    elements.append(Spacer(1, 15))
-
+    elements.append(Spacer(1, 10))
 
     # ---------------- FOOTER ----------------
     footer_data = []
-    
-    # Left side: Thank you message (strip any links to prevent sharing)
     clean_footer = re.sub(r'<a[^>]*>.*?</a>', '', invoice_footer, flags=re.IGNORECASE | re.DOTALL)
     left_content = Paragraph(f"<i>{clean_footer}</i>", normal_style)
     
-    # Right side: Signature
-    if signature_obj and signature_obj.signature and signature_obj.signature.path:
-        signature_path = signature_obj.signature.path
-        if os.path.exists(signature_path):
-            try:
-                signature_img = Image(signature_path, width=40*mm, height=15*mm)
-                sig_table = Table([[signature_img], [Paragraph("Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))]], colWidths=[60*mm])
-                sig_table.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'CENTER')]))
-                right_content = sig_table
-            except Exception:
-                right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
-        else:
-            right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
+    if signature_obj and signature_obj.signature and signature_obj.signature.path and os.path.exists(signature_obj.signature.path):
+        signature_img = Image(signature_obj.signature.path, width=30*mm, height=10*mm)
+        right_content = Table([[signature_img], [Paragraph("Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))]], colWidths=[40*mm])
     else:
         right_content = Paragraph("___________________<br/>Authorized Signature", ParagraphStyle('sig', parent=normal_style, alignment=1))
     
     footer_data.append([left_content, right_content])
-    
     footer_table = Table(footer_data, colWidths=[250, 250])
     footer_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'BOTTOM'),
