@@ -14,6 +14,7 @@ import os
 import hashlib
 from django.utils.crypto import get_random_string
 import re
+from django.utils import timezone
 
 from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expense
 
@@ -89,10 +90,23 @@ class InvoiceMainForm(forms.ModelForm):
         label='Service Kilometer',
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+    created_at = forms.DateTimeField(
+        required=True,
+        label='Invoice Date',
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d')
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk and not self.initial.get('created_at'):
+            self.initial['created_at'] = timezone.now().strftime('%Y-%m-%d')
+        elif self.instance.pk:
+            self.initial['created_at'] = self.instance.created_at.strftime('%Y-%m-%d')
     
     class Meta:
         model = Invoice
         fields = [
+            'created_at',
             'customer_name',
             'customer_phone',
             'vehicle_number',

@@ -474,6 +474,12 @@
                 </div>
 
                 <div class="col-md-6">
+                    <label class="form-label">INVOICE DATE</label>
+                    {{ main_form.created_at }}
+                    <div class="invalid-feedback">Please select a valid date.</div>
+                </div>
+
+                <div class="col-md-6">
                     <label class="form-label">{{ main_form.ran_kilometer.label }}</label>
                     {{ main_form.ran_kilometer }}
                     <div class="invalid-feedback">Enter a valid kilometer reading (numbers only).</div>
@@ -896,6 +902,7 @@ function initProductSearch(row) {
             input.classList.add('selected-product');
             const priceCell = row.querySelector('.unit-price');
             if (priceCell) priceCell.textContent = '₹ ' + parseFloat(selectedProduct.price).toFixed(2);
+            if (qty) qty.focus();
         } else {
             select.value = '';
             input.classList.remove('selected-product');
@@ -915,6 +922,7 @@ function initProductSearch(row) {
             input.classList.remove('is-invalid');
             input.classList.add('selected-product');
             if (priceCell) priceCell.textContent = '₹ ' + parseFloat(matchedProduct.price).toFixed(2);
+            if (qty) qty.focus();
         } else if (select.value && input.value !== getProductById(select.value)?.name) {
             select.value = '';
             input.classList.remove('selected-product');

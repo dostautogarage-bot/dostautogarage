@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 import hashlib
 
 def signature_upload_path(instance, filename):
@@ -25,7 +26,7 @@ class Product(models.Model):
 
 
 class Invoice(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
     invoice_number = models.PositiveIntegerField(unique=True, editable=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
