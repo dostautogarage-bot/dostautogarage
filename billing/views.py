@@ -1375,6 +1375,9 @@ def invoice_pdf_logic(request, invoice):
             f"{item.price:.2f}",
             f"{item.total_price:.2f}"
         ])
+    
+    # Append Product Subtotal
+    data.append(["", "", "Products Subtotal:", f"{invoice.total:.2f}"])
 
     product_table = Table(data, colWidths=[240, 60, 100, 100])
     product_table.setStyle(TableStyle([
@@ -1388,7 +1391,11 @@ def invoice_pdf_logic(request, invoice):
         ('TOPPADDING',    (0,0), (-1,-1), 2),
         ('ALIGN',         (1,0), (-1,-1), 'CENTER'),
         ('ALIGN',         (3,0), (-1,-1), 'RIGHT'),
-        ('LINEBELOW',     (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
+        ('LINEBELOW',     (0,0), (-1,-2), 0.5, colors.HexColor("#e2e8f0")),
+        # Style for the subtotal row
+        ('FONTNAME',      (2,-1), (-1,-1), 'Helvetica-Bold'),
+        ('ALIGN',         (2,-1), (2,-1), 'RIGHT'),
+        ('LINEABOVE',     (2,-1), (-1,-1), 1, colors.HexColor("#cbd5e1")),
     ]))
     elements.append(product_table)
     elements.append(Spacer(1, 5))
@@ -1404,6 +1411,9 @@ def invoice_pdf_logic(request, invoice):
         for charge in invoice.other_charges.all():
             other_data.append([charge.name.upper(), f"{charge.amount:.2f}"])
         
+        # Append Other Charges Subtotal
+        other_data.append(["Charges Subtotal:", f"{invoice.other_charges_total:.2f}"])
+        
         other_table = Table(other_data, colWidths=[400, 100])
         other_table.setStyle(TableStyle([
             ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
@@ -1413,7 +1423,11 @@ def invoice_pdf_logic(request, invoice):
             ('BOTTOMPADDING', (0,0), (-1,-1), 1.5),
             ('TOPPADDING',    (0,0), (-1,-1), 1.5),
             ('ALIGN',         (1,0), (-1,-1), 'RIGHT'),
-            ('GRID',          (0,0), (-1,-1), 0.5, colors.HexColor("#f1f5f9")),
+            ('GRID',          (0,0), (-1,-2), 0.5, colors.HexColor("#f1f5f9")),
+            # Style for the subtotal row
+            ('FONTNAME',      (0,-1), (-1,-1), 'Helvetica-Bold'),
+            ('ALIGN',         (0,-1), (0,-1), 'RIGHT'),
+            ('LINEABOVE',     (0,-1), (-1,-1), 1, colors.HexColor("#cbd5e1")),
         ]))
         elements.append(other_table)
         elements.append(Spacer(1, 4))
@@ -1423,12 +1437,12 @@ def invoice_pdf_logic(request, invoice):
     other_val = invoice.other_charges_total
     disc_val  = invoice.discount_amount or 0
     bal_val   = invoice.balance_amount
+    gross_total = total_val + other_val
 
-    totals_data = [["Subtotal:", f"{currency_symbol} {total_val:.2f}"]]
-    if other_val > 0:
-        totals_data.append(["Other Charges:", f"{currency_symbol} {other_val:.2f}"])
-    totals_data.append(["Discount:", f"{currency_symbol} {disc_val:.2f}"])
-    totals_data.append(["TOTAL DUE:", f"{currency_symbol} {bal_val:.2f}"])
+    totals_data = [["Total Amount (Products + Charges):", f"{currency_symbol} {gross_total:.2f}"]]
+    if disc_val > 0:
+        totals_data.append(["Discount:", f"- {currency_symbol} {disc_val:.2f}"])
+    totals_data.append(["FINAL AMOUNT:", f"{currency_symbol} {bal_val:.2f}"])
     
     totals_table = Table(totals_data, colWidths=[350, 150])
     totals_table.setStyle(TableStyle([
