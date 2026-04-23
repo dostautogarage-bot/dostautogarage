@@ -537,21 +537,90 @@ def expense_delete(request, pk):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def invoice_list(request):
-    # STRIPPED DOWN DEBUG VIEW
-    invoices = Invoice.objects.filter(status='COMPLETED').order_by('-invoice_number')
-    paginator = Paginator(invoices, 500)
-    page_obj = paginator.get_page(1)
+    query = request.GET.get('q', '').strip()
+    creator_id = request.GET.get('creator', '').strip()
+    start_date = request.GET.get('start_date', '').strip()
+    end_date = request.GET.get('end_date', '').strip()
+    per_page = int(request.GET.get('per_page', 100))
+    if per_page not in [100, 200, 300, 500]:
+        per_page = 100
+
+    show_drafts = request.GET.get('drafts') == '1'
+
+    if show_drafts:
+        invoices = Invoice.objects.filter(status='DRAFT').order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+    else:
+        invoices = Invoice.objects.filter(status='COMPLETED').order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+    
+    users = get_user_model().objects.filter(is_active=True).order_by('username')
+
+    if creator_id:
+        invoices = invoices.filter(created_by_id=creator_id)
+
+    if query:
+        # Get invoice prefix for formatted search
+        try:
+            prefix = Settings.objects.get(key='invoice_prefix').value.upper()
+        except Settings.DoesNotExist:
+            prefix = 'KNJ'
+        
+        search_filters = Q(
+            Q(customer_name__icontains=query) |
+            Q(customer_phone__icontains=query) |
+            Q(created_by__username__icontains=query) |
+            Q(created_by__first_name__icontains=query) |
+            Q(created_by__last_name__icontains=query)
+        )
+        
+        # Search by ID (primary key)
+        if query.isdigit():
+            search_filters |= Q(id=query)
+        
+        # Search by invoice number (numeric part)
+        if query.isdigit():
+            search_filters |= Q(invoice_number=query)
+        
+        # Search by formatted invoice number (e.g., KNJ00000001)
+        if query.upper().startswith(prefix) and query[len(prefix):].isdigit():
+            number_part = int(query[len(prefix):])
+            search_filters |= Q(invoice_number=number_part)
+        
+        invoices = invoices.filter(search_filters)
+
+    if start_date:
+        try:
+            start = datetime.strptime(start_date, '%Y-%m-%d').date()
+            invoices = invoices.filter(created_at__date__gte=start)
+        except ValueError:
+            start_date = ''
+
+    if end_date:
+        try:
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+            invoices = invoices.filter(created_at__date__lte=end)
+        except ValueError:
+            end_date = ''
+
+    # ABSOLUTE FAILSAFE: Force python-level sort descending
+    invoices_list = list(invoices)
+    invoices_list.sort(key=lambda x: x.invoice_number, reverse=True)
+
+    paginator = Paginator(invoices_list, per_page)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    draft_count = Invoice.objects.filter(status='DRAFT').count()
 
     return render(request, 'billing/invoice_list.html', {
         'invoices': page_obj,
-        'query': '',
-        'per_page': 500,
-        'users': [],
-        'selected_creator': '',
-        'start_date': '',
-        'end_date': '',
-        'show_drafts': False,
-        'draft_count': 0,
+        'query': query,
+        'per_page': per_page,
+        'users': users,
+        'selected_creator': creator_id,
+        'start_date': start_date,
+        'end_date': end_date,
+        'show_drafts': show_drafts,
+        'draft_count': draft_count,
     })
 
 
