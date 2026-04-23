@@ -177,7 +177,7 @@
 
         <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-            <h3>{% if show_drafts %}DRAFT INVOICES{% else %}INVOICES{% endif %}</h3>
+            <h3>{% if show_drafts %}DRAFT INVOICES{% else %}INVOICES (v2){% endif %}</h3>
             <div class="d-flex gap-2">
                 {% if show_drafts %}
                 <a href="{% url 'invoice_list' %}" class="premium-icon-btn premium-icon-success position-relative" title="Show Valid Invoices"><i class="bi bi-card-checklist"></i></a>
