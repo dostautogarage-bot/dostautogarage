@@ -468,6 +468,31 @@
         document.getElementById('invoiceNumber').textContent = invoiceNumber;
         document.getElementById('deleteForm').action = `/invoices/${invoiceId}/delete/`;
     });
+
+    // EMERGENCY JAVASCRIPT SORTING (Forces Descending Order visually)
+    document.addEventListener("DOMContentLoaded", function() {
+        const table = document.querySelector(".invoice-table");
+        if (table) {
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            
+            // Only sort if we have data rows (not the "NO DATA FOUND" row)
+            if (rows.length > 1 || (rows.length === 1 && !rows[0].querySelector("td[colspan]"))) {
+                rows.sort((a, b) => {
+                    const cellA = a.querySelector("td:first-child").textContent.trim();
+                    const cellB = b.querySelector("td:first-child").textContent.trim();
+                    
+                    // Extract numeric part from DST00000112 -> 112
+                    const numA = parseInt(cellA.replace(/\D/g, '')) || 0;
+                    const numB = parseInt(cellB.replace(/\D/g, '')) || 0;
+                    
+                    return numB - numA; // Descending
+                });
+                
+                rows.forEach(row => tbody.appendChild(row));
+            }
+        }
+    });
 </script>
 
 {% endblock %}
