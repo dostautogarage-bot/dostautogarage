@@ -548,9 +548,9 @@ def invoice_list(request):
     show_drafts = request.GET.get('drafts') == '1'
 
     if show_drafts:
-        invoices = Invoice.objects.filter(status='DRAFT').order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+        invoices = Invoice.objects.filter(status='DRAFT').order_by('-invoice_number', '-id').select_related('created_by').prefetch_related('items', 'other_charges')
     else:
-        invoices = Invoice.objects.filter(status='COMPLETED').order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+        invoices = Invoice.objects.filter(status='COMPLETED').order_by('-invoice_number', '-id').select_related('created_by').prefetch_related('items', 'other_charges')
     users = get_user_model().objects.filter(is_active=True).order_by('username')
 
     if creator_id:
