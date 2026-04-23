@@ -51,6 +51,9 @@ class Invoice(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='COMPLETED', db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['-invoice_number']
+
     def __str__(self):
         return f"Invoice #{self.invoice_number}"
 
