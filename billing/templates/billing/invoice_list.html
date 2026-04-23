@@ -177,22 +177,26 @@
 
         <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-            <h3>{% if show_drafts %}DRAFT INVOICES{% else %}INVOICES (v2){% endif %}</h3>
+            <h3>{% if show_drafts %}DRAFT INVOICES{% else %}INVOICES{% endif %}</h3>
             <div class="d-flex gap-2">
                 {% if show_drafts %}
-                <a href="{% url 'invoice_list' %}" class="premium-icon-btn premium-icon-success position-relative" title="Show Valid Invoices"><i class="bi bi-card-checklist"></i></a>
+                <a href="{% url 'invoice_list' %}" class="premium-icon-btn premium-icon-success position-relative"
+                    title="Show Valid Invoices"><i class="bi bi-card-checklist"></i></a>
                 {% else %}
-                <a href="{% url 'invoice_list' %}?drafts=1" class="premium-icon-btn premium-icon-warning position-relative" title="Show Draft Invoices">
+                <a href="{% url 'invoice_list' %}?drafts=1"
+                    class="premium-icon-btn premium-icon-warning position-relative" title="Show Draft Invoices">
                     <i class="bi bi-file-earmark-text"></i>
                     {% if draft_count > 0 %}
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; padding: 0.35em 0.5em; transform: translate(-30%, 30%) !important; box-shadow: 0 0 0 2px #fff;">
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        style="font-size: 0.55rem; padding: 0.35em 0.5em; transform: translate(-30%, 30%) !important; box-shadow: 0 0 0 2px #fff;">
                         {{ draft_count }}
                         <span class="visually-hidden">unfinished drafts</span>
                     </span>
                     {% endif %}
                 </a>
                 {% endif %}
-                <a href="{% url 'invoice_create' %}" class="premium-icon-btn premium-icon-primary" title="Create Invoice"><i class="bi bi-plus-lg"></i></a>
+                <a href="{% url 'invoice_create' %}" class="premium-icon-btn premium-icon-primary"
+                    title="Create Invoice"><i class="bi bi-plus-lg"></i></a>
             </div>
         </div>
 
@@ -219,7 +223,8 @@
                             <select name="creator" class="form-select">
                                 <option value="">ALL USERS</option>
                                 {% for user in users %}
-                                <option value="{{ user.pk }}" {% if selected_creator == user.pk|stringformat:"s" %}selected{% endif %}>
+                                <option value="{{ user.pk }}" {% if selected_creator==user.pk|stringformat:"s"
+                                    %}selected{% endif %}>
                                     {{ user.get_full_name|default:user.username|upper }}
                                 </option>
                                 {% endfor %}
@@ -228,14 +233,15 @@
                         <div class="col-6 col-md-4 col-lg-2">
                             <label class="form-label mb-1">PER PAGE</label>
                             <select name="per_page" class="form-select">
-                                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                                <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
-                                <option value="300" {% if per_page == 300 %}selected{% endif %}>300</option>
-                                <option value="500" {% if per_page == 500 %}selected{% endif %}>500</option>
+                                <option value="100" {% if per_page==100 %}selected{% endif %}>100</option>
+                                <option value="200" {% if per_page==200 %}selected{% endif %}>200</option>
+                                <option value="300" {% if per_page==300 %}selected{% endif %}>300</option>
+                                <option value="500" {% if per_page==500 %}selected{% endif %}>500</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4 col-lg-1 align-self-end">
-                            <button class="premium-icon-btn premium-icon-primary w-100" title="Search"><i class="bi bi-search"></i></button>
+                            <button class="premium-icon-btn premium-icon-primary w-100" title="Search"><i
+                                    class="bi bi-search"></i></button>
                         </div>
                     </form>
                 </div>
@@ -269,7 +275,8 @@
                             <small class="text-muted d-block">{{ invoice.customer_phone|upper }}</small>
                             {% endif %}
                             {% if invoice.mechanic_name %}
-                            <small class="text-info d-block" style="font-size: 0.65rem;">MECH: {{ invoice.mechanic_name|upper }}</small>
+                            <small class="text-info d-block" style="font-size: 0.65rem;">MECH: {{
+                                invoice.mechanic_name|upper }}</small>
                             {% endif %}
                         </td>
 
@@ -305,8 +312,8 @@
                                             </a>
                                         </li>
                                         <li class="share-pdf-menu-item d-none">
-                                            <button type="button" class="neo-dropdown-item" 
-                                                    onclick="shareInvoice('{% url 'invoice_pdf' invoice.pk %}', '{{ invoice.formatted_invoice_number }}.pdf')">
+                                            <button type="button" class="neo-dropdown-item"
+                                                onclick="shareInvoice('{% url 'invoice_pdf' invoice.pk %}', '{{ invoice.formatted_invoice_number }}.pdf')">
                                                 <div class="neo-icon-wrapper"
                                                     style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
                                                     <i class="bi bi-share-fill"></i>
@@ -326,8 +333,11 @@
                                         </li>
                                         {% if invoice.customer_phone %}
                                         <li>
-                                            <a class="neo-dropdown-item" href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}" target="_blank">
-                                                <div class="neo-icon-wrapper" style="background: rgba(34, 197, 114, 0.1); color: #22c55e;">
+                                            <a class="neo-dropdown-item"
+                                                href="https://wa.me/91{{ invoice.customer_phone|cut:' ' }}?text={{ invoice.whatsapp_message|urlencode }}"
+                                                target="_blank">
+                                                <div class="neo-icon-wrapper"
+                                                    style="background: rgba(34, 197, 114, 0.1); color: #22c55e;">
                                                     <i class="bi bi-whatsapp"></i>
                                                 </div>
                                                 Share to WhatsApp
@@ -448,9 +458,11 @@
             <div class="modal-footer">
                 <form id="deleteForm" method="post" action="">
                     {% csrf_token %}
-                    <button type="submit" class="premium-icon-btn premium-icon-danger" title="Confirm Delete"><i class="bi bi-check-lg"></i></button>
+                    <button type="submit" class="premium-icon-btn premium-icon-danger" title="Confirm Delete"><i
+                            class="bi bi-check-lg"></i></button>
                 </form>
-                <button type="button" class="premium-icon-btn premium-icon-secondary" data-bs-dismiss="modal" title="Cancel"><i class="bi bi-x-lg"></i></button>
+                <button type="button" class="premium-icon-btn premium-icon-secondary" data-bs-dismiss="modal"
+                    title="Cancel"><i class="bi bi-x-lg"></i></button>
             </div>
 
         </div>
@@ -470,25 +482,25 @@
     });
 
     // EMERGENCY JAVASCRIPT SORTING (Forces Descending Order visually)
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         const table = document.querySelector(".invoice-table");
         if (table) {
             const tbody = table.querySelector("tbody");
             const rows = Array.from(tbody.querySelectorAll("tr"));
-            
+
             // Only sort if we have data rows (not the "NO DATA FOUND" row)
             if (rows.length > 1 || (rows.length === 1 && !rows[0].querySelector("td[colspan]"))) {
                 rows.sort((a, b) => {
                     const cellA = a.querySelector("td:first-child").textContent.trim();
                     const cellB = b.querySelector("td:first-child").textContent.trim();
-                    
+
                     // Extract numeric part from DST00000112 -> 112
                     const numA = parseInt(cellA.replace(/\D/g, '')) || 0;
                     const numB = parseInt(cellB.replace(/\D/g, '')) || 0;
-                    
+
                     return numB - numA; // Descending
                 });
-                
+
                 rows.forEach(row => tbody.appendChild(row));
             }
         }

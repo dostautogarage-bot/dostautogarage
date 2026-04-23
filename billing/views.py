@@ -1433,13 +1433,10 @@ def invoice_pdf_logic(request, invoice):
         elements.append(Spacer(1, 4))
 
     # ---------------- TOTALS ----------------
-    total_val = invoice.total
-    other_val = invoice.other_charges_total
     disc_val  = invoice.discount_amount or 0
     bal_val   = invoice.balance_amount
-    gross_total = total_val + other_val
 
-    totals_data = [["Total Amount (Products + Charges):", f"{currency_symbol} {gross_total:.2f}"]]
+    totals_data = []
     if disc_val > 0:
         totals_data.append(["Discount:", f"- {currency_symbol} {disc_val:.2f}"])
     totals_data.append(["FINAL AMOUNT:", f"{currency_symbol} {bal_val:.2f}"])
