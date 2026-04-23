@@ -223,8 +223,7 @@
                             <select name="creator" class="form-select">
                                 <option value="">ALL USERS</option>
                                 {% for user in users %}
-                                <option value="{{ user.pk }}" {% if selected_creator==user.pk|stringformat:"s"
-                                    %}selected{% endif %}>
+                                <option value="{{ user.pk }}" {% if selected_creator == user.pk|stringformat:"s" %}selected{% endif %}>
                                     {{ user.get_full_name|default:user.username|upper }}
                                 </option>
                                 {% endfor %}
