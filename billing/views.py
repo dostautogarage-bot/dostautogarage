@@ -549,7 +549,6 @@ def invoice_list(request):
 
     if show_drafts:
         invoices = Invoice.objects.filter(status='DRAFT').order_by('-id').select_related('created_by').prefetch_related('items', 'other_charges')
-        
     else:
         invoices = Invoice.objects.filter(status='COMPLETED').order_by('-id').select_related('created_by').prefetch_related('items', 'other_charges')
     users = get_user_model().objects.filter(is_active=True).order_by('username')
