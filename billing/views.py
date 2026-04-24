@@ -1377,7 +1377,7 @@ def invoice_pdf_logic(request, invoice):
         ])
     
     # Append Product Subtotal
-    data.append(["", "", "Products Subtotal:", f"{invoice.total:.2f}"])
+    data.append(["", "", "Product Subtotal:", f"{invoice.total:.2f}"])
 
     product_table = Table(data, colWidths=[240, 60, 100, 100])
     product_table.setStyle(TableStyle([
@@ -1437,9 +1437,10 @@ def invoice_pdf_logic(request, invoice):
     bal_val   = invoice.balance_amount
 
     totals_data = []
+    totals_data.append(["Gross Total:", f"{currency_symbol} {invoice.grand_total:.2f}"])
     if disc_val > 0:
         totals_data.append(["Discount:", f"- {currency_symbol} {disc_val:.2f}"])
-    totals_data.append(["FINAL AMOUNT:", f"{currency_symbol} {bal_val:.2f}"])
+    totals_data.append(["GRAND TOTAL:", f"{currency_symbol} {bal_val:.2f}"])
     
     totals_table = Table(totals_data, colWidths=[350, 150])
     totals_table.setStyle(TableStyle([
