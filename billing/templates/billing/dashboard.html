@@ -222,7 +222,7 @@
             <div class="col-sm-6 col-md-4 col-lg-2">
                 <div class="dashboard-stat-card dashboard-stat-green h-100">
                     <span class="stat-label">PRODUCTS SOLD</span>
-                    <span class="stat-value">{{ products_sold }}</span>
+                    <span class="stat-value">{{ products_sold|floatformat:2 }}</span>
                 </div>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-2">
@@ -258,7 +258,7 @@
                 <div class="col-sm-6 col-md-4 col-lg-2">
                     <div class="dashboard-stat-card dashboard-stat-orange h-100">
                         <span class="stat-label">PRODUCTS SOLD</span>
-                        <span class="stat-value">{{ admin_stats.products_sold }}</span>
+                        <span class="stat-value">{{ admin_stats.products_sold|floatformat:2 }}</span>
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-2">
@@ -316,7 +316,7 @@
                             {% for product in top_products %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
                                     {{ product.product__name|upper }}
-                                    <span class="badge rounded-pill" style="background: var(--primary-gradient);">{{ product.total_qty|floatformat:1 }}</span>
+                                    <span class="badge rounded-pill" style="background: var(--primary-gradient);">{{ product.total_qty|floatformat:2 }}</span>
                                 </li>
                             {% endfor %}
                         </ul>
