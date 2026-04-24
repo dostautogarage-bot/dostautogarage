@@ -410,8 +410,7 @@
                 {% else %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}">{{
-                        num }}</a>
+                        href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}">{{ num }}</a>
                 </li>
                 {% endif %}
                 {% endfor %}
