@@ -17,6 +17,7 @@ import re
 from django.utils import timezone
 
 from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expense
+from django.db import transaction
 
 # ReportLab
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, KeepTogether
@@ -605,6 +606,10 @@ def invoice_list(request):
     invoices_list = list(invoices)
     invoices_list.sort(key=lambda x: x.invoice_number, reverse=True)
 
+    # Assign color index based on creator ID
+    for inv in invoices_list:
+        inv.color_index = (inv.created_by.id % 6) if inv.created_by else 0
+
     paginator = Paginator(invoices_list, per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -677,7 +682,12 @@ def dashboard(request):
     invoice_count = invoices.count()
     total_invoice_value = sum(invoice.grand_total for invoice in invoices)
     products_sold = InvoiceItem.objects.filter(invoice__in=invoices).aggregate(total_qty=Sum('quantity'))['total_qty'] or 0
-    total_other_charges = OtherCharge.objects.filter(invoice__in=invoices).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+    
+    # Differentiate Labour and Other Charges
+    all_other_charges_qs = OtherCharge.objects.filter(invoice__in=invoices)
+    total_labour_charges = all_other_charges_qs.filter(Q(name__icontains='LABOUR') | Q(name__icontains='LABOR')).aggregate(total=Sum('amount'))['total'] or 0
+    total_other_charges_only = all_other_charges_qs.exclude(Q(name__icontains='LABOUR') | Q(name__icontains='LABOR')).aggregate(total=Sum('amount'))['total'] or 0
+    total_other_charges = total_labour_charges + total_other_charges_only
     total_discount = invoices.aggregate(total_discount=Sum('discount_amount'))['total_discount'] or 0
     balance_amount = total_invoice_value - total_discount
     total_expenses = Expense.objects.filter(date__gte=start, date__lte=end).aggregate(total_amount=Sum('amount'))['total_amount'] or Decimal('0')
@@ -685,14 +695,20 @@ def dashboard(request):
     if admin_invoices is not None:
         admin_invoice_count = admin_invoices.count()
         admin_products_sold = InvoiceItem.objects.filter(invoice__in=admin_invoices).aggregate(total_qty=Sum('quantity'))['total_qty'] or 0
-        admin_other_charges = OtherCharge.objects.filter(invoice__in=admin_invoices).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+        
+        # Admin-specific Labour vs Other
+        admin_other_qs = OtherCharge.objects.filter(invoice__in=admin_invoices)
+        admin_labour = admin_other_qs.filter(Q(name__icontains='LABOUR') | Q(name__icontains='LABOR')).aggregate(total=Sum('amount'))['total'] or 0
+        admin_other_only = admin_other_qs.exclude(Q(name__icontains='LABOUR') | Q(name__icontains='LABOR')).aggregate(total=Sum('amount'))['total'] or 0
+        
         admin_total_discount = admin_invoices.aggregate(total_discount=Sum('discount_amount'))['total_discount'] or 0
         admin_balance_amount = sum(invoice.grand_total for invoice in admin_invoices) - admin_total_discount
         admin_expenses = Expense.objects.filter(created_by=admin_user, date__gte=start, date__lte=end).aggregate(total_amount=Sum('amount'))['total_amount'] or Decimal('0')
         admin_stats = {
             'invoice_count': admin_invoice_count,
             'products_sold': admin_products_sold,
-            'other_charges': admin_other_charges,
+            'labour_charges': admin_labour,
+            'other_charges_only': admin_other_only,
             'total_discount': admin_total_discount,
             'balance_amount': admin_balance_amount,
             'expenses': admin_expenses,
@@ -701,6 +717,7 @@ def dashboard(request):
         admin_stats = None
 
     user_counts = invoices.values(
+        'created_by__id',
         'created_by__username',
         'created_by__first_name',
         'created_by__last_name'
@@ -708,12 +725,17 @@ def dashboard(request):
 
     user_chart_labels = []
     user_chart_values = []
+    user_chart_ids    = []
     for row in user_counts:
+        # Assign color index for table rows
+        row['color_index'] = (row['created_by__id'] % 6) if row['created_by__id'] else 0
+
         username = row['created_by__username'] or 'Unknown'
         full_name = (row['created_by__first_name'] or row['created_by__last_name'] or '').strip()
         label = full_name or username
         user_chart_labels.append(label)
         user_chart_values.append(row['count'])
+        user_chart_ids.append(row['created_by__id'] or 0)
 
     top_products = InvoiceItem.objects.filter(invoice__in=invoices).values('product__name').annotate(total_qty=Sum('quantity')).order_by('-total_qty')[:5]
 
@@ -724,12 +746,15 @@ def dashboard(request):
         'month': month,
         'total_invoice_value': total_invoice_value,
         'products_sold': products_sold,
+        'total_labour_charges': total_labour_charges,
+        'total_other_charges_only': total_other_charges_only,
         'total_other_charges': total_other_charges,
         'total_discount': total_discount,
         'balance_amount': balance_amount,
         'user_counts': user_counts,
         'user_chart_labels': user_chart_labels,
         'user_chart_values': user_chart_values,
+        'user_chart_ids': user_chart_ids,
         'top_products': top_products,
         'users': users,
         'selected_admin': selected_admin,
@@ -828,79 +853,82 @@ def invoice_create(request):
                     'products' : Product.objects.all()
                 })
 
-            # ── Invoice number ───────────────────────────────────────────────
-            last_invoice = Invoice.objects.order_by('-invoice_number').first()
-            next_number  = (last_invoice.invoice_number if last_invoice else 0) + 1
-
-            is_draft = 'save_draft' in request.POST
-
-            invoice = main_form.save(commit=False)
-            invoice.invoice_number = next_number
-            invoice.created_by = request.user
-            invoice.discount_amount = main_form.cleaned_data.get('discount_amount') or 0
-            invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
-            invoice.save()
-
-            # ── Invoice items ────────────────────────────────────────────────
-            for form in formset:
-                if not form.cleaned_data:
-                    continue
-
-                product  = form.cleaned_data.get('product')
-                quantity = form.cleaned_data.get('quantity')
-
-                if not product or not quantity:
-                    continue
-
-                if not is_draft and product.stock < quantity:
-                    invoice.delete()
-                    available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
-                    err_msg = f'Only {available} available for {product.name}'
-                    form.add_error('quantity', err_msg)
-                    
-                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                        return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
-                    
-                    return render(request, 'billing/invoice_form.html', {
-                        'formset'  : formset,
-                        'main_form': main_form,
-                        'products' : Product.objects.all()
-                    })
-
-                InvoiceItem.objects.create(
-                    invoice  = invoice,
-                    product  = product,
-                    quantity = quantity,
-                    price    = product.price
-                )
-
-                if not is_draft:
-                    product.stock -= quantity
-                    product.save()
-
-            # ── Other charges ────────────────────────────────────────────────
-            charges_raw = request.POST.get('other_charges', '[]')
             try:
-                charges = json.loads(charges_raw)
-                for charge in charges:
-                    name   = charge.get('name', '').strip()
-                    amount = charge.get('amount', 0)
-                    if name and float(amount) > 0:
-                        OtherCharge.objects.create(
-                            invoice = invoice,
-                            name    = name,
-                            amount  = amount
-                        )
-            except (ValueError, KeyError, json.JSONDecodeError):
-                pass  # silently skip malformed charges
+                with transaction.atomic():
+                    # ── Invoice number ───────────────────────────────────────────────
+                    last_invoice = Invoice.objects.select_for_update().order_by('-invoice_number').first()
+                    next_number  = (last_invoice.invoice_number if last_invoice else 0) + 1
 
-            messages.success(
-                request,
-                f'Invoice #{invoice.formatted_invoice_number} created successfully.'
-            )
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success', 'redirect': f"/invoices/{invoice.pk}/"})
-            return redirect('invoice_detail', pk=invoice.pk)
+                    is_draft = 'save_draft' in request.POST
+
+                    invoice = main_form.save(commit=False)
+                    invoice.invoice_number = next_number
+                    invoice.created_by = request.user
+                    invoice.discount_amount = main_form.cleaned_data.get('discount_amount') or 0
+                    invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
+                    invoice.save()
+
+                    # ── Invoice items ────────────────────────────────────────────────
+                    for form in formset:
+                        if not form.cleaned_data:
+                            continue
+
+                        product  = form.cleaned_data.get('product')
+                        quantity = form.cleaned_data.get('quantity')
+
+                        if not product or not quantity:
+                            continue
+                        
+                        # Lock product for update
+                        p_locked = Product.objects.select_for_update().get(pk=product.pk)
+
+                        if not is_draft and p_locked.stock < quantity:
+                            available = p_locked.stock.quantize(Decimal('0.01')).normalize() if isinstance(p_locked.stock, Decimal) else p_locked.stock
+                            err_msg = f'Only {available} available for {product.name}'
+                            form.add_error('quantity', err_msg)
+                            raise Exception(err_msg)
+
+                        InvoiceItem.objects.create(
+                            invoice  = invoice,
+                            product  = product,
+                            quantity = quantity,
+                            price    = product.price
+                        )
+
+                        if not is_draft:
+                            p_locked.stock -= quantity
+                            p_locked.save()
+
+                    # ── Other charges ────────────────────────────────────────────────
+                    charges_raw = request.POST.get('other_charges', '[]')
+                    try:
+                        charges = json.loads(charges_raw)
+                        for charge in charges:
+                            name   = charge.get('name', '').strip()
+                            amount = charge.get('amount', 0)
+                            if name and float(amount) > 0:
+                                OtherCharge.objects.create(
+                                    invoice = invoice,
+                                    name    = name,
+                                    amount  = amount
+                                )
+                    except (ValueError, KeyError, json.JSONDecodeError):
+                        pass
+
+                    messages.success(request, f'Invoice #{invoice.formatted_invoice_number} created successfully.')
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'success', 'redirect': f"/invoices/{invoice.pk}/"})
+                    return redirect('invoice_detail', pk=invoice.pk)
+
+            except Exception as e:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
+                
+                return render(request, 'billing/invoice_form.html', {
+                    'formset'  : formset,
+                    'main_form': main_form,
+                    'products' : Product.objects.all()
+                })
 
     # If forms were invalid (non-AJAX)
     if request.method == 'POST':
@@ -930,7 +958,13 @@ def invoice_delete(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
     if request.method == 'POST':
-        invoice.delete()
+        with transaction.atomic():
+            # Restore stock if invoice was COMPLETED
+            if invoice.status == 'COMPLETED':
+                for item in invoice.items.all():
+                    item.product.stock += item.quantity
+                    item.product.save()
+            invoice.delete()
         return redirect('invoice_list')
 
     return render(request, 'billing/invoice_confirm_delete.html', {'invoice': invoice})
@@ -972,112 +1006,118 @@ def invoice_edit(request, pk):
             total_charges_posted = 0
 
         if formset.is_valid() and main_form.is_valid():
-            total_items_posted = sum(1 for f in formset if f.cleaned_data and not f.cleaned_data.get('DELETE', False) and f.cleaned_data.get('product'))
+            try:
+                with transaction.atomic():
+                    total_items_posted = sum(1 for f in formset if f.cleaned_data and not f.cleaned_data.get('DELETE', False) and f.cleaned_data.get('product'))
 
-            if total_items_posted == 0 and total_charges_posted == 0:
-                msg = "Please add at least one product or one charge."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'status': 'error', 'message': msg}, status=400)
-                messages.error(request, msg)
-                return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+                    if total_items_posted == 0 and total_charges_posted == 0:
+                        msg = "Please add at least one product or one charge."
+                        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                            return JsonResponse({'status': 'error', 'message': msg}, status=400)
+                        messages.error(request, msg)
+                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
 
-        selected_parts = set()
-        duplicate_found = False
+                    # ... (rest of validation) ...
+                    selected_parts = set()
+                    duplicate_found = False
 
-        for form in formset:
-            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
-                product = form.cleaned_data.get('product')
-                if product and product.part_number:
-                    part_key = product.part_number.strip().upper()
-                    if part_key in selected_parts:
-                        form.add_error('product', 'Duplicate product part number not allowed.')
-                        duplicate_found = True
-                    else:
-                        selected_parts.add(part_key)
+                    for form in formset:
+                        if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                            product = form.cleaned_data.get('product')
+                            if product and product.part_number:
+                                part_key = product.part_number.strip().upper()
+                                if part_key in selected_parts:
+                                    form.add_error('product', 'Duplicate product part number not allowed.')
+                                    duplicate_found = True
+                                else:
+                                    selected_parts.add(part_key)
 
-        if duplicate_found:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
-            return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+                    if duplicate_found:
+                        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                            return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
+                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
 
-        is_draft = 'save_draft' in request.POST
-        was_draft = invoice.status == 'DRAFT'
+                    is_draft = 'save_draft' in request.POST
+                    was_draft = invoice.status == 'DRAFT'
 
-        # Update main invoice
-        invoice = main_form.save(commit=False)
-        invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
-        invoice.save()
-
-        # Gather old quantities
-        old_quantities = {}
-        if not was_draft:
-            for item in invoice.items.all():
-                old_quantities[item.product_id] = old_quantities.get(item.product_id, Decimal('0')) + item.quantity
-
-        new_items = []
-        for form in formset:
-            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
-                product = form.cleaned_data.get('product')
-                quantity = form.cleaned_data.get('quantity')
-                if product and quantity > 0:
-                    new_items.append((form, product, quantity))
-
-        # Validate stock without changing it yet
-        if not is_draft:
-            for form, product, quantity in new_items:
-                old_quantity = old_quantities.get(product.pk, Decimal('0'))
-                delta = Decimal(quantity) - old_quantity
-                if delta > 0 and product.stock < delta:
-                    available = product.stock.quantize(Decimal('0.01')).normalize() if isinstance(product.stock, Decimal) else product.stock
-                    invoice.status = 'DRAFT' if was_draft else 'COMPLETED'
+                    # Update main invoice
+                    invoice = main_form.save(commit=False)
+                    invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
                     invoice.save()
-                    err_msg = f'Only {available} available for {product.name}'
-                    form.add_error('quantity', err_msg)
-                    
+
+                    # Gather old quantities
+                    old_quantities = {}
+                    if not was_draft:
+                        for item in invoice.items.all():
+                            old_quantities[item.product_id] = old_quantities.get(item.product_id, Decimal('0')) + item.quantity
+
+                    new_items = []
+                    for form in formset:
+                        if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                            product = form.cleaned_data.get('product')
+                            quantity = form.cleaned_data.get('quantity')
+                            if product and quantity > 0:
+                                new_items.append((form, product, quantity))
+
+                    # Validate stock without changing it yet
+                    if not is_draft:
+                        for form, product, quantity in new_items:
+                            # Lock the product for update
+                            p_locked = Product.objects.select_for_update().get(pk=product.pk)
+                            old_quantity = old_quantities.get(product.pk, Decimal('0'))
+                            delta = Decimal(quantity) - old_quantity
+                            if delta > 0 and p_locked.stock < delta:
+                                available = p_locked.stock.quantize(Decimal('0.01')).normalize() if isinstance(p_locked.stock, Decimal) else p_locked.stock
+                                err_msg = f'Only {available} available for {product.name}'
+                                form.add_error('quantity', err_msg)
+                                raise Exception(err_msg)
+
+                    # Apply stock changes: First refund old quantities
+                    for product_id, old_quantity in old_quantities.items():
+                        product = Product.objects.select_for_update().get(pk=product_id)
+                        product.stock += old_quantity
+                        product.save()
+
+                    invoice.items.all().delete()  # Clear existing items
+
+                    # Save updated items and apply new stock deductions if not a draft
+                    for form, product, quantity in new_items:
+                        if not is_draft:
+                            p_to_deduct = Product.objects.select_for_update().get(pk=product.pk)
+                            p_to_deduct.stock -= Decimal(quantity)
+                            p_to_deduct.save()
+                        InvoiceItem.objects.create(invoice=invoice, product=product, quantity=quantity, price=product.price)
+
+                    # Handle other charges - delete existing and recreate
+                    invoice.other_charges.all().delete()  # Clear existing charges
+                    charges_raw = request.POST.get('other_charges', '[]')
+                    try:
+                        charges = json.loads(charges_raw)
+                        for charge in charges:
+                            name = charge.get('name', '').strip()
+                            amount = charge.get('amount', 0)
+                            if name and float(amount) > 0:
+                                OtherCharge.objects.create(invoice=invoice, name=name, amount=amount)
+                    except (ValueError, KeyError, json.JSONDecodeError):
+                        pass
+
+                    messages.success(request, f'Invoice #{invoice.formatted_invoice_number} updated successfully.')
                     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                        return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
-                    
-                    return render(request, 'billing/invoice_form.html', {
-                        'formset': formset,
-                        'main_form': main_form,
-                        'products': Product.objects.all(),
-                        'editing': True,
-                        'invoice': invoice,
-                        'other_charges': other_charges
-                    })
-
-        # Apply stock changes: First refund old quantities
-        for product_id, old_quantity in old_quantities.items():
-            product = Product.objects.get(pk=product_id)
-            product.stock += old_quantity
-            product.save()
-
-        invoice.items.all().delete()  # Clear existing items
-
-        # Save updated items and apply new stock deductions if not a draft
-        for form, product, quantity in new_items:
-            if not is_draft:
-                product.stock -= Decimal(quantity)
-                product.save()
-            InvoiceItem.objects.create(invoice=invoice, product=product, quantity=quantity, price=product.price)
-
-        # Handle other charges - delete existing and recreate
-        invoice.other_charges.all().delete()  # Clear existing charges
-        charges_raw = request.POST.get('other_charges', '[]')
-        try:
-            charges = json.loads(charges_raw)
-            for charge in charges:
-                name = charge.get('name', '').strip()
-                amount = charge.get('amount', 0)
-                if name and float(amount) > 0:
-                    OtherCharge.objects.create(invoice=invoice, name=name, amount=amount)
-        except (ValueError, KeyError, json.JSONDecodeError):
-            pass
-
-        messages.success(request, f'Invoice #{invoice.formatted_invoice_number} updated successfully.')
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'success', 'redirect': f"/invoices/{invoice.pk}/"})
-        return redirect('invoice_detail', pk=invoice.pk)
+                        return JsonResponse({'status': 'success', 'redirect': f"/invoices/{invoice.pk}/"})
+                    return redirect('invoice_detail', pk=invoice.pk)
+            
+            except Exception as e:
+                # If it was a stock error we raised or something else
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
+                return render(request, 'billing/invoice_form.html', {
+                    'formset': formset,
+                    'main_form': main_form,
+                    'products': Product.objects.all(),
+                    'editing': True,
+                    'invoice': invoice,
+                    'other_charges': other_charges
+                })
 
     # If forms were invalid (non-AJAX)
     if request.method == 'POST':

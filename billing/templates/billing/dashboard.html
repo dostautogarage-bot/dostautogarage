@@ -157,6 +157,13 @@
         .table-responsive .table td {
             padding: 0.6rem;
         }
+        /* Admin-Specific Row Colors */
+        .admin-row-0 td { background-color: rgba(79, 70, 229, 0.12) !important; }
+        .admin-row-1 td { background-color: rgba(234, 88, 12, 0.12) !important; }
+        .admin-row-2 td { background-color: rgba(5, 150, 105, 0.12) !important; }
+        .admin-row-3 td { background-color: rgba(124, 58, 237, 0.12) !important; }
+        .admin-row-4 td { background-color: rgba(225, 29, 72, 0.12) !important; }
+        .admin-row-5 td { background-color: rgba(30, 41, 59, 0.12) !important; }
     }
 </style>
 {% endblock %}
@@ -215,7 +222,7 @@
             </div>
             <div class="col-sm-6 col-md-4 col-lg-2">
                 <div class="dashboard-stat-card dashboard-stat-orange h-100">
-                    <span class="stat-label">TOTAL INVOICE AMOUNT </span>
+                    <span class="stat-label">TOTAL REVENUE </span>
                     <span class="stat-value">₹ {{ balance_amount|floatformat:2 }}</span>
                 </div>
             </div>
@@ -226,9 +233,15 @@
                 </div>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-2">
+                <div class="dashboard-stat-card dashboard-stat-blue h-100">
+                    <span class="stat-label">LABOUR CHARGES</span>
+                    <span class="stat-value">₹ {{ total_labour_charges|floatformat:2 }}</span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-2">
                 <div class="dashboard-stat-card dashboard-stat-purple h-100">
-                    <span class="stat-label">OTHER CHARGES</span>
-                    <span class="stat-value">₹ {{ total_other_charges|floatformat:2 }}</span>
+                    <span class="stat-label">EXTRA CHARGES</span>
+                    <span class="stat-value">₹ {{ total_other_charges_only|floatformat:2 }}</span>
                 </div>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-2">
@@ -238,7 +251,7 @@
                 </div>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-2">
-                <div class="dashboard-stat-card dashboard-stat-purple h-100">
+                <div class="dashboard-stat-card dashboard-stat-dark h-100">
                     <span class="stat-label">TOTAL EXPENSES</span>
                     <span class="stat-value">₹ {{ total_expenses|floatformat:2 }}</span>
                 </div>
@@ -257,14 +270,14 @@
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-2">
                     <div class="dashboard-stat-card dashboard-stat-orange h-100">
-                        <span class="stat-label">PRODUCTS SOLD</span>
-                        <span class="stat-value">{{ admin_stats.products_sold|floatformat:2 }}</span>
+                        <span class="stat-label">LABOUR</span>
+                        <span class="stat-value">₹ {{ admin_stats.labour_charges|floatformat:2 }}</span>
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-2">
                     <div class="dashboard-stat-card dashboard-stat-green h-100">
-                        <span class="stat-label">OTHER CHARGES</span>
-                        <span class="stat-value">₹ {{ admin_stats.other_charges|floatformat:2 }}</span>
+                        <span class="stat-label">EXTRAS</span>
+                        <span class="stat-value">₹ {{ admin_stats.other_charges_only|floatformat:2 }}</span>
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-2">
@@ -342,9 +355,9 @@
                                 </thead>
                                 <tbody>
                                     {% for row in user_counts %}
-                                        <tr>
-                                            <td data-label="USER">{% if row.created_by__username %}{{ row.created_by__first_name|default:row.created_by__username|upper }}{% else %}UNKNOWN{% endif %}</td>
-                                            <td data-label="INVOICES" class="text-md-end">{{ row.count }}</td>
+                                        <tr class="admin-row-{{ row.color_index }}">
+                                            <td data-label="USER" style="font-weight: 600;">{% if row.created_by__username %}{{ row.created_by__first_name|default:row.created_by__username|upper }}{% else %}UNKNOWN{% endif %}</td>
+                                            <td data-label="INVOICES" class="text-md-end fw-bold">{{ row.count }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -379,9 +392,20 @@
 <script src="{% static 'vendor/chart.umd.min.js' %}"></script>
 {{ user_chart_labels|json_script:'admin-chart-labels' }}
 {{ user_chart_values|json_script:'admin-chart-values' }}
+{{ user_chart_ids|json_script:'admin-chart-ids' }}
 <script>
     const adminLabels = JSON.parse(document.getElementById('admin-chart-labels').textContent);
     const adminValues = JSON.parse(document.getElementById('admin-chart-values').textContent);
+    const adminIds    = JSON.parse(document.getElementById('admin-chart-ids').textContent);
+
+    const premiumColors = [
+        '#4F46E5', // Blue
+        '#EA580C', // Orange
+        '#059669', // Green
+        '#7C3AED', // Purple
+        '#E11D48', // Pink
+        '#1E293B'  // Dark
+    ];
 
     const ctx = document.getElementById('adminChart');
     if (ctx) {
@@ -392,19 +416,33 @@
                 datasets: [{
                     label: 'Invoices by Admin',
                     data: adminValues,
-                    backgroundColor: '#ea580c',
-                    borderRadius: 12,
-                    barThickness: 28
+                    backgroundColor: adminIds.map(id => premiumColors[id % premiumColors.length]),
+                    borderRadius: 8,
+                    barThickness: 32
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: true }
+                    tooltip: { 
+                        enabled: true,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.parsed.y} Invoices`;
+                            }
+                        }
+                    }
                 },
                 scales: {
-                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { precision: 0 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
                 }
             }
         });

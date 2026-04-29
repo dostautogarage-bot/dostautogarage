@@ -21,6 +21,11 @@ class Product(models.Model):
 	price = models.DecimalField(max_digits=10, decimal_places=2)
 	stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+	def save(self, *args, **kwargs):
+		if self.stock < 0:
+			self.stock = 0
+		super().save(*args, **kwargs)
+
 	def __str__(self):
 		return self.name
 
