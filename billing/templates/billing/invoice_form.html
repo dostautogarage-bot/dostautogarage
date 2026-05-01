@@ -895,9 +895,13 @@ function initProductSearch(row) {
     const qty    = row.querySelector('input[name*="quantity"]');
 
     input.addEventListener('change', function () {
-        const selectedProduct = ALL_PRODUCTS.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+        const selectedProduct = ALL_PRODUCTS.find(p => 
+            p.name.toLowerCase() === input.value.toLowerCase() || 
+            (p.part_number && p.part_number.toLowerCase() === input.value.toLowerCase())
+        );
         if (selectedProduct) {
             select.value = selectedProduct.id;
+            input.value = selectedProduct.name; // Reset input to name after selection if matched by part number
             input.classList.remove('is-invalid');
             input.classList.add('selected-product');
             const priceCell = row.querySelector('.unit-price');
@@ -914,7 +918,10 @@ function initProductSearch(row) {
     });
 
     input.addEventListener('input', function () {
-        const matchedProduct = ALL_PRODUCTS.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+        const matchedProduct = ALL_PRODUCTS.find(p => 
+            p.name.toLowerCase() === input.value.toLowerCase() || 
+            (p.part_number && p.part_number.toLowerCase() === input.value.toLowerCase())
+        );
         const priceCell = row.querySelector('.unit-price');
 
         if (matchedProduct) {
@@ -948,7 +955,8 @@ function updateDatalist() {
             if (!selectedIds.has(String(product.id))) {
                 const option = document.createElement('option');
                 option.value = product.name;
-                option.textContent = `${product.name.toUpperCase()} (₹${product.price}, STOCK: ${product.stock})`;
+                const partInfo = product.part_number ? ` [${product.part_number.toUpperCase()}]` : '';
+                option.textContent = `${product.name.toUpperCase()}${partInfo} (₹${product.price}, STOCK: ${product.stock})`;
                 datalist.appendChild(option);
             }
         });
@@ -1280,9 +1288,13 @@ if (mechanic) {
         const select = row.querySelector('select[name*="product"]');
         const input  = row.querySelector('.product-search-input');
         if (select && input && !select.value && input.value.trim()) {
-            const matched = ALL_PRODUCTS.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+            const matched = ALL_PRODUCTS.find(p => 
+                p.name.toLowerCase() === input.value.toLowerCase() || 
+                (p.part_number && p.part_number.toLowerCase() === input.value.toLowerCase())
+            );
             if (matched) {
                 select.value = matched.id;
+                input.value = matched.name;
                 input.classList.add('selected-product');
             }
         }

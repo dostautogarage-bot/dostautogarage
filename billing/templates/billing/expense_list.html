@@ -85,6 +85,14 @@
     .modal-footer {
         border-top: none;
     }
+
+    /* Admin-Specific Row Colors (Applies to all columns including sticky ones) */
+    .expense-row-0 td { background-color: rgba(79, 70, 229, 0.12) !important; }
+    .expense-row-1 td { background-color: rgba(234, 88, 12, 0.12) !important; }
+    .expense-row-2 td { background-color: rgba(5, 150, 105, 0.12) !important; }
+    .expense-row-3 td { background-color: rgba(124, 58, 237, 0.12) !important; }
+    .expense-row-4 td { background-color: rgba(225, 29, 72, 0.12) !important; }
+    .expense-row-5 td { background-color: rgba(30, 41, 59, 0.12) !important; }
 </style>
 {% endblock %}
 
@@ -118,6 +126,7 @@
             <table class="table table-striped expense-table mb-0">
                 <thead class="neo-table-header">
                     <tr>
+                        <th>ID</th>
                         <th>Date</th>
                         <th class="sticky-left-1">Property</th>
                         <th>Amount</th>
@@ -128,7 +137,8 @@
                 <tbody>
                     {% if expenses %}
                         {% for expense in expenses %}
-                            <tr>
+                            <tr class="expense-row-{{ expense.color_index }}">
+                                <td data-label="ID"><strong>#{{ expense.id }}</strong></td>
                                 <td data-label="Date">{{ expense.date }}</td>
                                 <td data-label="Property" class="sticky-left-1">{{ expense.property_name }}</td>
                                 <td data-label="Amount">₹ {{ expense.amount|floatformat:2 }}</td>
@@ -176,7 +186,7 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">NO EXPENSES RECORDED YET.</td>
+                            <td colspan="6" class="text-center text-muted py-4">NO EXPENSES RECORDED YET.</td>
                         </tr>
                     {% endif %}
                 </tbody>
@@ -306,6 +316,31 @@
         
         expenseNameElement.textContent = expenseName;
         deleteForm.action = url;
+    });
+
+    // EMERGENCY JAVASCRIPT SORTING (Forces Descending Order visually)
+    document.addEventListener("DOMContentLoaded", function () {
+        const table = document.querySelector(".expense-table");
+        if (table) {
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            // Only sort if we have data rows (not the "NO DATA FOUND" row)
+            if (rows.length > 1 || (rows.length === 1 && !rows[0].querySelector("td[colspan]"))) {
+                rows.sort((a, b) => {
+                    const cellA = a.querySelector("td:first-child").textContent.trim();
+                    const cellB = b.querySelector("td:first-child").textContent.trim();
+
+                    // Extract numeric part from #123 -> 123
+                    const numA = parseInt(cellA.replace(/\D/g, '')) || 0;
+                    const numB = parseInt(cellB.replace(/\D/g, '')) || 0;
+
+                    return numB - numA; // Descending
+                });
+
+                rows.forEach(row => tbody.appendChild(row));
+            }
+        }
     });
 </script>
 {% endblock %}

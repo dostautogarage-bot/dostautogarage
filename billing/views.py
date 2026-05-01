@@ -463,13 +463,17 @@ def product_delete(request, pk):
 def expense_list(request):
     admin_filter = request.GET.get('admin', '').strip()
     if request.user.is_superuser:
-        expenses = Expense.objects.all().order_by('-date')
+        expenses = Expense.objects.all().order_by('-id')
         users = get_user_model().objects.filter(is_active=True).order_by('username')
         if admin_filter:
             expenses = expenses.filter(created_by_id=admin_filter)
     else:
-        expenses = Expense.objects.filter(created_by=request.user).order_by('-date')
+        expenses = Expense.objects.filter(created_by=request.user).order_by('-id')
         users = None
+
+    # Assign color index based on creator ID
+    for exp in expenses:
+        exp.color_index = (exp.created_by.id % 6) if exp.created_by else 0
 
     form = ExpenseForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -1155,7 +1159,7 @@ def product_search_api(request):
         products = Product.objects.all()[:20]  # show top 20 on empty
     else:
         products = Product.objects.filter(
-            Q(name__icontains=query)
+            Q(name__icontains=query) | Q(part_number__icontains=query)
         ).order_by('name')[:30]   # max 30 results
 
     data = [
