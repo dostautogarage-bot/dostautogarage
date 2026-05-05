@@ -208,6 +208,22 @@
             </div>
         </div>
 
+        <!-- Simple Filter Toggle -->
+        {% if request.user.is_superuser %}
+        <div class="mb-4">
+            <div class="btn-group w-100" role="group" aria-label="Filter toggle">
+                <a href="?show_all=0&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}" 
+                   class="btn {% if not show_all %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
+                    <i class="bi bi-person-fill me-2"></i>MY INVOICES ({{ my_count }})
+                </a>
+                <a href="?show_all=1&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}" 
+                   class="btn {% if show_all %}btn-warning text-dark{% else %}btn-outline-warning{% endif %} py-2 fw-bold">
+                    <i class="bi bi-people-fill me-2"></i>ALL INVOICES ({{ total_count }})
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Search + Date Range + Per Page -->
         <div class="row mb-3">
             <div class="col-12">
@@ -247,8 +263,11 @@
                             </select>
                         </div>
                         <div class="col-12 col-md-4 col-lg-1 align-self-end">
-                            <button class="premium-icon-btn premium-icon-primary w-100" title="Search"><i
-                                    class="bi bi-search"></i></button>
+                            <input type="hidden" name="show_all" value="{% if show_all %}1{% else %}0{% endif %}">
+                            {% if show_drafts %}<input type="hidden" name="drafts" value="1">{% endif %}
+                            <button class="premium-icon-btn premium-icon-primary w-100" title="Search">
+                                <i class="bi bi-search"></i>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -401,36 +420,36 @@
                 {% if invoices.has_previous %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page=1&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}">First</a>
+                        href="?page=1&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">First</a>
                 </li>
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ invoices.previous_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}">Prev</a>
+                        href="?page={{ invoices.previous_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Prev</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">First</span></li>
                 <li class="page-item disabled"><span class="page-link">Prev</span></li>
                 {% endif %}
-
+ 
                 {% for num in invoices.paginator.page_range %}
                 {% if invoices.number == num %}
                 <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                 {% else %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}">{{ num }}</a>
+                        href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">{{ num }}</a>
                 </li>
                 {% endif %}
                 {% endfor %}
-
+ 
                 {% if invoices.has_next %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ invoices.next_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}">Next</a>
+                        href="?page={{ invoices.next_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Next</a>
                 </li>
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ invoices.paginator.num_pages }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}">Last</a>
+                        href="?page={{ invoices.paginator.num_pages }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Last</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">Next</span></li>

@@ -5,13 +5,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-title" content="DostGarage">
+    <meta name="application-name" content="DostGarage">
+    <meta name="msapplication-TileColor" content="#1e293b">
+    <meta name="theme-color" content="#FF5A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="{% url 'manifest_json' %}">
     <link rel="apple-touch-icon" href="{% static 'logo.png' %}">
-    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'logo.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'logo.png' %}">
+    <link rel="apple-touch-icon" sizes="167x167" href="{% static 'logo.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon.png' %}">
     <link rel="shortcut icon" href="{% static 'favicon.png' %}">
 
     <title>{% block title %}Dost Auto Garage{% endblock %}</title>
@@ -1104,6 +1110,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navigator.share && navigator.canShare) {
         document.querySelectorAll('.share-pdf-btn').forEach(el => el.classList.remove('d-none'));
         document.querySelectorAll('.share-pdf-menu-item').forEach(el => el.classList.remove('d-none'));
+    }
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
     }
 });
 </script>

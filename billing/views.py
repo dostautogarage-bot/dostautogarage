@@ -1,5 +1,6 @@
 # -------------------- IMPORTS --------------------
 from django.http import HttpResponse
+from django.templatetags.static import static
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
@@ -462,8 +463,13 @@ def product_delete(request, pk):
 @login_required
 def expense_list(request):
     admin_filter = request.GET.get('admin', '').strip()
+    show_all = request.GET.get('show_all') == '1'
+    
     if request.user.is_superuser:
-        expenses = Expense.objects.all().order_by('-id')
+        if show_all:
+            expenses = Expense.objects.all().order_by('-id')
+        else:
+            expenses = Expense.objects.filter(created_by=request.user).order_by('-id')
         users = get_user_model().objects.filter(is_active=True).order_by('username')
         if admin_filter:
             expenses = expenses.filter(created_by_id=admin_filter)
@@ -495,6 +501,9 @@ def expense_list(request):
     paginator = Paginator(expenses, per_page)
     page_obj = paginator.get_page(page_number)
 
+    total_count = Expense.objects.all().count() if request.user.is_superuser else 0
+    my_count = Expense.objects.filter(created_by=request.user).count()
+
     return render(request, 'billing/expense_list.html', {
         'expenses': page_obj.object_list,
         'form': form,
@@ -504,6 +513,9 @@ def expense_list(request):
         'paginator': paginator,
         'page_obj': page_obj,
         'per_page': per_page,
+        'show_all': show_all,
+        'total_count': total_count,
+        'my_count': my_count,
     })
 
 
@@ -540,7 +552,6 @@ def expense_delete(request, pk):
 
 # -------------------- INVOICE LIST --------------------
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
 def invoice_list(request):
     query = request.GET.get('q', '').strip()
     creator_id = request.GET.get('creator', '').strip()
@@ -551,11 +562,20 @@ def invoice_list(request):
         per_page = 100
 
     show_drafts = request.GET.get('drafts') == '1'
+    show_all = request.GET.get('show_all') == '1'
+
+    if request.user.is_superuser:
+        if show_all:
+            invoices = Invoice.objects.all().order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+        else:
+            invoices = Invoice.objects.filter(created_by=request.user).order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+    else:
+        invoices = Invoice.objects.filter(created_by=request.user).order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
 
     if show_drafts:
-        invoices = Invoice.objects.filter(status='DRAFT').order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+        invoices = invoices.filter(status='DRAFT')
     else:
-        invoices = Invoice.objects.filter(status='COMPLETED').order_by('-invoice_number').select_related('created_by').prefetch_related('items', 'other_charges')
+        invoices = invoices.filter(status='COMPLETED')
     
     users = get_user_model().objects.filter(is_active=True).order_by('username')
 
@@ -620,6 +640,9 @@ def invoice_list(request):
     
     draft_count = Invoice.objects.filter(status='DRAFT').count()
 
+    total_count = Invoice.objects.filter(status='DRAFT' if show_drafts else 'COMPLETED').count() if request.user.is_superuser else 0
+    my_count = Invoice.objects.filter(created_by=request.user, status='DRAFT' if show_drafts else 'COMPLETED').count()
+
     return render(request, 'billing/invoice_list.html', {
         'invoices': page_obj,
         'query': query,
@@ -630,6 +653,9 @@ def invoice_list(request):
         'end_date': end_date,
         'show_drafts': show_drafts,
         'draft_count': draft_count,
+        'show_all': show_all,
+        'total_count': total_count,
+        'my_count': my_count,
     })
 
 
@@ -801,7 +827,6 @@ def get_form_errors(form, formset=None):
 import json
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
 def invoice_create(request):
     ItemFormSet = forms.formset_factory(
         InvoiceItemForm,
@@ -948,18 +973,23 @@ def invoice_create(request):
 
 # -------------------- INVOICE DETAIL --------------------
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
 def invoice_detail(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if not request.user.is_superuser and invoice.created_by != request.user:
+        messages.error(request, "You do not have permission to view this invoice.")
+        return redirect('invoice_list')
     return render(request, 'billing/invoice_detail.html', {
-        'invoice': get_object_or_404(Invoice, pk=pk)
+        'invoice': invoice
     })
 
 
 # -------------------- DELETE --------------------
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
 def invoice_delete(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
+    if not request.user.is_superuser and invoice.created_by != request.user:
+        messages.error(request, "You do not have permission to delete this invoice.")
+        return redirect('invoice_list')
 
     if request.method == 'POST':
         with transaction.atomic():
@@ -976,9 +1006,11 @@ def invoice_delete(request, pk):
 
 # -------------------- INVOICE EDIT --------------------
 @login_required
-@user_passes_test(lambda u: u.is_superuser) 
 def invoice_edit(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
+    if not request.user.is_superuser and invoice.created_by != request.user:
+        messages.error(request, "You do not have permission to edit this invoice.")
+        return redirect('invoice_list')
     ItemFormSet = forms.formset_factory(
         InvoiceItemForm,
         formset=BaseInvoiceItemFormSet,
@@ -1704,18 +1736,27 @@ def admin_delete(request, pk):
 
 # -------------------- PWA SUPPORT --------------------
 def manifest_json(request):
+    logo_url = request.build_absolute_uri(static("logo.png"))
     manifest = {
-        "name": "Dost Garage Settings",
+        "name": "Dost Auto Garage",
         "short_name": "DostGarage",
-        "start_url": "/dashboard/",
+        "start_url": request.build_absolute_uri("/"),
         "display": "standalone",
-        "background_color": "#1e293b",
-        "theme_color": "#1e293b",
+        "background_color": "#F8FAFC",
+        "theme_color": "#FF5A00",
+        "orientation": "portrait",
         "icons": [
             {
-                "src": "/static/logo.png",
-                "sizes": "192x192 512x512",
-                "type": "image/png"
+                "src": logo_url,
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": logo_url,
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
             }
         ]
     }
