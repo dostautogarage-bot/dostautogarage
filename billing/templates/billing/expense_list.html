@@ -113,11 +113,11 @@
         {% if request.user.is_superuser %}
         <div class="mb-4">
             <div class="btn-group w-100" role="group" aria-label="Filter toggle">
-                <a href="?show_all=0&per_page={{ per_page }}" 
+                <a href="?show_all=0&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}"
                    class="btn {% if not show_all %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
                     <i class="bi bi-person-fill me-2"></i>MY EXPENSES ({{ my_count }})
                 </a>
-                <a href="?show_all=1&per_page={{ per_page }}" 
+                <a href="?show_all=1&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}"
                    class="btn {% if show_all %}btn-warning text-dark{% else %}btn-outline-warning{% endif %} py-2 fw-bold">
                     <i class="bi bi-people-fill me-2"></i>ALL EXPENSES ({{ total_count }})
                 </a>
@@ -125,17 +125,48 @@
         </div>
         {% endif %}
 
-        <!-- Filter Row: Per Page Dropdown -->
+        <!-- Filter Row -->
         <form method="get" class="row gx-3 gy-3 align-items-end mb-3">
-            <div class="col-6 col-sm-4 col-lg-2 ms-auto">
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="q" class="form-control" placeholder="ID / PROPERTY / AMOUNT / USER"
+                       value="{{ query }}">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            {% if request.user.is_superuser %}
+            <div class="col-6 col-md-4 col-lg-2">
+                <label class="form-label">Created By</label>
+                <select name="admin" class="form-select">
+                    <option value="">ALL USERS</option>
+                    {% for user in users %}
+                    <option value="{{ user.pk }}" {% if selected_admin == user.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ user.get_full_name|default:user.username|upper }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="col-6 col-md-4 col-lg-2">
                 <label class="form-label">Per Page</label>
-                <select name="per_page" class="form-select" onchange="this.form.submit()">
+                <select name="per_page" class="form-select">
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                     <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
                     <option value="300" {% if per_page == 300 %}selected{% endif %}>300</option>
                     <option value="500" {% if per_page == 500 %}selected{% endif %}>500</option>
                 </select>
+            </div>
+            <div class="col-12 col-md-4 col-lg-1">
                 <input type="hidden" name="show_all" value="{% if show_all %}1{% else %}0{% endif %}">
+                <button class="premium-icon-btn premium-icon-primary w-100" title="Search">
+                    <i class="bi bi-search"></i>
+                </button>
             </div>
         </form>
 
@@ -216,10 +247,10 @@
             <ul class="pagination justify-content-center flex-wrap gap-2">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">First</a>
+                        <a class="page-link" href="?page=1&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">First</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">Prev</a>
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">Prev</a>
                     </li>
                 {% else %}
                     <li class="page-item disabled"><span class="page-link">First</span></li>
@@ -230,16 +261,16 @@
                     {% if page_obj.number == num %}
                         <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                     {% else %}
-                        <li class="page-item"><a class="page-link" href="?page={{ num }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">{{ num }}</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">{{ num }}</a></li>
                     {% endif %}
                 {% endfor %}
 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">Next</a>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">Next</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ paginator.num_pages }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">Last</a>
+                        <a class="page-link" href="?page={{ paginator.num_pages }}&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}{% if show_all %}&show_all=1{% endif %}">Last</a>
                     </li>
                 {% else %}
                     <li class="page-item disabled"><span class="page-link">Next</span></li>

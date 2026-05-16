@@ -114,13 +114,15 @@ class InvoiceMainForm(forms.ModelForm):
             'vehicle_number',
             'mechanic_name',
             'discount_amount',
-            'ran_kilometer'
+            'ran_kilometer',
+            'is_paid'
         ]
         widgets = {
             'customer_name': forms.TextInput(attrs={'class': 'form-control'}),
             'customer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'vehicle_number': forms.TextInput(attrs={'class': 'form-control'}),
             'discount_amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'is_paid': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 
@@ -462,7 +464,10 @@ def product_delete(request, pk):
 
 @login_required
 def expense_list(request):
+    query = request.GET.get('q', '').strip()
     admin_filter = request.GET.get('admin', '').strip()
+    start_date = request.GET.get('start_date', '').strip()
+    end_date = request.GET.get('end_date', '').strip()
     show_all = request.GET.get('show_all') == '1'
     
     if request.user.is_superuser:
@@ -477,6 +482,39 @@ def expense_list(request):
         expenses = Expense.objects.filter(created_by=request.user).order_by('-id')
         users = None
 
+    if query:
+        search_filters = (
+            Q(property_name__icontains=query) |
+            Q(created_by__username__icontains=query) |
+            Q(created_by__first_name__icontains=query) |
+            Q(created_by__last_name__icontains=query)
+        )
+
+        if query.isdigit():
+            search_filters |= Q(id=query)
+
+        try:
+            search_amount = Decimal(query)
+            search_filters |= Q(amount=search_amount)
+        except Exception:
+            pass
+
+        expenses = expenses.filter(search_filters)
+
+    if start_date:
+        try:
+            start = datetime.strptime(start_date, '%Y-%m-%d').date()
+            expenses = expenses.filter(date__gte=start)
+        except ValueError:
+            start_date = ''
+
+    if end_date:
+        try:
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+            expenses = expenses.filter(date__lte=end)
+        except ValueError:
+            end_date = ''
+
     # Assign color index based on creator ID
     for exp in expenses:
         exp.color_index = (exp.created_by.id % 6) if exp.created_by else 0
@@ -490,7 +528,6 @@ def expense_list(request):
 
     total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
-    # Pagination logic (like invoice_list)
     try:
         per_page = int(request.GET.get('per_page', 100))
     except (TypeError, ValueError):
@@ -508,7 +545,10 @@ def expense_list(request):
         'expenses': page_obj.object_list,
         'form': form,
         'users': users,
+        'query': query,
         'selected_admin': admin_filter,
+        'start_date': start_date,
+        'end_date': end_date,
         'total_expenses': total_expenses,
         'paginator': paginator,
         'page_obj': page_obj,
@@ -557,6 +597,7 @@ def invoice_list(request):
     creator_id = request.GET.get('creator', '').strip()
     start_date = request.GET.get('start_date', '').strip()
     end_date = request.GET.get('end_date', '').strip()
+    payment_status = request.GET.get('payment_status', '').strip()
     per_page = int(request.GET.get('per_page', 100))
     if per_page not in [100, 200, 300, 500]:
         per_page = 100
@@ -626,6 +667,11 @@ def invoice_list(request):
         except ValueError:
             end_date = ''
 
+    if payment_status == 'paid':
+        invoices = invoices.filter(is_paid=True)
+    elif payment_status == 'unpaid':
+        invoices = invoices.filter(is_paid=False)
+
     # ABSOLUTE FAILSAFE: Force python-level sort descending
     invoices_list = list(invoices)
     invoices_list.sort(key=lambda x: x.invoice_number, reverse=True)
@@ -651,6 +697,7 @@ def invoice_list(request):
         'selected_creator': creator_id,
         'start_date': start_date,
         'end_date': end_date,
+        'payment_status': payment_status,
         'show_drafts': show_drafts,
         'draft_count': draft_count,
         'show_all': show_all,
@@ -667,7 +714,7 @@ def dashboard(request):
     end_date = request.GET.get('end_date', '')
     selected_admin = request.GET.get('admin', '')
     today = datetime.today().date()
-    default_start = today - timedelta(days=30)
+    default_start = today.replace(day=1)
     default_end = today
 
     if month:
@@ -981,6 +1028,25 @@ def invoice_detail(request, pk):
     return render(request, 'billing/invoice_detail.html', {
         'invoice': invoice
     })
+
+
+# -------------------- TOGGLE PAID STATUS --------------------
+@login_required
+def invoice_toggle_paid(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if not request.user.is_superuser and invoice.created_by != request.user:
+        messages.error(request, "You do not have permission to update this invoice.")
+        return redirect('invoice_list')
+
+    if request.method == 'POST':
+        invoice.is_paid = not invoice.is_paid
+        invoice.save(update_fields=['is_paid', 'updated_at'])
+        messages.success(
+            request,
+            f"Invoice #{invoice.formatted_invoice_number} marked as {'paid' if invoice.is_paid else 'unpaid'}."
+        )
+
+    return redirect('invoice_detail', pk=invoice.pk)
 
 
 # -------------------- DELETE --------------------

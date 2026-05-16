@@ -212,11 +212,11 @@
         {% if request.user.is_superuser %}
         <div class="mb-4">
             <div class="btn-group w-100" role="group" aria-label="Filter toggle">
-                <a href="?show_all=0&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}" 
+                <a href="?show_all=0&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&payment_status={{ payment_status }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}"
                    class="btn {% if not show_all %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
                     <i class="bi bi-person-fill me-2"></i>MY INVOICES ({{ my_count }})
                 </a>
-                <a href="?show_all=1&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}" 
+                <a href="?show_all=1&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&payment_status={{ payment_status }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}"
                    class="btn {% if show_all %}btn-warning text-dark{% else %}btn-outline-warning{% endif %} py-2 fw-bold">
                     <i class="bi bi-people-fill me-2"></i>ALL INVOICES ({{ total_count }})
                 </a>
@@ -251,6 +251,14 @@
                                     {{ user.get_full_name|default:user.username|upper }}
                                 </option>
                                 {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="form-label mb-1">PAYMENT</label>
+                            <select name="payment_status" class="form-select">
+                                <option value="">ALL</option>
+                                <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>PAID</option>
+                                <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>UNPAID</option>
                             </select>
                         </div>
                         <div class="col-6 col-md-4 col-lg-2">
@@ -315,7 +323,12 @@
 
                         <td data-label="Date">{{ invoice.created_at|date:"d M Y" }}</td>
 
-                        <td data-label="Total">₹ {{ invoice.balance_amount }}</td>
+                        <td data-label="Total">
+                            ₹ {{ invoice.balance_amount }}<br>
+                            <small class="{% if invoice.is_paid %}text-success{% else %}text-danger{% endif %}">
+                                {% if invoice.is_paid %}PAID{% else %}UNPAID{% endif %}
+                            </small>
+                        </td>
 
                         <td data-label="Discount">₹ {{ invoice.discount_amount|default:0 }}</td>
 
@@ -382,6 +395,24 @@
                                                 Edit Invoice
                                             </a>
                                         </li>
+                                        <li>
+                                            <form method="post" action="{% url 'invoice_toggle_paid' invoice.pk %}" class="m-0">
+                                                {% csrf_token %}
+                                                <button type="submit" class="neo-dropdown-item shadow-none w-100 text-start">
+                                                    {% if invoice.is_paid %}
+                                                    <div class="neo-icon-wrapper" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">
+                                                        <i class="bi bi-toggle-off"></i>
+                                                    </div>
+                                                    Mark as Unpaid
+                                                    {% else %}
+                                                    <div class="neo-icon-wrapper" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                                                        <i class="bi bi-toggle-on"></i>
+                                                    </div>
+                                                    Mark as Paid
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        </li>
                                         {% if invoice.status == 'DRAFT' %}
                                         <li>
                                             <button type="button" class="neo-dropdown-item shadow-none"
@@ -420,11 +451,11 @@
                 {% if invoices.has_previous %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page=1&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">First</a>
+                        href="?page=1&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&payment_status={{ payment_status }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">First</a>
                 </li>
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ invoices.previous_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Prev</a>
+                        href="?page={{ invoices.previous_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&payment_status={{ payment_status }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Prev</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">First</span></li>
@@ -437,7 +468,7 @@
                 {% else %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">{{ num }}</a>
+                        href="?page={{ num }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&payment_status={{ payment_status }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">{{ num }}</a>
                 </li>
                 {% endif %}
                 {% endfor %}
@@ -445,11 +476,11 @@
                 {% if invoices.has_next %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ invoices.next_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Next</a>
+                        href="?page={{ invoices.next_page_number }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&payment_status={{ payment_status }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Next</a>
                 </li>
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ invoices.paginator.num_pages }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Last</a>
+                        href="?page={{ invoices.paginator.num_pages }}&q={{ query }}&creator={{ selected_creator }}&start_date={{ start_date }}&end_date={{ end_date }}&payment_status={{ payment_status }}&per_page={{ per_page }}{% if show_drafts %}&drafts=1{% endif %}{% if show_all %}&show_all=1{% endif %}">Last</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">Next</span></li>

@@ -491,6 +491,16 @@
                     <div class="invalid-feedback">Mechanic name is optional.</div>
                 </div>
 
+                <div class="col-12">
+                    <div class="form-check form-switch mt-2">
+                        {{ main_form.is_paid }}
+                        <label class="form-check-label ms-2" for="{{ main_form.is_paid.id_for_label }}">
+                            MARK AS PAID
+                        </label>
+                    </div>
+                    <small class="text-muted">Enabled by default. Turn this off to save the invoice as unpaid.</small>
+                </div>
+
             </div>
 
             <!-- PRODUCTS SECTION -->

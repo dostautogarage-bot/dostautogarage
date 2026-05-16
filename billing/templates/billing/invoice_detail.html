@@ -368,6 +368,11 @@
                     {% if invoice.status == 'DRAFT' %}
                     <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">DRAFT</span>
                     {% endif %}
+                    {% if invoice.is_paid %}
+                    <span class="badge bg-success ms-2" style="font-size: 0.6em; vertical-align: middle;">PAID</span>
+                    {% else %}
+                    <span class="badge bg-danger ms-2" style="font-size: 0.6em; vertical-align: middle;">UNPAID</span>
+                    {% endif %}
                 </h3>
                 <small class="text-muted">DATE: {{ invoice.created_at|date:"d M Y" }}</small><br>
                 <small class="text-muted">
@@ -398,6 +403,12 @@
                         <i class="bi bi-pencil-fill"></i>
                     </a>
                 {% endif %}
+                <form method="post" action="{% url 'invoice_toggle_paid' invoice.pk %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="premium-icon-btn {% if invoice.is_paid %}premium-icon-danger{% else %}premium-icon-success{% endif %}" title="Toggle payment status">
+                        <i class="bi {% if invoice.is_paid %}bi-toggle-off{% else %}bi-toggle-on{% endif %}"></i>
+                    </button>
+                </form>
                 <a href="{% url 'invoice_list' %}" class="premium-icon-btn premium-icon-secondary" title="Back to invoices">
                     <i class="bi bi-arrow-left"></i>
                 </a>
@@ -516,6 +527,15 @@
                 <div class="border rounded p-3 text-center">
                     <small class="text-muted d-block">DISCOUNT AMOUNT</small>
                     <strong class="fs-5">₹ {{ invoice.discount_amount|default:0 }}</strong>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="border rounded p-3 text-center">
+                    <small class="text-muted d-block">PAYMENT STATUS</small>
+                    <strong class="fs-5 {% if invoice.is_paid %}text-success{% else %}text-danger{% endif %}">
+                        {% if invoice.is_paid %}PAID{% else %}UNPAID{% endif %}
+                    </strong>
                 </div>
             </div>
 
