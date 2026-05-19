@@ -1046,7 +1046,7 @@ def invoice_toggle_paid(request, pk):
             f"Invoice #{invoice.formatted_invoice_number} marked as {'paid' if invoice.is_paid else 'unpaid'}."
         )
 
-    return redirect('invoice_detail', pk=invoice.pk)
+    return redirect('invoice_list')
 
 
 # -------------------- DELETE --------------------
