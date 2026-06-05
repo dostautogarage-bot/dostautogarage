@@ -103,7 +103,7 @@ class Invoice(models.Model):
         from django.utils.encoding import smart_str
         from urllib.parse import quote
 
-        msg = f"*DOST AUTO GARAGE*\n"
+        msg = f"*THEFIXAUTOTECH*\n"
         msg += f"--------------------------\n"
         msg += f"*Invoice:* #{self.formatted_invoice_number}\n"
         msg += f"*Date:* {self.created_at.strftime('%d-%m-%Y')}\n"
@@ -138,13 +138,26 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)  # ← changed
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)  # Made optional
+    custom_product_name = models.CharField(max_length=200, blank=True, null=True, help_text="For products not in stock")
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Price at time of sale
 
     @property
     def total_price(self):
         return self.price * self.quantity
+    
+    @property
+    def product_name(self):
+        """Returns custom name if set, otherwise product name"""
+        if self.custom_product_name:
+            return self.custom_product_name
+        return self.product.name if self.product else "Unknown Product"
+    
+    @property
+    def is_custom_product(self):
+        """Check if this is a custom product (not from stock)"""
+        return bool(self.custom_product_name)
 
 
 class OtherCharge(models.Model):

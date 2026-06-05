@@ -1419,7 +1419,7 @@ def invoice_pdf_logic(request, invoice):
     for s in Settings.objects.all():
         settings_dict[s.key] = s.value
 
-    company_name    = settings_dict.get('company_name', 'DOST AUTO GARAGE')
+    company_name    = settings_dict.get('company_name', 'THEFIXAUTOTECH')
     company_address = settings_dict.get('company_address', 'Address not set')
     company_email   = settings_dict.get('company_email', '')
     company_phone_1 = settings_dict.get('company_phone_1', '')
@@ -1683,8 +1683,8 @@ def company_settings(request):
             return redirect('company_settings')
     else:
         initial_data = {
-            'company_name': settings_dict.get('company_name', 'DOSTAUTOGARAGE'),
-            'company_email': settings_dict.get('company_email', 'dostautogarage@gmail.com'),
+            'company_name': settings_dict.get('company_name', 'THEFIXAUTOTECH'),
+            'company_email': settings_dict.get('company_email', 'info@thefixautotech.com'),
             'company_phone_1': settings_dict.get('company_phone_1', '9746519367'),
             'company_phone_2': settings_dict.get('company_phone_2', '9745582281'),
             'company_address': settings_dict.get('company_address', ''),
@@ -1804,8 +1804,8 @@ def admin_delete(request, pk):
 def manifest_json(request):
     logo_url = request.build_absolute_uri(static("logo.png"))
     manifest = {
-        "name": "Dost Auto Garage",
-        "short_name": "DostGarage",
+        "name": "Thefixautotech",
+        "short_name": "Thefixautotech",
         "start_url": request.build_absolute_uri("/"),
         "display": "standalone",
         "background_color": "#F8FAFC",

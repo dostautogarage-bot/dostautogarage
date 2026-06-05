@@ -258,7 +258,7 @@
 
     .discount-input-card .stat-value input {
         width: 100%;
-        color: #ea580c;
+        color: #6366f1;
         font-size: 1.5rem;
         font-weight: 900;
         letter-spacing: 0.01em;
@@ -524,13 +524,23 @@
                         {% for form in formset %}
                         <tr>
                             <td data-label="PRODUCT" style="min-width: 280px;">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input custom-product-toggle" type="checkbox" id="customToggle-{{ forloop.counter0 }}">
+                                    <label class="form-check-label" for="customToggle-{{ forloop.counter0 }}" style="font-size: 0.8rem; color: #10b981;">
+                                        Custom Product (Not in stock)
+                                    </label>
+                                </div>
                                 <div style="display:none;">{{ form.product }}</div>
-                                <input type="text" 
+                                <input type="text"
                                        list="productList-{{ forloop.counter0 }}"
                                        class="form-control product-search-input"
                                        placeholder="🔍 TYPE TO SEARCH PRODUCT..."
                                        autocomplete="on"
                                        value="{{ form.initial.product_name|default:''|escape }}">
+                                <input type="text"
+                                       class="form-control custom-product-name d-none mt-2"
+                                       placeholder="Enter custom product name..."
+                                       style="border-color: #10b981;">
                                 <datalist class="product-datalist" id="productList-{{ forloop.counter0 }}"></datalist>
                                 {% for error in form.product.errors %}
                                     <div class="text-danger small mt-1">{{ error }}</div>
@@ -538,7 +548,13 @@
                                 <div class="invalid-feedback">PLEASE SELECT A PRODUCT.</div>
                             </td>
                             <td data-label="PRICE" class="unit-price text-center" style="font-weight: 600; color: #4b5563;">
-                                ₹ {{ form.initial.price|default:'0.00'|floatformat:2 }}
+                                <span class="price-display">₹ {{ form.initial.price|default:'0.00'|floatformat:2 }}</span>
+                                <input type="number"
+                                       class="form-control custom-price-input d-none"
+                                       placeholder="Enter price"
+                                       min="0"
+                                       step="0.01"
+                                       style="border-color: #10b981; text-align: center;">
                                 {% if not form.initial.product %}
                                 <br><small class="text-danger">Product deleted</small>
                                 {% endif %}
@@ -1023,15 +1039,42 @@ function addRow() {
         if (el.tagName.toLowerCase() !== 'datalist') {
             el.value = '';
         }
-        el.classList.remove('is-valid', 'is-invalid', 'selected-product');
+        el.classList.remove('is-valid', 'is-invalid', 'selected-product', 'd-none');
+        if (el.type === 'checkbox') el.checked = false;
     });
 
-    const priceCell = newRow.querySelector('.unit-price');
-    if (priceCell) priceCell.textContent = '₹ 0.00';
+    // Reset custom product fields
+    const customToggle = newRow.querySelector('.custom-product-toggle');
+    const customNameInput = newRow.querySelector('.custom-product-name');
+    const customPriceInput = newRow.querySelector('.custom-price-input');
+    const searchInput = newRow.querySelector('.product-search-input');
+    const priceDisplay = newRow.querySelector('.price-display');
+    
+    if (customToggle) {
+        customToggle.checked = false;
+        customToggle.id = `customToggle-${formIndex}`;
+        const label = newRow.querySelector('.form-check-label');
+        if (label) label.setAttribute('for', `customToggle-${formIndex}`);
+    }
+    if (customNameInput) {
+        customNameInput.classList.add('d-none');
+        customNameInput.value = '';
+    }
+    if (customPriceInput) {
+        customPriceInput.classList.add('d-none');
+        customPriceInput.value = '';
+    }
+    if (searchInput) {
+        searchInput.classList.remove('d-none');
+        searchInput.value = '';
+    }
+    if (priceDisplay) {
+        priceDisplay.classList.remove('d-none');
+        priceDisplay.textContent = '₹ 0.00';
+    }
 
     const clonedSearch = newRow.querySelector('.product-search-input');
     if (clonedSearch) {
-        clonedSearch.value = '';
         const newDatalistId = `productList-${formIndex}`;
         clonedSearch.setAttribute('list', newDatalistId);
     }
@@ -1046,6 +1089,7 @@ function addRow() {
     tbody.appendChild(newRow);
     totalForms.value = formIndex + 1;
     initProductSearch(newRow);
+    initCustomProductToggle(newRow);
     calculateInvoiceTotals();
     updateDatalist();
 }
@@ -1188,12 +1232,25 @@ function calculateInvoiceTotals() {
     let subtotal = 0;
     document.querySelectorAll('#product-table tbody tr').forEach(row => {
         const select = row.querySelector('select[name*="product"]');
-        const qty    = row.querySelector('input[name*="quantity"]');
-        if (select && select.value && qty && qty.value.trim() !== '') {
-            const product = getProductById(select.value);
+        const qty = row.querySelector('input[name*="quantity"]');
+        const customToggle = row.querySelector('.custom-product-toggle');
+        const customPriceInput = row.querySelector('.custom-price-input');
+        
+        if (qty && qty.value.trim() !== '') {
             const quantity = parseFloat(qty.value) || 0;
-            if (product && quantity > 0) {
-                subtotal += (parseFloat(product.price) || 0) * quantity;
+            
+            if (customToggle && customToggle.checked) {
+                // Custom product - use manual price
+                const customPrice = parseFloat(customPriceInput.value) || 0;
+                if (quantity > 0 && customPrice > 0) {
+                    subtotal += customPrice * quantity;
+                }
+            } else if (select && select.value) {
+                // Stock product - use product price
+                const product = getProductById(select.value);
+                if (product && quantity > 0) {
+                    subtotal += (parseFloat(product.price) || 0) * quantity;
+                }
             }
         }
     });
@@ -1318,17 +1375,48 @@ if (mechanic) {
     rows.forEach(row => {
         const hiddenSelect = row.querySelector('select[name*="product"]');
         const searchInput  = row.querySelector('.product-search-input');
+        const customToggle = row.querySelector('.custom-product-toggle');
+        const customNameInput = row.querySelector('.custom-product-name');
+        const customPriceInput = row.querySelector('.custom-price-input');
         const qtyInput     = row.querySelector('input[name*="quantity"]');
         
+        const isCustom = customToggle && customToggle.checked;
         const hasProduct = hiddenSelect && hiddenSelect.value !== '';
+        const hasCustomName = customNameInput && customNameInput.value.trim() !== '';
+        const hasCustomPrice = customPriceInput && customPriceInput.value.trim() !== '' && Number(customPriceInput.value) > 0;
         const hasQty     = qtyInput && qtyInput.value.trim() !== '' && Number(qtyInput.value) > 0;
 
         // Reset states
         if (searchInput) searchInput.classList.remove('is-invalid');
+        if (customNameInput) customNameInput.classList.remove('is-invalid');
+        if (customPriceInput) customPriceInput.classList.remove('is-invalid');
         if (qtyInput) qtyInput.classList.remove('is-invalid');
 
-        if (hasProduct || hasQty) {
-            // If they started filling the row, both must be valid
+        if (isCustom) {
+            // Custom product validation
+            if (hasCustomName || hasCustomPrice || hasQty) {
+                let rowOk = true;
+                if (!hasCustomName) {
+                    if (customNameInput) customNameInput.classList.add('is-invalid');
+                    rowOk = false;
+                }
+                if (!hasCustomPrice) {
+                    if (customPriceInput) customPriceInput.classList.add('is-invalid');
+                    rowOk = false;
+                }
+                if (!hasQty) {
+                    if (qtyInput) qtyInput.classList.add('is-invalid');
+                    rowOk = false;
+                }
+                if (rowOk) {
+                    validProductCount++;
+                    if (qtyInput) qtyInput.classList.add('is-valid');
+                } else {
+                    valid = false;
+                }
+            }
+        } else if (hasProduct || hasQty) {
+            // Stock product validation
             let rowOk = true;
             if (!hasProduct) {
                 if (searchInput) searchInput.classList.add('is-invalid');
@@ -1585,9 +1673,66 @@ document.getElementById('invoiceForm').addEventListener('input', function (e) {
     }
 });
 
+// ─── Custom Product Toggle Handler ───────────────────────────────────────────
+function initCustomProductToggle(row) {
+    const toggle = row.querySelector('.custom-product-toggle');
+    const searchInput = row.querySelector('.product-search-input');
+    const customNameInput = row.querySelector('.custom-product-name');
+    const priceDisplay = row.querySelector('.price-display');
+    const customPriceInput = row.querySelector('.custom-price-input');
+    const hiddenSelect = row.querySelector('select[name*="product"]');
+    
+    if (!toggle) return;
+    
+    toggle.addEventListener('change', function() {
+        if (this.checked) {
+            // Switch to custom product mode
+            searchInput.classList.add('d-none');
+            customNameInput.classList.remove('d-none');
+            priceDisplay.classList.add('d-none');
+            customPriceInput.classList.remove('d-none');
+            
+            // Clear product selection
+            if (hiddenSelect) hiddenSelect.value = '';
+            searchInput.value = '';
+            searchInput.classList.remove('selected-product');
+            
+            // Focus on custom name input
+            customNameInput.focus();
+        } else {
+            // Switch back to stock product mode
+            searchInput.classList.remove('d-none');
+            customNameInput.classList.add('d-none');
+            priceDisplay.classList.remove('d-none');
+            customPriceInput.classList.add('d-none');
+            
+            // Clear custom inputs
+            customNameInput.value = '';
+            customPriceInput.value = '';
+            priceDisplay.textContent = '₹ 0.00';
+        }
+        calculateInvoiceTotals();
+    });
+    
+    // Add input listeners for custom fields
+    if (customNameInput) {
+        customNameInput.addEventListener('input', calculateInvoiceTotals);
+    }
+    if (customPriceInput) {
+        customPriceInput.addEventListener('input', calculateInvoiceTotals);
+    }
+}
+
+function initAllCustomToggles() {
+    document.querySelectorAll('#product-table tbody tr').forEach(row => {
+        initCustomProductToggle(row);
+    });
+}
+
 // ─── Initialize totals on page load ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
     calculateInvoiceTotals();
+    initAllCustomToggles();
 });
 
 // Populate product search inputs with selected product names (Runs always on load)
