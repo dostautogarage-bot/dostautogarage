@@ -334,6 +334,74 @@
         margin-bottom: 0;
     }
 
+    @media (max-width: 768px) {
+        .table {
+            min-width: auto !important;
+        }
+
+        .invoice-table thead {
+            display: none;
+        }
+
+        .invoice-table,
+        .invoice-table tbody,
+        .invoice-table tr,
+        .invoice-table td,
+        .invoice-table tfoot {
+            display: block;
+            width: 100%;
+        }
+
+        .invoice-table tr {
+            margin-bottom: 1rem;
+            border: 1px solid #d1fae5;
+            border-radius: 0.85rem;
+            padding: 0.85rem;
+            background: #ffffff;
+        }
+
+        .invoice-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.65rem 0.5rem;
+            border: none;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .invoice-table td:last-child {
+            border-bottom: none;
+        }
+
+        .invoice-table td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #065f46;
+            flex: 0 0 35%;
+            margin-right: 0.75rem;
+            text-transform: uppercase;
+            white-space: normal;
+        }
+
+        .invoice-table tfoot td::before {
+            display: none;
+        }
+
+        .invoice-table tfoot tr {
+            border: none;
+            margin-bottom: 0;
+            padding: 0;
+            background: transparent;
+        }
+
+        .invoice-table tfoot td {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0.5rem 0 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+    }
+
     @media (min-width: 768px) {
         .table {
             min-width: auto;
@@ -446,7 +514,7 @@
         <!-- Products Table -->
         <h5 class="mb-3">PRODUCTS / SERVICES</h5>
         <div class="table-responsive">
-            <table class="table table-bordered align-middle">
+            <table class="invoice-table table table-bordered align-middle">
                 <thead class="neo-table-header">
                     <tr>
                         <th>PRODUCT</th>
@@ -478,7 +546,7 @@
         {% if invoice.other_charges.exists %}
         <h5 class="mt-4 mb-3">OTHER CHARGES</h5>
         <div class="table-responsive">
-            <table class="table table-bordered align-middle">
+            <table class="invoice-table table table-bordered align-middle">
                 <thead class="neo-table-header">
                     <tr>
                         <th>CHARGE</th>
