@@ -88,7 +88,7 @@
 
     /* Admin-Specific Row Colors (Applies to all columns including sticky ones) */
     .expense-row-0 td { background-color: rgba(79, 70, 229, 0.12) !important; }
-    .expense-row-1 td { background-color: rgba(234, 88, 12, 0.12) !important; }
+    .expense-row-1 td { background-color: rgba(234, 179, 8, 0.12) !important; }
     .expense-row-2 td { background-color: rgba(5, 150, 105, 0.12) !important; }
     .expense-row-3 td { background-color: rgba(124, 58, 237, 0.12) !important; }
     .expense-row-4 td { background-color: rgba(225, 29, 72, 0.12) !important; }
@@ -118,7 +118,7 @@
                     <i class="bi bi-person-fill me-2"></i>MY EXPENSES ({{ my_count }})
                 </a>
                 <a href="?show_all=1&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&admin={{ selected_admin }}&per_page={{ per_page }}"
-                   class="btn {% if show_all %}btn-warning text-dark{% else %}btn-outline-warning{% endif %} py-2 fw-bold">
+                   class="btn {% if show_all %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
                     <i class="bi bi-people-fill me-2"></i>ALL EXPENSES ({{ total_count }})
                 </a>
             </div>
@@ -208,7 +208,7 @@
                                                 </li>
                                                 <li>
                                                     <a class="neo-dropdown-item" href="{% url 'expense_edit' expense.pk %}">
-                                                        <div class="neo-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                                        <div class="neo-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
                                                             <i class="bi bi-pencil-fill"></i>
                                                         </div>
                                                         Edit Expense

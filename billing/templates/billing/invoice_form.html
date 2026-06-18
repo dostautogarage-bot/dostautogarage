@@ -246,7 +246,7 @@
         padding: 1.25rem;
         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
         background: #ffffff;
-        border: 2px dashed rgba(234, 88, 12, 0.3);
+        border: 2px dashed rgba(16, 185, 129, 0.3);
         color: #1f2937;
     }
 
@@ -258,7 +258,7 @@
 
     .discount-input-card .stat-value input {
         width: 100%;
-        color: #ea580c;
+        color: #10b981;
         font-size: 1.5rem;
         font-weight: 900;
         letter-spacing: 0.01em;
@@ -525,7 +525,7 @@
                         <tr>
                             <td data-label="PRODUCT" style="min-width: 280px;">
                                 <div style="display:none;">{{ form.product }}</div>
-                                <input type="text" 
+                                <input type="text"
                                        list="productList-{{ forloop.counter0 }}"
                                        class="form-control product-search-input"
                                        placeholder="🔍 TYPE TO SEARCH PRODUCT..."
@@ -565,6 +565,42 @@
             <button type="button" class="premium-icon-btn premium-icon-primary mb-3" title="Add Product" onclick="addRow()">
                 <i class="bi bi-plus-circle"></i>
             </button>
+
+            <!-- TOGGLE CUSTOM PRODUCTS -->
+            <div class="d-flex justify-content-end align-items-center mb-3 mt-4">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="toggleCustomProducts" onchange="toggleCustomProductsSection()" style="cursor: pointer;">
+                    <label class="form-check-label ms-2" for="toggleCustomProducts" style="cursor: pointer; font-weight: 600;">
+                        SHOW CUSTOM PRODUCTS
+                    </label>
+                </div>
+            </div>
+
+            <!-- CUSTOM PRODUCTS SECTION -->
+            <div id="customProductsSection" style="display: none;">
+                <h5 class="mb-3 mt-3">CUSTOM PRODUCTS</h5>
+                <small class="text-muted d-block mb-3">Add products that are not in your inventory. These won't affect stock levels.</small>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle" id="custom-product-table">
+                        <thead class="neo-table-header">
+                            <tr>
+                                <th>PRODUCT NAME</th>
+                                <th style="width:120px;" class="text-center">PRICE (₹)</th>
+                                <th style="width:160px;">QUANTITY</th>
+                                <th style="width:80px;" class="text-center">REMOVE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="custom-products-body">
+                            <!-- Custom product rows will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="button" class="premium-icon-btn premium-icon-primary mb-3" title="Add Custom Product" onclick="addCustomProductRow()">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+            </div>
 
             <!-- OTHER CHARGES -->
             <h5 class="mb-3 mt-2">OTHER CHARGES</h5>
@@ -1177,6 +1213,62 @@ function collectCharges() {
     document.getElementById('otherChargesData').value = JSON.stringify(charges);
 }
 
+// ─── Toggle Custom Products Section ──────────────────────────────────────────
+function toggleCustomProductsSection() {
+    const checkbox = document.getElementById('toggleCustomProducts');
+    const section = document.getElementById('customProductsSection');
+    
+    if (checkbox.checked) {
+        section.style.display = 'block';
+        // Add first row if empty
+        const tbody = document.getElementById('custom-products-body');
+        if (tbody.children.length === 0) {
+            addCustomProductRow();
+        }
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+// ─── Collect custom products into hidden field ───────────────────────────────
+function collectCustomProducts() {
+    const customProducts = [];
+    const toggleCheckbox = document.getElementById('toggleCustomProducts');
+    
+    if (toggleCheckbox && toggleCheckbox.checked) {
+        document.querySelectorAll('#custom-products-body tr').forEach(row => {
+            const nameInput = row.querySelector('.custom-product-name');
+            const priceInput = row.querySelector('.custom-product-price');
+            const qtyInput = row.querySelector('.custom-product-quantity');
+            
+            if (nameInput && priceInput && qtyInput) {
+                const name = nameInput.value.trim();
+                const price = parseFloat(priceInput.value) || 0;
+                const quantity = parseFloat(qtyInput.value) || 0;
+                
+                if (name && price > 0 && quantity > 0) {
+                    customProducts.push({
+                        name: name,
+                        price: price,
+                        quantity: quantity
+                    });
+                }
+            }
+        });
+    }
+    
+    // Create or update hidden input for custom products
+    let customProductsInput = document.getElementById('customProductsData');
+    if (!customProductsInput) {
+        customProductsInput = document.createElement('input');
+        customProductsInput.type = 'hidden';
+        customProductsInput.id = 'customProductsData';
+        customProductsInput.name = 'custom_products';
+        document.getElementById('invoiceForm').appendChild(customProductsInput);
+    }
+    customProductsInput.value = JSON.stringify(customProducts);
+}
+
 function formatCurrency(value) {
     return '₹ ' + Number(value).toLocaleString('en-IN', {
         minimumFractionDigits: 2,
@@ -1186,6 +1278,8 @@ function formatCurrency(value) {
 
 function calculateInvoiceTotals() {
     let subtotal = 0;
+    
+    // Calculate regular products total
     document.querySelectorAll('#product-table tbody tr').forEach(row => {
         const select = row.querySelector('select[name*="product"]');
         const qty    = row.querySelector('input[name*="quantity"]');
@@ -1197,6 +1291,22 @@ function calculateInvoiceTotals() {
             }
         }
     });
+    
+    // Calculate custom products total
+    const toggleCheckbox = document.getElementById('toggleCustomProducts');
+    if (toggleCheckbox && toggleCheckbox.checked) {
+        document.querySelectorAll('#custom-products-body tr').forEach(row => {
+            const priceInput = row.querySelector('.custom-product-price');
+            const qtyInput = row.querySelector('.custom-product-quantity');
+            if (priceInput && qtyInput) {
+                const price = parseFloat(priceInput.value) || 0;
+                const quantity = parseFloat(qtyInput.value) || 0;
+                if (price > 0 && quantity > 0) {
+                    subtotal += price * quantity;
+                }
+            }
+        });
+    }
 
     let chargesTotal = 0;
     document.querySelectorAll('#charges-body tr').forEach(row => {
@@ -1454,6 +1564,7 @@ if (mechanic) {
     e.preventDefault();
     calculateInvoiceTotals();
     collectCharges();
+    collectCustomProducts();
 
     // Determine which button was clicked
     const submitter = e.submitter;
@@ -1617,6 +1728,85 @@ populateSearchInputs();
 document.querySelectorAll('#charges-body tr').forEach(initChargeRow);
 calculateInvoiceTotals();
 updateDatalist();
+
+// ─── Custom Products Section Toggle ──────────────────────────────────────────
+document.getElementById('enableCustomProducts').addEventListener('change', function() {
+    const section = document.getElementById('customProductsSection');
+    const tbody = document.getElementById('custom-products-body');
+    
+    if (this.checked) {
+        section.style.display = 'block';
+        // Add one row by default if empty
+        if (tbody.children.length === 0) {
+            addCustomProductRow();
+        }
+    } else {
+        section.style.display = 'none';
+        // Clear all custom product rows
+        tbody.innerHTML = '';
+    }
+    calculateInvoiceTotals();
+});
+
+// Show custom products section when toggle is enabled
+document.getElementById('enableCustomProducts').addEventListener('change', function() {
+    document.getElementById('customProductsSection').style.display = this.checked ? 'block' : 'none';
+});
+
+// ─── Add Custom Product Row ──────────────────────────────────────────────────
+function addCustomProductRow() {
+    const tbody = document.getElementById('custom-products-body');
+    const rowCount = tbody.children.length;
+    
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td data-label="PRODUCT NAME">
+            <input type="text"
+                   class="form-control custom-product-name"
+                   placeholder="ENTER PRODUCT NAME..."
+                   style="text-transform: uppercase;"
+                   required>
+        </td>
+        <td data-label="PRICE">
+            <input type="number"
+                   class="form-control custom-product-price text-center"
+                   placeholder="0.00"
+                   step="0.01"
+                   min="0"
+                   required
+                   oninput="calculateInvoiceTotals()">
+        </td>
+        <td data-label="QUANTITY">
+            <input type="number"
+                   class="form-control custom-product-quantity"
+                   placeholder="1"
+                   step="0.01"
+                   min="0.01"
+                   value="1"
+                   required
+                   oninput="calculateInvoiceTotals()">
+        </td>
+        <td data-label="REMOVE" class="text-center">
+            <button type="button" class="premium-icon-btn premium-icon-danger"
+                    style="width: 32px; height: 32px;"
+                    title="Remove Custom Product"
+                    onclick="removeCustomProductRow(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+    calculateInvoiceTotals();
+}
+
+// ─── Remove Custom Product Row ───────────────────────────────────────────────
+function removeCustomProductRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+    calculateInvoiceTotals();
+}
+
 
 </script>
 

@@ -5,10 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-title" content="DostGarage">
-    <meta name="application-name" content="DostGarage">
+    <meta name="apple-mobile-web-app-title" content="Thefix">
+    <meta name="application-name" content="Thefix">
     <meta name="msapplication-TileColor" content="#1e293b">
-    <meta name="theme-color" content="#FF5A00">
+    <meta name="theme-color" content="#10B981">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="{% url 'manifest_json' %}">
@@ -19,8 +19,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon.png' %}">
     <link rel="shortcut icon" href="{% static 'favicon.png' %}">
+<title>{% block title %}Thefixautotech{% endblock %}</title>
 
-    <title>{% block title %}Dost Auto Garage{% endblock %}</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,8 +36,8 @@
 
     <style>
         :root {
-            --primary: #FF5A00;
-            --primary-gradient: linear-gradient(135deg, #FF7B00 0%, #FF5A00 100%);
+            --primary: #10B981;
+            --primary-gradient: linear-gradient(135deg, #86EFAC 0%, #10B981 100%);
             --secondary: #2563EB;
             --bg-color: #F8FAFC;
             --surface: #FFFFFF;
@@ -46,7 +46,7 @@
             --border-light: #E2E8F0;
             --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
             --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 12px 32px rgba(255, 90, 0, 0.15);
+            --shadow-lg: 0 12px 32px rgba(16, 185, 129, 0.15);
             --border-radius-lg: 20px;
             --border-radius-md: 14px;
         }
@@ -76,7 +76,7 @@
             background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 90, 0, 0.4);
+            background: rgba(16, 185, 129, 0.4);
             border-radius: 10px;
         }
 
@@ -232,7 +232,7 @@
         }
 
         .nav-link.active {
-            background: rgba(255, 90, 0, 0.1);
+            background: rgba(16, 185, 129, 0.1);
             color: var(--primary);
         }
 
@@ -318,7 +318,7 @@
 
         .bottom-nav-item.active i {
             transform: translateY(-4px) scale(1.1);
-            text-shadow: 0 4px 12px rgba(255, 90, 0, 0.4);
+            text-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
         }
 
         /* FAB for "More / Add" */
@@ -365,7 +365,7 @@
 
         .btn-primary {
             background: var(--primary-gradient);
-            border: none;
+            border: 2px solid transparent !important;
             border-radius: var(--border-radius-md);
             padding: 10px 20px;
             font-weight: 600;
@@ -374,9 +374,27 @@
 
         .btn-primary:hover,
         .btn-primary:focus {
-            background: linear-gradient(135deg, #FF5A00 0%, #E65100 100%);
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
             transform: translateY(-2px);
-            box-shadow: 0 14px 32px rgba(255, 90, 0, 0.25);
+            box-shadow: 0 14px 32px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            border: 2px solid var(--primary) !important;
+            color: var(--primary) !important;
+            font-weight: 600 !important;
+            border-radius: var(--border-radius-md) !important;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover,
+        .btn-outline-primary:focus {
+            background: var(--primary-gradient) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
 
         .form-control,
@@ -391,7 +409,7 @@
         .form-control:focus,
         .form-select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(255, 90, 0, 0.1);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
             background: var(--surface);
         }
 
@@ -777,8 +795,8 @@
             justify-content: center;
             margin-right: 10px;
             font-size: 0.9rem;
-            background: rgba(234, 88, 12, 0.1) !important;
-            color: #ea580c !important;
+            background: rgba(16, 185, 129, 0.1) !important;
+            color: #10b981 !important;
         }
 
         /* ----- PREMIUM ICON BUTTONS ----- */
@@ -798,23 +816,23 @@
         
         .premium-icon-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(234, 88, 12, 0.3);
+            box-shadow: 0 6px 14px rgba(16, 185, 129, 0.3);
         }
 
         .premium-icon-btn:active {
             transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(234, 88, 12, 0.2);
+            box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
         }
 
-        /* Unified Orange Gradient for all icon buttons */
+        /* Unified Green Gradient for all icon buttons */
         .premium-icon-primary,
         .premium-icon-success,
         .premium-icon-danger,
         .premium-icon-warning,
         .premium-icon-secondary {
-            background: linear-gradient(135deg, #ea580c, #f59e0b);
+            background: linear-gradient(135deg, #10B981, #86EFAC);
             color: #ffffff;
-            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.2);
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
         }
 
         .premium-icon-primary:hover,
@@ -822,7 +840,7 @@
         .premium-icon-danger:hover,
         .premium-icon-warning:hover,
         .premium-icon-secondary:hover {
-            background: linear-gradient(135deg, #c2410c, #d97706);
+            background: linear-gradient(135deg, #059669, #10B981);
             color: #ffffff;
         }
 
@@ -830,7 +848,7 @@
         .neo-table-header th {
             background: #f8fafc !important;
             color: #334155 !important;
-            border-bottom: 2px solid rgba(234, 88, 12, 0.3) !important;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.3) !important;
             text-transform: uppercase;
             font-weight: 700;
         }
@@ -844,7 +862,7 @@
     <header class="top-app-bar">
         <a href="{% url 'dashboard' %}" class="brand-logo">
             <i class="bi bi-heptagon-fill"></i>
-            DostGarage
+            Thefix
         </a>
         {% if user.is_authenticated %}
         <div class="user-avatar-btn" data-bs-toggle="offcanvas" data-bs-target="#userMenu">
@@ -857,7 +875,7 @@
     <aside class="sidebar">
         <a href="{% url 'dashboard' %}" class="sidebar-brand">
             <i class="bi bi-heptagon-fill"></i>
-            DostGarage
+            Thefix
         </a>
 
         <div class="nav flex-column mb-auto mt-4">

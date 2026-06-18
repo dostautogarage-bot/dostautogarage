@@ -1,0 +1,177 @@
+{% extends 'billing/base.html' %}
+{% block title %}CATEGORY LIST{% endblock %}
+
+{% block content %}
+<style>
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+        .card {
+            padding: 1rem !important;
+        }
+        
+        h3 {
+            font-size: 1.25rem;
+        }
+        
+        .table {
+            font-size: 0.875rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.5rem;
+        }
+        
+        .btn-group-mobile {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        
+        .btn-group-mobile .btn {
+            width: 100%;
+            margin: 0;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .table {
+            font-size: 0.8rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.4rem;
+        }
+        
+        .badge {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+        
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h3 class="mb-0">CATEGORY LIST</h3>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'product_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to Products
+                </a>
+                <a href="{% url 'category_add' %}" class="premium-icon-btn premium-icon-primary" title="Add Category">
+                    <i class="bi bi-plus-lg"></i>
+                </a>
+            </div>
+        </div>
+
+        {% if category_data %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>CATEGORY NAME</th>
+                        <th>DESCRIPTION</th>
+                        <th class="text-center">PRODUCTS</th>
+                        <th class="text-center">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in category_data %}
+                    <tr>
+                        <td><strong>{{ item.category.name }}</strong></td>
+                        <td>{{ item.category.description|default:"—" }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-primary">{{ item.product_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                <a href="{% url 'category_edit' item.category.pk %}"
+                                   class="btn btn-sm btn-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button"
+                                   class="btn btn-sm btn-danger"
+                                   title="Delete"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#deleteModal"
+                                   data-category-id="{{ item.category.pk }}"
+                                   data-category-name="{{ item.category.name }}"
+                                   data-product-count="{{ item.product_count }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle me-2"></i>
+            No categories found. <a href="{% url 'category_add' %}" class="alert-link">Create your first category</a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Delete Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteCategoryName"></strong>?</p>
+                <p class="text-muted small mb-0">This action cannot be undone.</p>
+                <div id="productCountWarning" class="alert alert-info mt-3" style="display: none;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    This category has <strong><span id="productCount"></span> product(s)</strong>.
+                    Products will not be deleted, but their category will be set to "None".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="premium-icon-btn premium-icon-primary" title="Confirm Delete">
+                        <i class="bi bi-check-lg"></i>
+                    </button>
+                </form>
+                <button type="button" class="premium-icon-btn premium-icon-secondary" data-bs-dismiss="modal" title="Cancel">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle delete modal
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const categoryId = button.getAttribute('data-category-id');
+        const categoryName = button.getAttribute('data-category-name');
+        const productCount = parseInt(button.getAttribute('data-product-count'));
+        
+        // Update modal content
+        document.getElementById('deleteCategoryName').textContent = categoryName;
+        document.getElementById('deleteForm').action = `/categories/${categoryId}/delete/`;
+        
+        // Show/hide product count warning
+        const warningDiv = document.getElementById('productCountWarning');
+        if (productCount > 0) {
+            document.getElementById('productCount').textContent = productCount;
+            warningDiv.style.display = 'block';
+        } else {
+            warningDiv.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

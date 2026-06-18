@@ -17,7 +17,7 @@ from django.utils.crypto import get_random_string
 import re
 from django.utils import timezone
 
-from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expense
+from .models import Product, Invoice, InvoiceItem, OtherCharge, Settings, Expense, Category
 from django.db import transaction
 
 # ReportLab
@@ -42,9 +42,10 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = ['name', 'part_number', 'price', 'stock']
+        fields = ['name', 'part_number', 'category', 'price', 'stock']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
             'price': forms.NumberInput(attrs={'class': 'form-control'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
         }
@@ -314,11 +315,35 @@ class AdminEditForm(UserChangeForm):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def product_list(request):
-    products = Product.objects.all()
+    from .models import Category
+    
+    # Get category filter from query params
+    category_id = request.GET.get('category')
+    
+    # Get all categories for the tabs
+    categories = Category.objects.all()
+    
+    # Filter products by category if specified
+    if category_id:
+        products = Product.objects.filter(category_id=category_id)
+        selected_category = Category.objects.filter(id=category_id).first()
+    else:
+        products = Product.objects.all()
+        selected_category = None
+    
     total_product_worth = sum(p.price * p.stock for p in products)
     outofstock_count = Product.objects.filter(stock__lte=0).count()
+    
+    # Count products per category
+    category_counts = {}
+    for cat in categories:
+        category_counts[cat.id] = Product.objects.filter(category=cat).count()
+    
     return render(request, 'billing/product_list.html', {
         'products': products,
+        'categories': categories,
+        'selected_category': selected_category,
+        'category_counts': category_counts,
         'total_product_worth': total_product_worth,
         'outofstock_count': outofstock_count
     })
@@ -460,6 +485,73 @@ def product_delete(request, pk):
         return redirect('product_list')
 
     return render(request, 'billing/product_confirm_delete.html', {'product': product})
+
+# -------------------- CATEGORY VIEWS --------------------
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+@user_passes_test(lambda u: u.is_superuser)
+def category_list(request):
+    from .models import Category
+    categories = Category.objects.all().order_by('name')
+    
+    # Count products per category
+    category_data = []
+    for category in categories:
+        product_count = Product.objects.filter(category=category).count()
+        category_data.append({
+            'category': category,
+            'product_count': product_count
+        })
+    
+    return render(request, 'billing/category_list.html', {
+        'category_data': category_data
+    })
+
+@user_passes_test(lambda u: u.is_superuser)
+def category_add(request):
+    form = CategoryForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Category created successfully!')
+        return redirect('category_list')
+    return render(request, 'billing/category_form.html', {'form': form, 'action': 'Add'})
+
+@user_passes_test(lambda u: u.is_superuser)
+def category_edit(request, pk):
+    from .models import Category
+    category = get_object_or_404(Category, pk=pk)
+    form = CategoryForm(request.POST or None, instance=category)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Category updated successfully!')
+        return redirect('category_list')
+    return render(request, 'billing/category_form.html', {'form': form, 'action': 'Edit', 'category': category})
+
+@user_passes_test(lambda u: u.is_superuser)
+def category_delete(request, pk):
+    from .models import Category
+    category = get_object_or_404(Category, pk=pk)
+    
+    if request.method == 'POST':
+        category.delete()
+        messages.success(request, 'Category deleted successfully!')
+        return redirect('category_list')
+    
+    # Count products in this category
+    product_count = Product.objects.filter(category=category).count()
+    
+    return render(request, 'billing/category_confirm_delete.html', {
+        'category': category,
+        'product_count': product_count
+    })
+
 
 
 @login_required
@@ -944,7 +1036,7 @@ def invoice_create(request):
                     invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
                     invoice.save()
 
-                    # ── Invoice items ────────────────────────────────────────────────
+                    # ── Invoice items (Regular Products) ─────────────────────────────
                     for form in formset:
                         if not form.cleaned_data:
                             continue
@@ -965,15 +1057,37 @@ def invoice_create(request):
                             raise Exception(err_msg)
 
                         InvoiceItem.objects.create(
-                            invoice  = invoice,
-                            product  = product,
-                            quantity = quantity,
-                            price    = product.price
+                            invoice=invoice,
+                            product=product,
+                            is_custom=False,
+                            quantity=quantity,
+                            price=product.price
                         )
 
                         if not is_draft:
                             p_locked.stock -= quantity
                             p_locked.save()
+                    
+                    # ── Custom Products ──────────────────────────────────────────────
+                    custom_products_raw = request.POST.get('custom_products', '[]')
+                    try:
+                        custom_products = json.loads(custom_products_raw)
+                        for custom_item in custom_products:
+                            name = custom_item.get('name', '').strip()
+                            price = Decimal(str(custom_item.get('price', 0)))
+                            quantity = Decimal(str(custom_item.get('quantity', 0)))
+                            
+                            if name and price > 0 and quantity > 0:
+                                InvoiceItem.objects.create(
+                                    invoice=invoice,
+                                    product=None,
+                                    custom_product_name=name,
+                                    is_custom=True,
+                                    quantity=quantity,
+                                    price=price
+                                )
+                    except (ValueError, KeyError, json.JSONDecodeError):
+                        pass
 
                     # ── Other charges ────────────────────────────────────────────────
                     charges_raw = request.POST.get('other_charges', '[]')
@@ -1280,10 +1394,11 @@ from .models import Product  # adjust import path
 @require_GET
 def product_list_api(request):
     """
-    GET /api/products/?q=oil&page=1&per_page=25&stock_filter=zero
+    GET /api/products/?q=oil&page=1&per_page=25&stock_filter=zero&category=1
     """
     query        = request.GET.get('q', '').strip()
     stock_filter = request.GET.get('stock_filter', '').strip()
+    category_id  = request.GET.get('category', '').strip()
     page         = max(1, int(request.GET.get('page', 1)))
     per_page     = int(request.GET.get('per_page', 100))
     if per_page not in [100, 200, 300, 500]:
@@ -1293,6 +1408,9 @@ def product_list_api(request):
 
     if stock_filter == 'zero':
         qs = qs.filter(stock__lte=0)
+    
+    if category_id:
+        qs = qs.filter(category_id=category_id)
 
     if query:
         qs = qs.filter(
@@ -1419,7 +1537,7 @@ def invoice_pdf_logic(request, invoice):
     for s in Settings.objects.all():
         settings_dict[s.key] = s.value
 
-    company_name    = settings_dict.get('company_name', 'DOST AUTO GARAGE')
+    company_name    = settings_dict.get('company_name', 'THEFIXAUTOTECH')
     company_address = settings_dict.get('company_address', 'Address not set')
     company_email   = settings_dict.get('company_email', '')
     company_phone_1 = settings_dict.get('company_phone_1', '')
@@ -1511,8 +1629,13 @@ def invoice_pdf_logic(request, invoice):
     # ---------------- PRODUCT TABLE ----------------
     data = [["DESCRIPTION", "QTY", "RATE", "AMOUNT"]]
     for item in invoice.items.all():
+        # Use product_name property which handles both regular and custom products
+        product_display = item.product_name.upper()
+        if item.is_custom:
+            product_display += " (CUSTOM)"
+        
         data.append([
-            item.product.name.upper(),
+            product_display,
             str(item.quantity),
             f"{item.price:.2f}",
             f"{item.total_price:.2f}"
@@ -1683,9 +1806,9 @@ def company_settings(request):
             return redirect('company_settings')
     else:
         initial_data = {
-            'company_name': settings_dict.get('company_name', 'DOSTAUTOGARAGE'),
-            'company_email': settings_dict.get('company_email', 'dostautogarage@gmail.com'),
-            'company_phone_1': settings_dict.get('company_phone_1', '9746519367'),
+            'company_name': settings_dict.get('company_name', 'THEFIXAUTOTECH'),
+            'company_email': settings_dict.get('company_email', 'info@thefixautotech.com'),
+            'company_phone_1': settings_dict.get('company_phone_1', ''),
             'company_phone_2': settings_dict.get('company_phone_2', '9745582281'),
             'company_address': settings_dict.get('company_address', ''),
             'invoice_prefix': settings_dict.get('invoice_prefix', 'KNJ'),
@@ -1804,8 +1927,8 @@ def admin_delete(request, pk):
 def manifest_json(request):
     logo_url = request.build_absolute_uri(static("logo.png"))
     manifest = {
-        "name": "Dost Auto Garage",
-        "short_name": "DostGarage",
+        "name": "Thefixautotech",
+        "short_name": "Thefixautotech",
         "start_url": request.build_absolute_uri("/"),
         "display": "standalone",
         "background_color": "#F8FAFC",

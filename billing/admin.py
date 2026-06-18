@@ -1,14 +1,21 @@
 from django.contrib import admin
 
-from .models import Product, Invoice, InvoiceItem, Settings
+from .models import Product, Invoice, InvoiceItem, Settings, Category
+
 @admin.register(Settings)
 class SettingsAdmin(admin.ModelAdmin):
 	list_display = ("key", "value")
 
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+	list_display = ("name", "description", "created_at")
+	search_fields = ("name",)
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-	list_display = ("name", "price", "stock")
-	search_fields = ("name",)
+	list_display = ("name", "category", "price", "stock")
+	list_filter = ("category",)
+	search_fields = ("name", "part_number")
 
 class InvoiceItemInline(admin.TabularInline):
 	model = InvoiceItem

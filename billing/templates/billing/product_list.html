@@ -4,13 +4,84 @@
 {% block content %}
 
 <style>
+    /* Category tabs scrollable container */
+    .category-tabs-container {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .category-tabs-container::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .category-tabs-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    .category-tabs-container::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #10B981, #86EFAC);
+        border-radius: 10px;
+    }
+    
+    .category-tabs-container::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #86EFAC, #10B981);
+    }
+    
+    .category-tabs-wrapper {
+        display: inline-flex;
+        min-width: 100%;
+        width: max-content;
+    }
+    
+    .category-tabs-wrapper .btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: fit-content;
+    }
+    
+    /* Fade effect on edges to indicate scrollability */
+    .category-tabs-container::before,
+    .category-tabs-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0.5rem;
+        width: 30px;
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    .category-tabs-container::before {
+        left: 0;
+        background: linear-gradient(to right, rgba(255,255,255,0.9), transparent);
+    }
+    
+    .category-tabs-container::after {
+        right: 0;
+        background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+    }
+    
+    .category-tabs-container.scrolled-start::before {
+        display: none;
+    }
+    
+    .category-tabs-container.scrolled-end::after {
+        display: none;
+    }
+
     .product-worth-banner {
-        background: linear-gradient(135deg, #ea580c, #f59e0b);
+        background: linear-gradient(135deg, #10B981, #86EFAC);
         border-radius: 1rem;
         color: #fff;
         padding: 1rem;
         margin-bottom: 1rem;
-        box-shadow: 0 12px 40px rgba(234, 88, 12, 0.2);
+        box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2);
     }
 
     @media (min-width: 768px) {
@@ -179,7 +250,7 @@
 
     /* Light Green/Yellowish 5-10 */
     .stock-low {
-        background: #eab308;
+        background: #f59e0b;
         color: #ffffff;
     }
 
@@ -470,8 +541,11 @@
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h3 class="mb-0">PRODUCT LIST</h3>
-            <div class="d-flex gap-2">
-                <a href="{% url 'product_export_pdf' %}" target="_blank" class="premium-icon-btn premium-icon-danger"
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'category_list' %}" class="btn btn-primary btn-sm" title="Manage Categories">
+                    <i class="bi bi-tags"></i> Categories
+                </a>
+                <a href="{% url 'product_export_pdf' %}" target="_blank" class="premium-icon-btn premium-icon-primary"
                     title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
                 <a href="{% url 'product_add' %}" class="premium-icon-btn premium-icon-primary"
                     title="Create Product"><i class="bi bi-plus-lg"></i></a>
@@ -499,6 +573,24 @@
                 </div>
             </div>
             {% endif %}
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="mb-3 position-relative">
+            <div class="category-tabs-container" id="categoryTabsContainer">
+                <div class="btn-group category-tabs-wrapper" role="group" aria-label="Category filter">
+                    <a href="{% url 'product_list' %}"
+                       class="btn {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
+                        ALL PRODUCTS
+                    </a>
+                    {% for category in categories %}
+                    <a href="{% url 'product_list' %}?category={{ category.id }}"
+                       class="btn {% if selected_category and selected_category.id == category.id %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
+                        {{ category.name|upper }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
 
         <!-- Search -->
@@ -629,7 +721,11 @@
     // ── Only AJAX needed: search + pagination ──────────────────────────────────────
     const LIST_URL = "{% url 'product_list_api' %}";
 
-    let state = { query: '', page: 1, perPage: 100, total: 0 };
+    // Get category from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category') || '';
+    
+    let state = { query: '', page: 1, perPage: 100, total: 0, category: categoryParam };
     let searchTimer = null;
     let activeXHR = null;
 
@@ -640,7 +736,7 @@
         document.getElementById('productTableWrapper').classList.add('table-loading');
         document.getElementById('searchSpinner').style.display = 'block';
 
-        const url = `${LIST_URL}?q=${encodeURIComponent(state.query)}&page=${state.page}&per_page=${state.perPage}&stock_filter=${state.stockFilter}`;
+        const url = `${LIST_URL}?q=${encodeURIComponent(state.query)}&page=${state.page}&per_page=${state.perPage}&stock_filter=${state.stockFilter}&category=${state.category}`;
         const xhr = new XMLHttpRequest();
         activeXHR = xhr;
 
@@ -711,7 +807,7 @@
                             </li>
                             <li>
                                 <a class="neo-dropdown-item" href="/products/${p.id}/edit/">
-                                    <div class="neo-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                    <div class="neo-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
                                         <i class="bi bi-pencil-fill"></i>
                                     </div>
                                     Edit Product
@@ -891,6 +987,37 @@
         tableWrapper.addEventListener('scroll', function () {
             // Passive listener for better scroll performance
         }, { passive: true });
+    }
+
+    // ── Category tabs scroll handling ──────────────────────────────────────────────
+    const categoryTabsContainer = document.getElementById('categoryTabsContainer');
+    if (categoryTabsContainer) {
+        function updateScrollFade() {
+            const scrollLeft = categoryTabsContainer.scrollLeft;
+            const scrollWidth = categoryTabsContainer.scrollWidth;
+            const clientWidth = categoryTabsContainer.clientWidth;
+            
+            // Check if scrolled to start
+            if (scrollLeft <= 5) {
+                categoryTabsContainer.classList.add('scrolled-start');
+            } else {
+                categoryTabsContainer.classList.remove('scrolled-start');
+            }
+            
+            // Check if scrolled to end
+            if (scrollLeft + clientWidth >= scrollWidth - 5) {
+                categoryTabsContainer.classList.add('scrolled-end');
+            } else {
+                categoryTabsContainer.classList.remove('scrolled-end');
+            }
+        }
+        
+        // Update on scroll
+        categoryTabsContainer.addEventListener('scroll', updateScrollFade, { passive: true });
+        
+        // Update on load and resize
+        updateScrollFade();
+        window.addEventListener('resize', updateScrollFade);
     }
 
     // ── Initial load ───────────────────────────────────────────────────────────────

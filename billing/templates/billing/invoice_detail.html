@@ -458,7 +458,12 @@
                 <tbody>
                     {% for item in invoice.items.all %}
                     <tr>
-                        <td data-label="PRODUCT">{{ item.product.name|upper }}</td>
+                        <td data-label="PRODUCT">
+                            {{ item.product_name|upper }}
+                            {% if item.is_custom %}
+                                <span class="badge bg-info ms-2" style="font-size: 0.7rem;">CUSTOM</span>
+                            {% endif %}
+                        </td>
                         <td data-label="QUANTITY">{{ item.quantity }}</td>
                         <td data-label="PRICE">₹ {{ item.price }}</td>
                         <td data-label="TOTAL">₹ {{ item.total_price }}</td>

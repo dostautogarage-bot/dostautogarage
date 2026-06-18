@@ -15,11 +15,31 @@ class Settings(models.Model):
 		return f"{self.key}: {self.value}"
 
 
+class Category(models.Model):
+	name = models.CharField(max_length=100, unique=True, db_index=True)
+	description = models.TextField(blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		verbose_name_plural = 'Categories'
+		ordering = ['name']
+
+	def __str__(self):
+		return self.name
+
+
 class Product(models.Model):
 	name = models.CharField(max_length=100, db_index=True)
 	part_number = models.CharField(max_length=100, unique=True, default='', db_index=True)
 	price = models.DecimalField(max_digits=10, decimal_places=2)
 	stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+	category = models.ForeignKey(
+		Category,
+		on_delete=models.SET_NULL,
+		null=True,
+		blank=True,
+		related_name='products'
+	)
 
 	def save(self, *args, **kwargs):
 		if self.stock < 0:
@@ -103,7 +123,7 @@ class Invoice(models.Model):
         from django.utils.encoding import smart_str
         from urllib.parse import quote
 
-        msg = f"*DOST AUTO GARAGE*\n"
+        msg = f"*THEFIXAUTOTECH*\n"
         msg += f"--------------------------\n"
         msg += f"*Invoice:* #{self.formatted_invoice_number}\n"
         msg += f"*Date:* {self.created_at.strftime('%d-%m-%Y')}\n"
@@ -117,7 +137,7 @@ class Invoice(models.Model):
         
         msg += f"*ITEMS:*\n"
         for item in self.items.all():
-            msg += f"- {item.product.name.upper()} ({item.quantity}): Rs.{item.total_price}\n"
+            msg += f"- {item.product_name.upper()} ({item.quantity}): Rs.{item.total_price}\n"
         
         other_charges = self.other_charges.all()
         if other_charges:
@@ -138,13 +158,22 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)  # ← changed
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)  # Made optional for custom products
+    custom_product_name = models.CharField(max_length=255, blank=True, null=True)  # For custom products
+    is_custom = models.BooleanField(default=False)  # Flag to identify custom products
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Price at time of sale
 
     @property
     def total_price(self):
         return self.price * self.quantity
+    
+    @property
+    def product_name(self):
+        """Returns custom product name if custom, otherwise product name"""
+        if self.is_custom and self.custom_product_name:
+            return self.custom_product_name
+        return self.product.name if self.product else "Unknown Product"
 
 
 class OtherCharge(models.Model):

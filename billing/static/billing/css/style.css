@@ -1,5 +1,5 @@
 body {
-    background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+    background: linear-gradient(120deg, #ECFDF5 0%, #ffffff 100%);
     font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
     padding: 0;
@@ -14,6 +14,95 @@ body {
     letter-spacing: 2px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Modern Premium Icon Buttons */
+.premium-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.premium-icon-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.premium-icon-btn:hover::before {
+    opacity: 1;
+}
+
+.premium-icon-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.premium-icon-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.premium-icon-primary {
+    background: linear-gradient(135deg, #10B981, #86EFAC);
+    color: #fff;
+}
+
+.premium-icon-primary:hover {
+    background: linear-gradient(135deg, #86EFAC, #10B981);
+    color: #fff;
+}
+
+.premium-icon-danger {
+    background: linear-gradient(135deg, #10B981, #86EFAC);
+    color: #fff;
+}
+
+.premium-icon-danger:hover {
+    background: linear-gradient(135deg, #86EFAC, #10B981);
+    color: #fff;
+}
+
+.premium-icon-secondary {
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
+    color: #fff;
+}
+
+.premium-icon-secondary:hover {
+    background: linear-gradient(135deg, #9ca3af, #6b7280);
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .premium-icon-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .premium-icon-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
 }
 
 .container {
@@ -114,40 +203,156 @@ table th {
 }
 
 table tr:nth-child(even) {
-    background: #f6d36533;
+    background: #ECFDF533;
 }
 
 table tr:hover {
-    background: #fda08533;
+    background: #A7F3D033;
 }
 
 .btn {
     background: #4a4e69;
     color: #fff;
     border: none;
-    border-radius: 6px;
-    padding: 0.5rem 1.2rem;
-    font-size: 1rem;
+    border-radius: 10px;
+    padding: 0.6rem 1.4rem;
+    font-size: 0.95rem;
+    font-weight: 500;
     cursor: pointer;
     margin-right: 0.5rem;
-    transition: background 0.2s, transform 0.15s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.35rem;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.02em;
 }
 
 .btn:hover {
     background: #9a8c98;
     color: #22223b;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-sm {
-    padding: 0.3rem 0.7rem;
-    font-size: 0.85rem;
-    border-radius: 0.45rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 10px;
+}
+
+/* Green Theme Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #10B981, #86EFAC) !important;
+    border: 2px solid #10B981 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #86EFAC, #10B981) !important;
+    color: #fff !important;
+}
+
+.btn-outline-primary {
+    background: linear-gradient(135deg, #ECFDF5, #D1FAE5) !important;
+    border: 2px solid #10B981 !important;
+    color: #065F46 !important;
+    font-weight: 500 !important;
+    border-radius: 10px !important;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #10B981, #86EFAC) !important;
+    border-color: #10B981 !important;
+    color: #fff !important;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6b7280, #9ca3af) !important;
+    border: 2px solid #6b7280 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #9ca3af, #6b7280) !important;
+    color: #fff !important;
+}
+
+.btn-outline-secondary {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+    border: 2px solid #6b7280 !important;
+    color: #374151 !important;
+    font-weight: 500 !important;
+    border-radius: 10px !important;
+}
+
+.btn-outline-secondary:hover {
+    background: linear-gradient(135deg, #6b7280, #9ca3af) !important;
+    border-color: #6b7280 !important;
+    color: #fff !important;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+    border: 2px solid #dc2626 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: #fff !important;
+}
+
+.btn-outline-danger {
+    background: linear-gradient(135deg, #fee2e2, #fecaca) !important;
+    border: 2px solid #dc2626 !important;
+    color: #991b1b !important;
+    font-weight: 500 !important;
+    border-radius: 10px !important;
+}
+
+.btn-outline-danger:hover {
+    background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+    border-color: #dc2626 !important;
+    color: #fff !important;
+}
+
+@media (max-width: 768px) {
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 10px !important;
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        border-radius: 10px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn {
+        padding: 0.45rem 0.9rem;
+        font-size: 0.85rem;
+        border-radius: 10px !important;
+    }
+    
+    .btn-sm {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.75rem;
+        border-radius: 10px !important;
+    }
 }
 
 .action-btn {
