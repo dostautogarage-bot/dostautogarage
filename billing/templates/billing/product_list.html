@@ -14,37 +14,38 @@
         padding-bottom: 0.5rem;
         margin-bottom: 0.5rem;
     }
-    
+
     .category-tabs-container::-webkit-scrollbar {
         height: 6px;
     }
-    
+
     .category-tabs-container::-webkit-scrollbar-track {
         background: #f1f5f9;
         border-radius: 10px;
     }
-    
+
     .category-tabs-container::-webkit-scrollbar-thumb {
         background: linear-gradient(135deg, #10B981, #86EFAC);
         border-radius: 10px;
     }
-    
+
     .category-tabs-container::-webkit-scrollbar-thumb:hover {
         background: linear-gradient(135deg, #86EFAC, #10B981);
     }
-    
+
     .category-tabs-wrapper {
         display: inline-flex;
         min-width: 100%;
         width: max-content;
     }
-    
+
     .category-tabs-wrapper .btn {
         white-space: nowrap;
         flex-shrink: 0;
-        min-width: fit-content;
+        width: 150px;
+        text-align: center;
     }
-    
+
     /* Fade effect on edges to indicate scrollability */
     .category-tabs-container::before,
     .category-tabs-container::after {
@@ -56,21 +57,21 @@
         pointer-events: none;
         z-index: 1;
     }
-    
+
     .category-tabs-container::before {
         left: 0;
-        background: linear-gradient(to right, rgba(255,255,255,0.9), transparent);
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.9), transparent);
     }
-    
+
     .category-tabs-container::after {
         right: 0;
-        background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+        background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
     }
-    
+
     .category-tabs-container.scrolled-start::before {
         display: none;
     }
-    
+
     .category-tabs-container.scrolled-end::after {
         display: none;
     }
@@ -543,7 +544,7 @@
             <h3 class="mb-0">PRODUCT LIST</h3>
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{% url 'category_list' %}" class="btn btn-primary btn-sm" title="Manage Categories">
-                    <i class="bi bi-tags"></i> Categories
+                    <i class="bi bi-tags"></i> BRANDS
                 </a>
                 <a href="{% url 'product_export_pdf' %}" target="_blank" class="premium-icon-btn premium-icon-primary"
                     title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
@@ -580,12 +581,12 @@
             <div class="category-tabs-container" id="categoryTabsContainer">
                 <div class="btn-group category-tabs-wrapper" role="group" aria-label="Category filter">
                     <a href="{% url 'product_list' %}"
-                       class="btn {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
-                        ALL PRODUCTS
+                        class="btn {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
+                        ALL BRANDS
                     </a>
                     {% for category in categories %}
                     <a href="{% url 'product_list' %}?category={{ category.id }}"
-                       class="btn {% if selected_category and selected_category.id == category.id %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
+                        class="btn {% if selected_category and selected_category.id == category.id %}btn-primary{% else %}btn-outline-primary{% endif %} py-2 fw-bold">
                         {{ category.name|upper }}
                     </a>
                     {% endfor %}
@@ -724,7 +725,7 @@
     // Get category from URL params
     const urlParams = new URLSearchParams(window.location.search);
     const categoryParam = urlParams.get('category') || '';
-    
+
     let state = { query: '', page: 1, perPage: 100, total: 0, category: categoryParam };
     let searchTimer = null;
     let activeXHR = null;
@@ -996,14 +997,14 @@
             const scrollLeft = categoryTabsContainer.scrollLeft;
             const scrollWidth = categoryTabsContainer.scrollWidth;
             const clientWidth = categoryTabsContainer.clientWidth;
-            
+
             // Check if scrolled to start
             if (scrollLeft <= 5) {
                 categoryTabsContainer.classList.add('scrolled-start');
             } else {
                 categoryTabsContainer.classList.remove('scrolled-start');
             }
-            
+
             // Check if scrolled to end
             if (scrollLeft + clientWidth >= scrollWidth - 5) {
                 categoryTabsContainer.classList.add('scrolled-end');
@@ -1011,10 +1012,10 @@
                 categoryTabsContainer.classList.remove('scrolled-end');
             }
         }
-        
+
         // Update on scroll
         categoryTabsContainer.addEventListener('scroll', updateScrollFade, { passive: true });
-        
+
         // Update on load and resize
         updateScrollFade();
         window.addEventListener('resize', updateScrollFade);

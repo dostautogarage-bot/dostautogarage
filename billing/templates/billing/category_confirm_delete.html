@@ -1,5 +1,5 @@
 {% extends 'billing/base.html' %}
-{% block title %}Delete Category{% endblock %}
+{% block title %}Delete Brand{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -165,7 +165,7 @@
 
     <!-- Clean confirmation card -->
     <div class="card shadow-sm">
-        <h5 class="text-danger mb-3">DELETE CATEGORY</h5>
+        <h5 class="text-danger mb-3">DELETE BRAND</h5>
         <p>
             ARE YOU SURE YOU WANT TO DELETE <strong>{{ category.name|upper }}</strong>?
             <br>
@@ -175,8 +175,8 @@
         {% if product_count > 0 %}
         <div class="alert alert-info">
             <i class="bi bi-info-circle me-1"></i>
-            This category has <strong>{{ product_count }} product(s)</strong>. 
-            Products will not be deleted, but their category will be set to "None".
+            This brand has <strong>{{ product_count }} product(s)</strong>. 
+            Products will not be deleted, but their brand will be set to "None".
         </div>
         {% endif %}
         

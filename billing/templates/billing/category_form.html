@@ -1,5 +1,5 @@
 {% extends 'billing/base.html' %}
-{% block title %}{{ action }} CATEGORY{% endblock %}
+{% block title %}{{ action }} BRAND{% endblock %}
 
 {% block content %}
 <style>
@@ -35,9 +35,9 @@
         
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <h3 class="mb-0">{{ action|upper }} CATEGORY</h3>
+            <h3 class="mb-0">{{ action|upper }} BRAND</h3>
             <a href="{% url 'category_list' %}" class="btn btn-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Back to Categories
+                <i class="bi bi-arrow-left"></i> Back to Brands
             </a>
         </div>
 
@@ -45,7 +45,7 @@
             {% csrf_token %}
             
             <div class="mb-3">
-                <label for="{{ form.name.id_for_label }}" class="form-label">Category Name *</label>
+                <label for="{{ form.name.id_for_label }}" class="form-label">Brand Name *</label>
                 {{ form.name }}
                 {% if form.name.errors %}
                     <div class="invalid-feedback d-block">
@@ -62,12 +62,12 @@
                         {{ form.description.errors.0 }}
                     </div>
                 {% endif %}
-                <small class="text-muted">Optional: Add a brief description of this category</small>
+                <small class="text-muted">Optional: Add a brief description of this brand</small>
             </div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-lg"></i> Save Category
+                    <i class="bi bi-check-lg"></i> Save Brand
                 </button>
                 <a href="{% url 'category_list' %}" class="btn btn-secondary">
                     <i class="bi bi-x-lg"></i> Cancel

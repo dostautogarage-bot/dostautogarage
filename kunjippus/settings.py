@@ -26,10 +26,13 @@ SECRET_KEY = "&)z1qen^5tke+l_ucu523gx5m=2+xg_mv!@-0^-$i!pzo#)4f@"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["thefixautotech.com" ,"www.thefixautotech.com", "159.65.151.179","localhost", "127.0.0.1"]
-
-
-
+ALLOWED_HOSTS = [
+    "thefixautotech.in",
+    "www.thefixautotech.in",
+    "159.65.151.179",
+    "localhost",
+    "127.0.0.1",
+]
 
 # Application definition
 

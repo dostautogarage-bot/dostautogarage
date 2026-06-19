@@ -43,6 +43,9 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = ['name', 'part_number', 'category', 'price', 'stock']
+        labels = {
+            'category': 'Brand',
+        }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
@@ -519,7 +522,7 @@ def category_add(request):
     form = CategoryForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         form.save()
-        messages.success(request, 'Category created successfully!')
+        messages.success(request, 'Brand created successfully!')
         return redirect('category_list')
     return render(request, 'billing/category_form.html', {'form': form, 'action': 'Add'})
 
@@ -530,7 +533,7 @@ def category_edit(request, pk):
     form = CategoryForm(request.POST or None, instance=category)
     if request.method == 'POST' and form.is_valid():
         form.save()
-        messages.success(request, 'Category updated successfully!')
+        messages.success(request, 'Brand updated successfully!')
         return redirect('category_list')
     return render(request, 'billing/category_form.html', {'form': form, 'action': 'Edit', 'category': category})
 
@@ -541,7 +544,7 @@ def category_delete(request, pk):
     
     if request.method == 'POST':
         category.delete()
-        messages.success(request, 'Category deleted successfully!')
+        messages.success(request, 'Brand deleted successfully!')
         return redirect('category_list')
     
     # Count products in this category
@@ -995,7 +998,7 @@ def invoice_create(request):
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'status': 'error', 'message': msg}, status=400)
                 messages.error(request, msg)
-                return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all()})
+                return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'categories': Category.objects.all()})
 
             selected_parts = set()
             duplicate_found = False
@@ -1018,7 +1021,8 @@ def invoice_create(request):
                 return render(request, 'billing/invoice_form.html', {
                     'formset'  : formset,
                     'main_form': main_form,
-                    'products' : Product.objects.all()
+                    'products' : Product.objects.all(),
+                    'categories': Category.objects.all(),
                 })
 
             try:
@@ -1117,7 +1121,8 @@ def invoice_create(request):
                 return render(request, 'billing/invoice_form.html', {
                     'formset'  : formset,
                     'main_form': main_form,
-                    'products' : Product.objects.all()
+                    'products' : Product.objects.all(),
+                    'categories': Category.objects.all(),
                 })
 
     # If forms were invalid (non-AJAX)
@@ -1128,7 +1133,8 @@ def invoice_create(request):
     return render(request, 'billing/invoice_form.html', {
         'formset'  : formset,
         'main_form': main_form,
-        'products' : Product.objects.all()  # include all products for search
+        'products' : Product.objects.all(),  # include all products for search
+        'categories': Category.objects.all(),
     })
 
 
@@ -1231,7 +1237,7 @@ def invoice_edit(request, pk):
                         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                             return JsonResponse({'status': 'error', 'message': msg}, status=400)
                         messages.error(request, msg)
-                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'categories': Category.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
 
                     # ... (rest of validation) ...
                     selected_parts = set()
@@ -1251,7 +1257,7 @@ def invoice_edit(request, pk):
                     if duplicate_found:
                         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                             return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
-                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'categories': Category.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
 
                     is_draft = 'save_draft' in request.POST
                     was_draft = invoice.status == 'DRAFT'
@@ -1330,6 +1336,7 @@ def invoice_edit(request, pk):
                     'formset': formset,
                     'main_form': main_form,
                     'products': Product.objects.all(),
+                    'categories': Category.objects.all(),
                     'editing': True,
                     'invoice': invoice,
                     'other_charges': other_charges
@@ -1344,6 +1351,7 @@ def invoice_edit(request, pk):
         'formset': formset, 
         'main_form': main_form, 
         'products': Product.objects.all(), 
+        'categories': Category.objects.all(),
         'editing': True, 
         'invoice': invoice, 
         'other_charges': other_charges
@@ -1631,8 +1639,6 @@ def invoice_pdf_logic(request, invoice):
     for item in invoice.items.all():
         # Use product_name property which handles both regular and custom products
         product_display = item.product_name.upper()
-        if item.is_custom:
-            product_display += " (CUSTOM)"
         
         data.append([
             product_display,
