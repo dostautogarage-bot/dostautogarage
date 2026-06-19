@@ -1387,7 +1387,10 @@ def product_search_api(request):
             'id':    p.pk,
             'name':  p.name,
             'price': str(p.price),
-            'stock': p.stock,
+            'stock': str(p.stock),
+            'part_number': p.part_number,
+            'category_id': p.category_id if p.category else None,
+            'category_name': p.category.name if p.category else None,
         }
         for p in products
     ]
@@ -1437,7 +1440,9 @@ def product_list_api(request):
                 'name':  p.name,
                 'part_number': p.part_number,
                 'price': str(p.price),
-                'stock': p.stock,
+                'stock': str(p.stock),
+                'category_id': p.category_id if p.category else None,
+                'category_name': p.category.name if p.category else None,
             }
             for p in products
         ],

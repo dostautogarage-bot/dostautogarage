@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Dropdown Test</title>
+    <style>
+        .product-dropdown {
+            max-width: 400px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .product-dropdown .drop-item {
+            padding: 0.6rem 0.85rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            display: block;
+            width: 100%;
+        }
+
+        .product-dropdown .drop-item:hover {
+            background: #e8f4fd;
+        }
+
+        .product-dropdown .drop-item .prod-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .product-dropdown .drop-item .prod-meta {
+            font-size: 0.75rem;
+            color: #666;
+            white-space: normal;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .category-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #059669;
+            background-color: rgba(16, 185, 129, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h2>Product Dropdown Test</h2>
+    <div class="product-dropdown">
+        <div class="drop-item">
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: 1; min-width: 0;">
+                <span class="category-badge">CASTROL</span>
+                <span class="prod-name">ENGINE OIL 5W-30</span>
+                <span class="prod-meta">Price: ₹450.00  |  Stock: 25  |  Part: EO5W30  |  Brand: CASTROL</span>
+            </div>
+        </div>
+        <div class="drop-item">
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: 1; min-width: 0;">
+                <span class="category-badge">BOSCH</span>
+                <span class="prod-name">BRAKE PAD SET</span>
+                <span class="prod-meta">Price: ₹1200.00  |  Stock: 10  |  Part: BP123  |  Brand: BOSCH</span>
+            </div>
+        </div>
+        <div class="drop-item">
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: 1; min-width: 0;">
+                <span class="prod-name">AIR FILTER</span>
+                <span class="prod-meta">Price: ₹350.00  |  Stock: 15  |  Part: AF456</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

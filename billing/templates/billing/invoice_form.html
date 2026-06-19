@@ -185,16 +185,13 @@
         padding: 0.6rem 0.85rem;
         cursor: pointer;
         border-bottom: 1px solid #f0f0f0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.5rem;
+        display: block;
+        width: 100%;
     }
 
     @media (min-width: 768px) {
         .product-dropdown .drop-item {
             padding: 10px 14px;
-            gap: 10px;
         }
     }
 
@@ -226,27 +223,27 @@
     .product-dropdown .drop-item .prod-meta {
         font-size: 0.6rem;
         color: #666;
-        white-space: nowrap;
+        white-space: normal;
+        line-height: 1.4;
+        word-break: break-word;
     }
 
     @media (min-width: 768px) {
         .product-dropdown .drop-item .prod-meta {
             font-size: 0.78rem;
+            line-height: 1.5;
         }
     }
 
-    .category-select {
-        background-color: #f1f5f9;
-        color: #64748b;
-        font-weight: 600;
-        border: 1px solid #cbd5e1;
-        transition: all 0.2s ease;
-    }
-
-    .category-select.selected {
-        background-color: #e0f2fe !important;
-        color: #0369a1 !important;
-        border-color: #bae6fd !important;
+    .category-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--primary);
+        background-color: rgba(16, 185, 129, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-bottom: 2px;
     }
 
     .product-dropdown .drop-item.used .prod-meta {
@@ -683,20 +680,24 @@
                         <tr>
                             <td data-label="PRODUCT" style="min-width: 280px;">
                                 <div style="display:none;">{{ form.product }}</div>
-                                <div class="input-group">
-                                    <select class="form-select category-select"
-                                        style="max-width: 160px; flex: 0 0 160px;">
-                                        <option value="">ALL BRANDS</option>
-                                        {% for category in categories %}
-                                        <option value="{{ category.pk }}">{{ category.name|upper }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <input type="text" list="productList-{{ forloop.counter0 }}"
-                                        class="form-control product-search-input"
-                                        placeholder="🔍 TYPE TO SEARCH PRODUCT..." autocomplete="on"
-                                        value="{{ form.initial.product_name|default:''|escape }}">
+                                <div class="product-search-wrapper" style="position: relative; width: 100%;">
+                                    <div class="input-group">
+                                        <button class="btn btn-light border row-category-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 44px; display: flex; align-items: center; justify-content: center; background-color: #f8fafc;" title="Filter by Brand">
+                                            <i class="bi bi-tag" style="font-size: 1.1rem; color: #64748b;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu row-category-menu shadow-sm" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">
+                                            <li><a class="dropdown-item active" href="#" data-value="">ALL BRANDS</a></li>
+                                            {% for category in categories %}
+                                            <li><a class="dropdown-item" href="#" data-value="{{ category.pk }}">{{ category.name|upper }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                        <input type="hidden" class="category-select" value="">
+                                        <input type="text"
+                                            class="form-control product-search-input"
+                                            placeholder="🔍 TYPE TO SEARCH PRODUCT..." autocomplete="off"
+                                            value="{{ form.initial.product_name|default:''|escape }}">
+                                    </div>
                                 </div>
-                                <datalist class="product-datalist" id="productList-{{ forloop.counter0 }}"></datalist>
                                 {% for error in form.product.errors %}
                                 <div class="text-danger small mt-1">{{ error }}</div>
                                 {% endfor %}
@@ -918,9 +919,9 @@
 </div>
 
 
-<!--
-    PORTAL DIV: removed, using datalist instead
--->
+<div id="productDropdownPortal">
+    <div id="sharedDropdown" class="product-dropdown card shadow-lg" style="position: absolute; z-index: 1050; display: none; max-height: 280px; overflow-y: auto; background: white; border: 1px solid #cbd5e1; width: 340px;"></div>
+</div>
 
 <script>
     const ALL_PRODUCTS = [
@@ -939,7 +940,6 @@
 
     // ─── Shared dropdown (portal, appended to body) ───────────────────────────────
     const sharedDropdown = document.getElementById('sharedDropdown');
-    const dropdownBackdrop = document.getElementById('dropdownBackdrop');
     let activeInput = null;
     let activeSelect = null;
 
@@ -949,18 +949,6 @@
         document.body.appendChild(portal);
     }
 
-    // Click on backdrop closes dropdown
-    if (dropdownBackdrop) {
-        dropdownBackdrop.addEventListener('mousedown', function (e) {
-            e.preventDefault();
-            hideDropdown();
-        });
-    }
-
-    // FIX 2: Correct positioning math.
-    // The portal div is position:absolute at the body origin (top:0, left:0).
-    // getBoundingClientRect() returns viewport coords, so we add window.scroll*
-    // to convert to page (document) coordinates — which is what absolute children need.
     function positionDropdown(input) {
         if (!sharedDropdown) return;
         const rect = input.getBoundingClientRect();
@@ -968,7 +956,14 @@
         const left = rect.left + window.scrollX;
         sharedDropdown.style.top = top + 'px';
         sharedDropdown.style.left = left + 'px';
-        sharedDropdown.style.width = Math.max(rect.width, 340) + 'px';
+        
+        const screenWidth = window.innerWidth;
+        const width = Math.min(Math.max(rect.width, 340), screenWidth - 20);
+        sharedDropdown.style.width = width + 'px';
+        
+        if (left + width > screenWidth) {
+            sharedDropdown.style.left = Math.max(10, screenWidth - width - 10) + 'px';
+        }
     }
 
     function getSelectedProductIds(excludeSelect = null) {
@@ -1017,12 +1012,73 @@
         return partNumbers;
     }
 
+    function setRowBrand(row, brandId, brandName) {
+        const categorySelect = row.querySelector('.category-select');
+        const btn = row.querySelector('.row-category-btn');
+        const menu = row.querySelector('.row-category-menu');
+        
+        if (!categorySelect || !btn) return;
+        
+        categorySelect.value = brandId;
+        
+        // Update menu items active state
+        if (menu) {
+            menu.querySelectorAll('.dropdown-item').forEach(item => {
+                if (item.getAttribute('data-value') === String(brandId)) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        const icon = btn.querySelector('i');
+        if (brandId) {
+            btn.style.backgroundColor = '#e0f2fe';
+            btn.style.borderColor = '#bae6fd';
+            btn.title = 'Brand: ' + brandName.toUpperCase();
+            if (icon) {
+                icon.className = 'bi bi-tag-fill';
+                icon.style.color = '#0369a1';
+            }
+        } else {
+            btn.style.backgroundColor = '#f8fafc';
+            btn.style.borderColor = '#cbd5e1';
+            btn.title = 'Filter by Brand';
+            if (icon) {
+                icon.className = 'bi bi-tag';
+                icon.style.color = '#64748b';
+            }
+        }
+        
+        // Clear selected product if it doesn't match the new brand
+        const select = row.querySelector('select[name*="product"]');
+        const input = row.querySelector('.product-search-input');
+        if (select && select.value && brandId) {
+            const prod = getProductById(select.value);
+            if (prod && String(prod.category_id) !== String(brandId)) {
+                select.value = '';
+                if (input) {
+                    input.value = '';
+                    input.classList.remove('selected-product');
+                }
+                const priceCell = row.querySelector('.unit-price');
+                if (priceCell) priceCell.textContent = '₹ 0.00';
+                calculateInvoiceTotals();
+            }
+        }
+    }
+
     function renderDropdown(filter) {
         if (!activeInput || !activeSelect || !sharedDropdown) return;
 
         const row = activeInput.closest('tr');
+        const globalCategorySelect = document.getElementById('global-category-select');
         const categorySelect = row ? row.querySelector('.category-select') : null;
-        const selectedCategoryVal = categorySelect ? categorySelect.value : '';
+        
+        const selectedCategoryVal = (categorySelect && categorySelect.value) 
+            ? categorySelect.value 
+            : (globalCategorySelect ? globalCategorySelect.value : '');
 
         const selected = getSelectedProductIds(activeSelect);
         const selectedPartNumbers = getSelectedPartNumbers(activeSelect);
@@ -1056,6 +1112,8 @@
                 leftDiv.style.flexDirection = 'column';
                 leftDiv.style.alignItems = 'flex-start';
                 leftDiv.style.gap = '2px';
+                leftDiv.style.flex = '1';
+                leftDiv.style.minWidth = '0';
 
                 if (p.category_name) {
                     const catSpan = document.createElement('span');
@@ -1071,11 +1129,22 @@
 
                 const metaSpan = document.createElement('span');
                 metaSpan.className = 'prod-meta';
-                const partInfo = p.part_number ? ` [${p.part_number.toUpperCase()}]` : '';
-                metaSpan.textContent = `₹${parseFloat(p.price).toFixed(2)}${partInfo}  |  Stock: ${p.stock}`;
+                const partInfo = p.part_number ? `Part: ${p.part_number.toUpperCase()}` : '';
+                const brandInfo = p.category_name ? `Brand: ${p.category_name.toUpperCase()}` : '';
+                const priceInfo = `Price: ₹${parseFloat(p.price).toFixed(2)}`;
+                const stockInfo = `Stock: ${p.stock}`;
+                
+                // Build meta info with separators
+                const metaParts = [priceInfo, stockInfo];
+                if (partInfo) metaParts.push(partInfo);
+                if (brandInfo) metaParts.push(brandInfo);
+                
+                metaSpan.textContent = metaParts.join('  |  ');
+                
+                // Add metaSpan to leftDiv instead of div
+                leftDiv.appendChild(metaSpan);
 
                 div.appendChild(leftDiv);
-                div.appendChild(metaSpan);
 
                 if (!isUsed) {
                     div.addEventListener('mousedown', function (e) {
@@ -1088,9 +1157,13 @@
                         activeInput.value = p.name;
                         activeInput.classList.remove('is-invalid');
                         activeInput.classList.add('selected-product');
-                        if (categorySelect && p.category_id) {
-                            categorySelect.value = p.category_id;
+                        
+                        if (p.category_id) {
+                            setRowBrand(row, p.category_id, p.category_name);
+                        } else {
+                            setRowBrand(row, '', '');
                         }
+
                         const priceCell = row.querySelector('.unit-price');
                         if (priceCell) priceCell.textContent = '₹ ' + parseFloat(p.price).toFixed(2);
                         calculateInvoiceTotals();
@@ -1114,217 +1187,128 @@
 
         positionDropdown(activeInput);
         sharedDropdown.style.display = 'block';
-        if (dropdownBackdrop) dropdownBackdrop.style.display = 'block';
     }
 
     function hideDropdown() {
         if (sharedDropdown) {
             sharedDropdown.style.display = 'none';
         }
-        if (dropdownBackdrop) {
-            dropdownBackdrop.style.display = 'none';
-        }
         activeInput = null;
         activeSelect = null;
     }
 
-    // Reposition on scroll or resize (works correctly now with absolute positioning)
+    // Reposition on scroll or resize
     window.addEventListener('scroll', () => { if (activeInput) positionDropdown(activeInput); }, true);
     window.addEventListener('resize', () => { if (activeInput) positionDropdown(activeInput); });
 
     // Click outside the dropdown closes it
     document.addEventListener('mousedown', function (e) {
-        if (sharedDropdown && !sharedDropdown.contains(e.target) && e.target !== activeInput && e.target !== dropdownBackdrop) {
+        if (sharedDropdown && !sharedDropdown.contains(e.target) && e.target !== activeInput) {
             hideDropdown();
         }
     });
-
-    // ─── Product search with datalist ───────────────────────────────
-    function updateCategorySelectStyle(select) {
-        if (select && select.value) {
-            select.classList.add('selected');
-        } else if (select) {
-            select.classList.remove('selected');
-        }
-    }
 
     function initProductSearch(row) {
         const input = row.querySelector('.product-search-input');
         const select = row.querySelector('select[name*="product"]');
         const qty = row.querySelector('input[name*="quantity"]');
-        const categorySelect = row.querySelector('.category-select');
+        const menu = row.querySelector('.row-category-menu');
 
-        // On page load, if product is already selected, pre-populate category
-        if (select && select.value && categorySelect) {
+        // On page load, if product is already selected, pre-populate category button
+        if (select && select.value) {
             const prod = getProductById(select.value);
             if (prod && prod.category_id) {
-                categorySelect.value = prod.category_id;
+                setRowBrand(row, prod.category_id, prod.category_name);
             }
         }
-        if (categorySelect) {
-            updateCategorySelectStyle(categorySelect);
-        }
 
-        if (categorySelect) {
-            categorySelect.addEventListener('change', function () {
-                const currentVal = select ? select.value : '';
-                if (currentVal) {
-                    const prod = getProductById(currentVal);
-                    if (prod && categorySelect.value && String(prod.category_id) !== String(categorySelect.value)) {
-                        // Category changed to one that doesn't match selected product; clear product selection
-                        select.value = '';
-                        input.value = '';
-                        input.classList.remove('selected-product');
-                        const priceCell = row.querySelector('.unit-price');
-                        if (priceCell) priceCell.textContent = '₹ 0.00';
-                        calculateInvoiceTotals();
+        if (menu && input) {
+            menu.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const val = item.getAttribute('data-value');
+                    const text = item.textContent;
+                    setRowBrand(row, val, text);
+                    
+                    // Re-render suggestions if input is active
+                    if (activeInput === input) {
+                        renderDropdown(input.value);
                     }
-                }
-                updateCategorySelectStyle(categorySelect);
-                updateDatalist();
+                });
             });
         }
 
-        input.addEventListener('change', function () {
-            const selectedCategoryVal = categorySelect ? categorySelect.value : '';
-            const selectedProduct = ALL_PRODUCTS.find(p => {
-                const matchesName = p.name.toLowerCase() === input.value.toLowerCase() ||
-                    (p.part_number && p.part_number.toLowerCase() === input.value.toLowerCase());
-                if (!matchesName) return false;
-                if (selectedCategoryVal && String(p.category_id) !== String(selectedCategoryVal)) return false;
-                return true;
+        if (input && select) {
+            input.addEventListener('focus', function () {
+                activeInput = input;
+                activeSelect = select;
+                renderDropdown(input.value);
             });
-            if (selectedProduct) {
-                select.value = selectedProduct.id;
-                input.value = selectedProduct.name; // Reset input to name after selection if matched by part number
-                input.classList.remove('is-invalid');
-                input.classList.add('selected-product');
-                if (categorySelect && selectedProduct.category_id) {
-                    categorySelect.value = selectedProduct.category_id;
-                    updateCategorySelectStyle(categorySelect);
-                }
-                const priceCell = row.querySelector('.unit-price');
-                if (priceCell) priceCell.textContent = '₹ ' + parseFloat(selectedProduct.price).toFixed(2);
-                if (qty) qty.focus();
-            } else {
-                select.value = '';
-                input.classList.remove('selected-product');
-                const priceCell = row.querySelector('.unit-price');
-                if (priceCell) priceCell.textContent = '₹ 0.00';
-            }
-            calculateInvoiceTotals();
-            updateDatalist();
-        });
 
-        input.addEventListener('input', function () {
-            const selectedCategoryVal = categorySelect ? categorySelect.value : '';
-            const matchedProduct = ALL_PRODUCTS.find(p => {
-                const matchesName = p.name.toLowerCase() === input.value.toLowerCase() ||
-                    (p.part_number && p.part_number.toLowerCase() === input.value.toLowerCase());
-                if (!matchesName) return false;
-                if (selectedCategoryVal && String(p.category_id) !== String(selectedCategoryVal)) return false;
-                return true;
+            input.addEventListener('input', function () {
+                activeInput = input;
+                activeSelect = select;
+                
+                // If the user cleared the search input, clear selection
+                if (!input.value.trim()) {
+                    select.value = '';
+                    input.classList.remove('selected-product');
+                    const priceCell = row.querySelector('.unit-price');
+                    if (priceCell) priceCell.textContent = '₹ 0.00';
+                    calculateInvoiceTotals();
+                } else {
+                    // Check if input value matches a product exactly
+                    const matchedProduct = ALL_PRODUCTS.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+                    const priceCell = row.querySelector('.unit-price');
+                    if (matchedProduct) {
+                        select.value = matchedProduct.id;
+                        input.classList.remove('is-invalid');
+                        input.classList.add('selected-product');
+                        if (priceCell) priceCell.textContent = '₹ ' + parseFloat(matchedProduct.price).toFixed(2);
+                        
+                        if (matchedProduct.category_id) {
+                            setRowBrand(row, matchedProduct.category_id, matchedProduct.category_name);
+                        } else {
+                            setRowBrand(row, '', '');
+                        }
+                    } else if (select.value && input.value !== getProductById(select.value)?.name) {
+                        select.value = '';
+                        input.classList.remove('selected-product');
+                        if (priceCell) priceCell.textContent = '₹ 0.00';
+                    }
+                    calculateInvoiceTotals();
+                }
+                renderDropdown(input.value);
             });
-            const priceCell = row.querySelector('.unit-price');
 
-            if (matchedProduct) {
-                select.value = matchedProduct.id;
-                input.classList.remove('is-invalid');
-                input.classList.add('selected-product');
-                if (categorySelect && matchedProduct.category_id) {
-                    categorySelect.value = matchedProduct.category_id;
-                    updateCategorySelectStyle(categorySelect);
-                }
-                if (priceCell) priceCell.textContent = '₹ ' + parseFloat(matchedProduct.price).toFixed(2);
-                if (qty) qty.focus();
-            } else if (select.value && input.value !== getProductById(select.value)?.name) {
-                select.value = '';
-                input.classList.remove('selected-product');
-                if (priceCell) priceCell.textContent = '₹ 0.00';
-            }
-            calculateInvoiceTotals();
-        });
+            input.addEventListener('blur', function () {
+                // Delay hiding so dropdown clicks register
+                setTimeout(hideDropdown, 200);
+            });
+        }
 
         if (qty) {
             qty.addEventListener('input', calculateInvoiceTotals);
         }
     }
 
-    // ─── Update datalist to exclude selected products ─────────────────────────────
-    function updateDatalist() {
-        const rows = document.querySelectorAll('#product-table tbody tr');
-        if (!rows.length) return;
-
-        const selectedIds = getSelectedProductIds();
-        rows.forEach(row => {
-            const categorySelect = row.querySelector('.category-select');
-            const datalist = row.querySelector('.product-datalist');
-            if (!datalist) return;
-
-            const selectedCategoryVal = categorySelect ? categorySelect.value : '';
-
-            datalist.innerHTML = '';
-            ALL_PRODUCTS.forEach(product => {
-                if (selectedIds.has(String(product.id))) {
-                    return;
-                }
-
-                if (selectedCategoryVal && String(product.category_id) !== String(selectedCategoryVal)) {
-                    return;
-                }
-
-                const option = document.createElement('option');
-                option.value = product.name;
-                const partInfo = product.part_number ? ` [${product.part_number.toUpperCase()}]` : '';
-                const catInfo = product.category_name ? `🏷️ [${product.category_name.toUpperCase()}] ` : '';
-                option.textContent = `${catInfo}${product.name.toUpperCase()}${partInfo} (₹${product.price}, STOCK: ${product.stock})`;
-                datalist.appendChild(option);
-            });
-        });
-    }
-
-
-
     // Init existing formset rows on page load
     document.querySelectorAll('#product-table tbody tr').forEach(row => initProductSearch(row));
     removeEmptyExtraRows();
     calculateInvoiceTotals();
-    updateDatalist();
 
     // ─── Global Brand/Category Select Change Handler ──────────────────────────────
     const globalCategorySelect = document.getElementById('global-category-select');
     if (globalCategorySelect) {
         globalCategorySelect.addEventListener('change', function () {
             const globalVal = globalCategorySelect.value;
+            const globalText = globalCategorySelect.options[globalCategorySelect.selectedIndex].text;
             const rows = document.querySelectorAll('#product-table tbody tr');
             rows.forEach(row => {
-                const categorySelect = row.querySelector('.category-select');
-                if (!categorySelect) return;
-
-                // Set per-row brand to match global selection
-                categorySelect.value = globalVal;
-                updateCategorySelectStyle(categorySelect);
-
-                // If a product is already selected and doesn't match the new brand, clear it
-                if (globalVal) {
-                    const select = row.querySelector('select[name*="product"]');
-                    const input = row.querySelector('.product-search-input');
-                    if (select && select.value) {
-                        const prod = getProductById(select.value);
-                        if (prod && String(prod.category_id) !== String(globalVal)) {
-                            select.value = '';
-                            if (input) {
-                                input.value = '';
-                                input.classList.remove('selected-product');
-                            }
-                            const priceCell = row.querySelector('.unit-price');
-                            if (priceCell) priceCell.textContent = '₹ 0.00';
-                        }
-                    }
-                }
+                setRowBrand(row, globalVal, globalVal ? globalText : '');
             });
             calculateInvoiceTotals();
-            updateDatalist();
+            hideDropdown();
         });
     }
 
@@ -1369,9 +1353,7 @@
                     );
                 }
             });
-            if (el.tagName.toLowerCase() !== 'datalist') {
-                el.value = '';
-            }
+            el.value = '';
             el.classList.remove('is-valid', 'is-invalid', 'selected-product');
         });
 
@@ -1381,29 +1363,33 @@
         const clonedSearch = newRow.querySelector('.product-search-input');
         if (clonedSearch) {
             clonedSearch.value = '';
-            const newDatalistId = `productList-${formIndex}`;
-            clonedSearch.setAttribute('list', newDatalistId);
         }
 
-        const clonedDatalist = newRow.querySelector('.product-datalist');
-        if (clonedDatalist) {
-            const newDatalistId = `productList-${formIndex}`;
-            clonedDatalist.id = newDatalistId;
-            clonedDatalist.innerHTML = '';
+        const brandIdInput = newRow.querySelector('.category-select');
+        if (brandIdInput) brandIdInput.value = '';
+        const btn = newRow.querySelector('.row-category-btn');
+        if (btn) {
+            btn.style.backgroundColor = '#f8fafc';
+            btn.style.borderColor = '#cbd5e1';
+            btn.title = 'Filter by Brand';
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = 'bi bi-tag';
+                icon.style.color = '#64748b';
+            }
         }
 
         tbody.appendChild(newRow);
         totalForms.value = formIndex + 1;
 
         const globalCategorySelect = document.getElementById('global-category-select');
-        const newCategorySelect = newRow.querySelector('.category-select');
-        if (globalCategorySelect && newCategorySelect && globalCategorySelect.value) {
-            newCategorySelect.value = globalCategorySelect.value;
+        if (globalCategorySelect && globalCategorySelect.value) {
+            const globalText = globalCategorySelect.options[globalCategorySelect.selectedIndex].text;
+            setRowBrand(newRow, globalCategorySelect.value, globalText);
         }
 
         initProductSearch(newRow);
         calculateInvoiceTotals();
-        updateDatalist();
     }
 
     // ─── Remove Product Row ───────────────────────────────────────────────────────
@@ -1427,7 +1413,6 @@
             });
             document.getElementById('id_form-TOTAL_FORMS').value = rows.length;
             calculateInvoiceTotals();
-            updateDatalist();
         } else {
             alert('At least one product row is required.');
         }
@@ -2055,7 +2040,6 @@
     // Initialize existing charge rows on edit
     document.querySelectorAll('#charges-body tr').forEach(initChargeRow);
     calculateInvoiceTotals();
-    updateDatalist();
 
     // ─── Custom Products Section Toggle ──────────────────────────────────────────
     document.getElementById('enableCustomProducts').addEventListener('change', function () {
