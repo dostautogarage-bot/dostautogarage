@@ -448,12 +448,14 @@
 
     /* Part Number is NOT sticky on mobile */
     .sticky-left-2 {
-        position: static;
-        background: transparent;
+        position: static !important;
+        left: auto !important;
+        background: transparent !important;
+        z-index: auto !important;
     }
 
     .table-striped tbody tr:nth-child(odd) .sticky-left-2 {
-        background: transparent;
+        background: transparent !important;
     }
 
     /* On tablets (768px+), make Part Number sticky too */
