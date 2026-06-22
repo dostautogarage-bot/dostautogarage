@@ -433,7 +433,8 @@
         background: #94a3b8;
     }
 
-    /* Sticky columns for better tablet UX */
+    /* Sticky columns for better mobile/tablet UX */
+    /* Only Name column is sticky on mobile */
     .sticky-left-1 {
         position: sticky;
         left: 40px;
@@ -445,17 +446,31 @@
         background: #f8f9fa;
     }
 
+    /* Part Number is NOT sticky on mobile */
     .sticky-left-2 {
-        position: sticky;
-        left: 190px;
-        z-index: 4;
-        background: #fff;
+        position: static;
+        background: transparent;
     }
 
     .table-striped tbody tr:nth-child(odd) .sticky-left-2 {
-        background: #f8f9fa;
+        background: transparent;
     }
 
+    /* On tablets (768px+), make Part Number sticky too */
+    @media (min-width: 768px) {
+        .sticky-left-2 {
+            position: sticky;
+            left: 190px;
+            z-index: 4;
+            background: #fff;
+        }
+
+        .table-striped tbody tr:nth-child(odd) .sticky-left-2 {
+            background: #f8f9fa;
+        }
+    }
+
+    /* On desktop (1024px+), remove all sticky positioning */
     @media (min-width: 1024px) {
 
         .sticky-left-1,

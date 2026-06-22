@@ -390,6 +390,7 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         margin-bottom: 1rem;
+        border-radius: 0.5rem;
     }
 
     .table-responsive table {
@@ -398,12 +399,51 @@
         table-layout: auto;
     }
 
+    /* Product tables - ensure horizontal scrolling on mobile */
+    #product-table,
+    #custom-product-table {
+        min-width: 600px;
+    }
+
+    #product-table th:first-child,
+    #product-table td:first-child,
+    #custom-product-table th:first-child,
+    #custom-product-table td:first-child {
+        min-width: 280px;
+    }
+
+    #product-table th:nth-child(2),
+    #product-table td:nth-child(2),
+    #custom-product-table th:nth-child(2),
+    #custom-product-table td:nth-child(2) {
+        min-width: 120px;
+    }
+
+    #product-table th:nth-child(3),
+    #product-table td:nth-child(3),
+    #custom-product-table th:nth-child(3),
+    #custom-product-table td:nth-child(3) {
+        min-width: 160px;
+    }
+
+    #product-table th:nth-child(4),
+    #product-table td:nth-child(4),
+    #custom-product-table th:nth-child(4),
+    #custom-product-table td:nth-child(4) {
+        min-width: 80px;
+    }
+
     @media (min-width: 768px) {
         .table-responsive {
             overflow-x: visible;
         }
 
         .table-responsive table {
+            min-width: auto;
+        }
+
+        #product-table,
+        #custom-product-table {
             min-width: auto;
         }
     }
@@ -664,6 +704,11 @@
                 </select>
             </div>
 
+            <div class="d-block d-md-none mb-2">
+                <small class="text-info">
+                    <i class="bi bi-arrow-left-right"></i> Swipe left/right to see all columns
+                </small>
+            </div>
 
             <div class="table-responsive">
                 <table class="table table-bordered align-middle" id="product-table">
@@ -751,6 +796,11 @@
                 <h5 class="mb-3 mt-3">CUSTOM PRODUCTS</h5>
                 <small class="text-muted d-block mb-3">Add products that are not in your inventory. These won't affect
                     stock levels.</small>
+                <div class="d-block d-md-none mb-2">
+                    <small class="text-info">
+                        <i class="bi bi-arrow-left-right"></i> Swipe left/right to see all columns
+                    </small>
+                </div>
 
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle" id="custom-product-table">
