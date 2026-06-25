@@ -391,6 +391,7 @@
         -webkit-overflow-scrolling: touch;
         margin-bottom: 1rem;
         border-radius: 0.5rem;
+        overflow-y: visible !important;
     }
 
     .table-responsive table {
@@ -608,6 +609,29 @@
             padding: 0.85rem;
         }
     }
+
+    /* Brand/Category dropdown menu - ensure it appears on top */
+    .dropdown-menu.row-category-menu {
+        z-index: 99999 !important;
+        position: fixed !important;
+        will-change: transform;
+    }
+
+    /* Ensure dropdown button and input group work properly */
+    .input-group {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Prevent table overflow from clipping dropdown */
+    .table-responsive:has(.dropdown-menu.show) {
+        overflow: visible !important;
+    }
+
+    /* Ensure table cells don't clip dropdown */
+    td {
+        overflow: visible !important;
+    }
 </style>
 
 <div class="container mt-4">
@@ -730,7 +754,7 @@
                                         <button class="btn btn-light border row-category-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 44px; display: flex; align-items: center; justify-content: center; background-color: #f8fafc;" title="Filter by Brand">
                                             <i class="bi bi-tag" style="font-size: 1.1rem; color: #64748b;"></i>
                                         </button>
-                                        <ul class="dropdown-menu row-category-menu shadow-sm" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">
+                                        <ul class="dropdown-menu row-category-menu shadow-sm" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem; z-index: 9999 !important; position: fixed !important;">
                                             <li><a class="dropdown-item active" href="#" data-value="">ALL BRANDS</a></li>
                                             {% for category in categories %}
                                             <li><a class="dropdown-item" href="#" data-value="{{ category.pk }}">{{ category.name|upper }}</a></li>

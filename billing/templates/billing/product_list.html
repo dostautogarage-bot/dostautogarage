@@ -551,6 +551,12 @@
     .table tbody tr:hover {
         will-change: background-color;
     }
+
+    /* Fix dropdown menu appearing behind elements - position fixed to escape parent overflow */
+    .dropdown-menu.neo-dropdown-menu {
+        position: fixed !important;
+        z-index: 99999 !important;
+    }
 </style>
 
 <div class="container mt-4">
