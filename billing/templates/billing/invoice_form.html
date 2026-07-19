@@ -775,7 +775,7 @@
                             <td data-label="PRICE" class="unit-price text-center"
                                 style="font-weight: 600; color: #4b5563;">
                                 ₹ {{ form.initial.price|default:'0.00'|floatformat:2 }}
-                                {% if not form.initial.product %}
+                                {% if not form.initial.product and not form.initial.product_name %}
                                 <br><small class="text-danger">Product deleted</small>
                                 {% endif %}
                             </td>
@@ -807,7 +807,8 @@
             <div class="d-flex justify-content-start align-items-center mb-3 mt-4">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="toggleCustomProducts"
-                        onchange="toggleCustomProductsSection()" style="cursor: pointer;">
+                        onchange="toggleCustomProductsSection()" style="cursor: pointer;"
+                        {% if existing_custom_products %}checked{% endif %}>
                     <label class="form-check-label ms-2" for="toggleCustomProducts"
                         style="cursor: pointer; font-weight: 600;">
                         SHOW CUSTOM PRODUCTS
@@ -816,7 +817,7 @@
             </div>
 
             <!-- CUSTOM PRODUCTS SECTION -->
-            <div id="customProductsSection" style="display: none;">
+            <div id="customProductsSection" style="display: {% if existing_custom_products %}block{% else %}none{% endif %};">
                 <h5 class="mb-3 mt-3">CUSTOM PRODUCTS</h5>
                 <small class="text-muted d-block mb-3">Add products that are not in your inventory. These won't affect
                     stock levels.</small>
@@ -1003,6 +1004,9 @@
     { id: "{{ product.pk }}", name: "{{ product.name|escapejs }}", price: "{{ product.price|escapejs }}", stock: {{ product.stock }}, part_number: "{{ product.part_number|escapejs }}", category_id: "{{ product.category_id|default:'' }}", category_name: "{{ product.category.name|default:''|escapejs }}" },
     {% endfor %}
 ];
+
+    // Existing custom products for edit mode
+    const EXISTING_CUSTOM_PRODUCTS = {{ existing_custom_products|default:"[]"|safe }};
 
     const predefined_charges = ['LABOUR CHARGE', 'CLEANING CHARGE', 'TRANSPORT CHARGE', 'INDUSTRIAL CHARGE'];
 
@@ -1900,6 +1904,24 @@
             valid = false;
         }
 
+        // Count valid custom products toward the "at least one" check
+        const toggleCheckbox = document.getElementById('toggleCustomProducts');
+        if (toggleCheckbox && toggleCheckbox.checked) {
+            document.querySelectorAll('#custom-products-body tr').forEach(row => {
+                const nameInput = row.querySelector('.custom-product-name');
+                const priceInput = row.querySelector('.custom-product-price');
+                const qtyInput = row.querySelector('.custom-product-quantity');
+                if (nameInput && priceInput && qtyInput) {
+                    const name = nameInput.value.trim();
+                    const price = parseFloat(priceInput.value) || 0;
+                    const qty = parseFloat(qtyInput.value) || 0;
+                    if (name && price > 0 && qty > 0) {
+                        validProductCount++;
+                    }
+                }
+            });
+        }
+
         // FINAL CHECK: AT LEAST ONE PRODUCT OR ONE CHARGE
         if (validProductCount === 0 && validChargeCount === 0) {
             valid = false;
@@ -2113,31 +2135,58 @@
 
     // Initialize existing charge rows on edit
     document.querySelectorAll('#charges-body tr').forEach(initChargeRow);
+
+    // ─── Pre-populate custom products on edit ────────────────────────────────────
+    if (EXISTING_CUSTOM_PRODUCTS && EXISTING_CUSTOM_PRODUCTS.length > 0) {
+        const tbody = document.getElementById('custom-products-body');
+        // Clear any auto-added row first
+        tbody.innerHTML = '';
+        EXISTING_CUSTOM_PRODUCTS.forEach(function(item) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+            <td data-label="PRODUCT NAME">
+                <input type="text"
+                       class="form-control custom-product-name"
+                       placeholder="ENTER PRODUCT NAME..."
+                       style="text-transform: uppercase;"
+                       value="${item.name.toUpperCase()}"
+                       required>
+            </td>
+            <td data-label="PRICE">
+                <input type="number"
+                       class="form-control custom-product-price text-center"
+                       placeholder="0.00"
+                       step="0.01"
+                       min="0"
+                       value="${item.price}"
+                       required
+                       oninput="calculateInvoiceTotals()">
+            </td>
+            <td data-label="QUANTITY">
+                <input type="number"
+                       class="form-control custom-product-quantity"
+                       placeholder="1"
+                       step="0.01"
+                       min="0.01"
+                       value="${item.quantity}"
+                       required
+                       oninput="calculateInvoiceTotals()">
+            </td>
+            <td data-label="REMOVE" class="text-center">
+                <button type="button" class="premium-icon-btn premium-icon-danger"
+                        style="width: 32px; height: 32px;"
+                        title="Remove Custom Product"
+                        onclick="removeCustomProductRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+            tbody.appendChild(row);
+        });
+    }
+
     calculateInvoiceTotals();
 
-    // ─── Custom Products Section Toggle ──────────────────────────────────────────
-    document.getElementById('enableCustomProducts').addEventListener('change', function () {
-        const section = document.getElementById('customProductsSection');
-        const tbody = document.getElementById('custom-products-body');
-
-        if (this.checked) {
-            section.style.display = 'block';
-            // Add one row by default if empty
-            if (tbody.children.length === 0) {
-                addCustomProductRow();
-            }
-        } else {
-            section.style.display = 'none';
-            // Clear all custom product rows
-            tbody.innerHTML = '';
-        }
-        calculateInvoiceTotals();
-    });
-
-    // Show custom products section when toggle is enabled
-    document.getElementById('enableCustomProducts').addEventListener('change', function () {
-        document.getElementById('customProductsSection').style.display = this.checked ? 'block' : 'none';
-    });
 
     // ─── Add Custom Product Row ──────────────────────────────────────────────────
     function addCustomProductRow() {

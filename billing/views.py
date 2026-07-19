@@ -1182,8 +1182,9 @@ def invoice_delete(request, pk):
             # Restore stock if invoice was COMPLETED
             if invoice.status == 'COMPLETED':
                 for item in invoice.items.all():
-                    item.product.stock += item.quantity
-                    item.product.save()
+                    if item.product:
+                        item.product.stock += item.quantity
+                        item.product.save()
             invoice.delete()
         return redirect('invoice_list')
 
@@ -1205,20 +1206,28 @@ def invoice_edit(request, pk):
         validate_min=True,
         can_delete=True
     )
+    # Separate regular (stock) items from custom items
+    stock_items = [item for item in invoice.items.all() if not item.is_custom]
+    custom_items = [item for item in invoice.items.all() if item.is_custom]
+
     formset = ItemFormSet(
         request.POST or None,
         initial=[
             {
                 'product': item.product.pk if item.product else None,
                 'quantity': item.quantity,
-                'product_name': item.product.name if item.product else f'[DELETED PRODUCT - ID: {item.product_id}]',
+                'product_name': item.product.name if item.product else '',
                 'price': item.price,
             }
-            for item in invoice.items.all()
+            for item in stock_items
         ]
     )
     main_form = InvoiceMainForm(request.POST or None, instance=invoice)
     other_charges = list(invoice.other_charges.all())
+    existing_custom_products = json.dumps([
+        {'name': item.custom_product_name or '', 'price': str(item.price), 'quantity': str(item.quantity)}
+        for item in custom_items
+    ])
 
     if request.method == 'POST':
         charges_raw = request.POST.get('other_charges', '[]')
@@ -1232,12 +1241,23 @@ def invoice_edit(request, pk):
                 with transaction.atomic():
                     total_items_posted = sum(1 for f in formset if f.cleaned_data and not f.cleaned_data.get('DELETE', False) and f.cleaned_data.get('product'))
 
-                    if total_items_posted == 0 and total_charges_posted == 0:
+                    # Also count custom products from POST
+                    custom_products_raw = request.POST.get('custom_products', '[]')
+                    try:
+                        custom_products_list = json.loads(custom_products_raw)
+                        total_custom_posted = sum(
+                            1 for cp in custom_products_list
+                            if cp.get('name', '').strip() and float(cp.get('price', 0)) > 0 and float(cp.get('quantity', 0)) > 0
+                        )
+                    except (ValueError, KeyError, json.JSONDecodeError):
+                        total_custom_posted = 0
+
+                    if total_items_posted == 0 and total_custom_posted == 0 and total_charges_posted == 0:
                         msg = "Please add at least one product or one charge."
                         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                             return JsonResponse({'status': 'error', 'message': msg}, status=400)
                         messages.error(request, msg)
-                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'categories': Category.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges})
+                        return render(request, 'billing/invoice_form.html', {'formset': formset, 'main_form': main_form, 'products': Product.objects.all(), 'categories': Category.objects.all(), 'editing': True, 'invoice': invoice, 'other_charges': other_charges, 'existing_custom_products': custom_products_raw})
 
                     # ... (rest of validation) ...
                     selected_parts = set()
@@ -1267,11 +1287,12 @@ def invoice_edit(request, pk):
                     invoice.status = 'DRAFT' if is_draft else 'COMPLETED'
                     invoice.save()
 
-                    # Gather old quantities
+                    # Gather old quantities (for stock products only)
                     old_quantities = {}
                     if not was_draft:
                         for item in invoice.items.all():
-                            old_quantities[item.product_id] = old_quantities.get(item.product_id, Decimal('0')) + item.quantity
+                            if item.product_id is not None:
+                                old_quantities[item.product_id] = old_quantities.get(item.product_id, Decimal('0')) + item.quantity
 
                     new_items = []
                     for form in formset:
@@ -1308,7 +1329,27 @@ def invoice_edit(request, pk):
                             p_to_deduct = Product.objects.select_for_update().get(pk=product.pk)
                             p_to_deduct.stock -= Decimal(quantity)
                             p_to_deduct.save()
-                        InvoiceItem.objects.create(invoice=invoice, product=product, quantity=quantity, price=product.price)
+                        InvoiceItem.objects.create(invoice=invoice, product=product, is_custom=False, quantity=quantity, price=product.price)
+
+                    # ── Custom Products (edit) ───────────────────────────────────
+                    custom_products_raw = request.POST.get('custom_products', '[]')
+                    try:
+                        custom_products = json.loads(custom_products_raw)
+                        for custom_item in custom_products:
+                            name = custom_item.get('name', '').strip()
+                            price = Decimal(str(custom_item.get('price', 0)))
+                            qty = Decimal(str(custom_item.get('quantity', 0)))
+                            if name and price > 0 and qty > 0:
+                                InvoiceItem.objects.create(
+                                    invoice=invoice,
+                                    product=None,
+                                    custom_product_name=name,
+                                    is_custom=True,
+                                    quantity=qty,
+                                    price=price
+                                )
+                    except (ValueError, KeyError, json.JSONDecodeError):
+                        pass
 
                     # Handle other charges - delete existing and recreate
                     invoice.other_charges.all().delete()  # Clear existing charges
@@ -1348,13 +1389,14 @@ def invoice_edit(request, pk):
             return JsonResponse({'status': 'error', 'errors': get_form_errors(main_form, formset)}, status=400)
 
     return render(request, 'billing/invoice_form.html', {
-        'formset': formset, 
-        'main_form': main_form, 
-        'products': Product.objects.all(), 
+        'formset': formset,
+        'main_form': main_form,
+        'products': Product.objects.all(),
         'categories': Category.objects.all(),
-        'editing': True, 
-        'invoice': invoice, 
-        'other_charges': other_charges
+        'editing': True,
+        'invoice': invoice,
+        'other_charges': other_charges,
+        'existing_custom_products': existing_custom_products,
     })
 
 

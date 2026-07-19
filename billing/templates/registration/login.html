@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,8 +10,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <!-- Bootstrap CSS (Local) -->
     <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
     <!-- Bootstrap Icons (Local) -->
@@ -31,7 +33,7 @@
         body {
             font-family: 'Outfit', sans-serif;
             background-color: var(--bg-color);
-            background-image: 
+            background-image:
                 radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.05) 0px, transparent 50%);
             color: var(--text-main);
@@ -198,9 +200,9 @@
             color: #E1306C;
             font-size: 14px;
         }
-
     </style>
 </head>
+
 <body>
 
     <div class="login-card">
@@ -222,19 +224,21 @@
 
         <form method="post" novalidate>
             {% csrf_token %}
-            
+
             <div class="mb-3">
                 <label for="id_username" class="form-label">Username</label>
-                <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter username" required autofocus>
+                <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter username"
+                    required autofocus>
             </div>
 
             <div class="mb-4">
                 <label for="id_password" class="form-label">Password</label>
-                <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter password" required>
+                <input type="password" name="password" id="id_password" class="form-control"
+                    placeholder="Enter password" required>
             </div>
 
             {% if next %}
-                <input type="hidden" name="next" value="{{ next }}">
+            <input type="hidden" name="next" value="{{ next }}">
             {% endif %}
 
             <button type="submit" class="btn btn-login">
@@ -244,8 +248,8 @@
 
         <div class="footer-text">
             Designed & Developed by<br>
-            <a href="https://www.instagram.com/its_me_fanu_/" target="_blank" class="instagram-pill">
-                <i class="bi bi-instagram"></i> its_me_fanu_
+            <a href="https://www.instagram.com/f4ni.__/" target="_blank" class="instagram-pill">
+                <i class="bi bi-instagram"></i> f4ni.__
             </a>
         </div>
     </div>
@@ -253,5 +257,5 @@
     <!-- Bootstrap Bundle with Popper (Local) -->
     <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
 </body>
-</html>
 
+</html>
